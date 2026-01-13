@@ -1,31 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:included1="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E" name="LifeInsuranceExclusion" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D">
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E" name="LifeInsuranceExclusion" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D">
   <dmn:extensionElements/>
   <dmn:import id="_C3D4E5F6-A7B8-9C0D-1E2F-3A4B5C6D7E8F" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../BDT.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters for this check -->
+  <dmn:itemDefinition id="_li_tParameters" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_li_tParameters_resource" name="resource" isCollection="false">
+      <dmn:typeRef>BDT.tResource</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation (standard check pattern) -->
+  <dmn:inputData id="_li_situation_input" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_li_situation_var" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters with resource -->
+  <dmn:inputData id="_li_parameters_input" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_li_parameters_var" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: extract resource from parameters -->
+  <dmn:decision id="_li_resource_decision" name="resource">
+    <dmn:extensionElements/>
+    <dmn:variable id="_li_resource_var" name="resource" typeRef="BDT.tResource"/>
+    <dmn:informationRequirement id="_li_resource_req1">
+      <dmn:requiredInput href="#_li_situation_input"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_li_resource_req2">
+      <dmn:requiredInput href="#_li_parameters_input"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_li_resource_expr">
+      <dmn:text>parameters.resource</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
   <dmn:decision id="_D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A" name="isExcluded">
     <dmn:extensionElements/>
     <dmn:variable id="_E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B" name="isExcluded" typeRef="boolean"/>
     <dmn:informationRequirement id="_F6A7B8C9-D0E1-2F3A-4B5C-6D7E8F9A0B1C">
-      <dmn:requiredInput href="#_A7B8C9D0-E1F2-3A4B-5C6D-7E8F9A0B1C2D"/>
+      <dmn:requiredDecision href="#_li_resource_decision"/>
     </dmn:informationRequirement>
     <dmn:literalExpression id="_B8C9D0E1-F2A3-4B5C-6D7E-8F9A0B1C2D3E">
-      <dmn:text>resource.type = "life_insurance" and resource.lifeInsuranceFaceValue != null and resource.lifeInsuranceFaceValue &lt;= 1500</dmn:text>
+      <dmn:text>resource != null and resource.type = "life_insurance" and resource.lifeInsuranceFaceValue != null and resource.lifeInsuranceFaceValue &lt;= 1500</dmn:text>
     </dmn:literalExpression>
   </dmn:decision>
-  <dmn:inputData id="_A7B8C9D0-E1F2-3A4B-5C6D-7E8F9A0B1C2D" name="resource">
+
+  <dmn:decision id="_li_checkResult_decision" name="checkResult">
+    <dmn:description>Returns true if life insurance qualifies for exclusion</dmn:description>
     <dmn:extensionElements/>
-    <dmn:variable id="_C9D0E1F2-A3B4-5C6D-7E8F-9A0B1C2D3E4F" name="resource" typeRef="BDT.tResource"/>
-  </dmn:inputData>
+    <dmn:variable id="_li_checkResult_var" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_li_checkResult_req">
+      <dmn:requiredDecision href="#_D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_li_checkResult_expr">
+      <dmn:text>isExcluded</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
   <dmn:decisionService id="_D0E1F2A3-B4C5-6D7E-8F9A-0B1C2D3E4F5A" name="LifeInsuranceExclusionService">
     <dmn:extensionElements/>
-    <dmn:variable id="_E1F2A3B4-C5D6-7E8F-9A0B-1C2D3E4F5A6B" name="LifeInsuranceExclusionService" typeRef="Any"/>
-    <dmn:outputDecision href="#_D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A"/>
-    <dmn:inputData href="#_A7B8C9D0-E1F2-3A4B-5C6D-7E8F9A0B1C2D"/>
+    <dmn:variable id="_E1F2A3B4-C5D6-7E8F-9A0B-1C2D3E4F5A6B" name="LifeInsuranceExclusionService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_li_checkResult_decision"/>
+    <dmn:encapsulatedDecision href="#_D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A"/>
+    <dmn:encapsulatedDecision href="#_li_resource_decision"/>
+    <dmn:inputData href="#_li_situation_input"/>
+    <dmn:inputData href="#_li_parameters_input"/>
   </dmn:decisionService>
+
   <dmn:textAnnotation id="_F2A3B4C5-D6E7-8F9A-0B1C-2D3E4F5A6B7C" textFormat="text/plain">
     <dmn:text>SSI Life Insurance Exclusion (POMS SI 01130.500)
-Life insurance with face value ≤ $1,500 excluded</dmn:text>
+Life insurance with face value &lt;= $1,500 excluded</dmn:text>
   </dmn:textAnnotation>
+
   <dmndi:DMNDI>
     <dmndi:DMNDiagram id="_A3B4C5D6-E7F8-9A0B-1C2D-3E4F5A6B7C8D" name="DRG">
       <di:extension>
@@ -35,6 +84,24 @@ Life insurance with face value ≤ $1,500 excluded</dmn:text>
           </kie:ComponentWidths>
         </kie:ComponentsWidthsExtension>
       </di:extension>
+      <dmndi:DMNShape id="dmnshape-drg-_li_situation_input" dmnElementRef="_li_situation_input" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="150" y="400" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_li_parameters_input" dmnElementRef="_li_parameters_input" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="350" y="400" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
       <dmndi:DMNShape id="dmnshape-drg-_D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A" dmnElementRef="_D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A" isCollapsed="false">
         <dmndi:DMNStyle>
           <dmndi:FillColor red="255" green="255" blue="255"/>
@@ -42,15 +109,6 @@ Life insurance with face value ≤ $1,500 excluded</dmn:text>
           <dmndi:FontColor red="0" green="0" blue="0"/>
         </dmndi:DMNStyle>
         <dc:Bounds x="250" y="150" width="100" height="50"/>
-        <dmndi:DMNLabel/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="dmnshape-drg-_A7B8C9D0-E1F2-3A4B-5C6D-7E8F9A0B1C2D" dmnElementRef="_A7B8C9D0-E1F2-3A4B-5C6D-7E8F9A0B1C2D" isCollapsed="false">
-        <dmndi:DMNStyle>
-          <dmndi:FillColor red="255" green="255" blue="255"/>
-          <dmndi:StrokeColor red="0" green="0" blue="0"/>
-          <dmndi:FontColor red="0" green="0" blue="0"/>
-        </dmndi:DMNStyle>
-        <dc:Bounds x="250" y="280" width="100" height="50"/>
         <dmndi:DMNLabel/>
       </dmndi:DMNShape>
       <dmndi:DMNShape id="dmnshape-drg-_D0E1F2A3-B4C5-6D7E-8F9A-0B1C2D3E4F5A" dmnElementRef="_D0E1F2A3-B4C5-6D7E-8F9A-0B1C2D3E4F5A" isCollapsed="false">
@@ -71,10 +129,6 @@ Life insurance with face value ≤ $1,500 excluded</dmn:text>
         <dc:Bounds x="450" y="150" width="300" height="80"/>
         <dmndi:DMNLabel/>
       </dmndi:DMNShape>
-      <dmndi:DMNEdge id="dmnedge-drg-_F6A7B8C9-D0E1-2F3A-4B5C-6D7E8F9A0B1C" dmnElementRef="_F6A7B8C9-D0E1-2F3A-4B5C-6D7E8F9A0B1C">
-        <di:waypoint x="300" y="280"/>
-        <di:waypoint x="300" y="200"/>
-      </dmndi:DMNEdge>
     </dmndi:DMNDiagram>
   </dmndi:DMNDI>
 </dmn:definitions>

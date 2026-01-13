@@ -1,31 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_C1D2E3F4-A5B6-7C8D-9E0F-1A2B3C4D5E6F" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:included1="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_D2E3F4A5-B6C7-8D9E-0F1A-2B3C4D5E6F7A" name="VehicleExclusion" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_C1D2E3F4-A5B6-7C8D-9E0F-1A2B3C4D5E6F">
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_C1D2E3F4-A5B6-7C8D-9E0F-1A2B3C4D5E6F" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_D2E3F4A5-B6C7-8D9E-0F1A-2B3C4D5E6F7A" name="VehicleExclusion" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_C1D2E3F4-A5B6-7C8D-9E0F-1A2B3C4D5E6F">
   <dmn:extensionElements/>
   <dmn:import id="_E3F4A5B6-C7D8-9E0F-1A2B-3C4D5E6F7A8B" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../BDT.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters for this check -->
+  <dmn:itemDefinition id="_veh_tParameters" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_veh_tParameters_resources" name="resources" isCollection="false">
+      <dmn:typeRef>BDT.tResourceList</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation (standard check pattern) -->
+  <dmn:inputData id="_veh_situation_input" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_veh_situation_var" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters with resources list -->
+  <dmn:inputData id="_veh_parameters_input" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_veh_parameters_var" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: extract resources from parameters -->
+  <dmn:decision id="_veh_resources_decision" name="resources">
+    <dmn:extensionElements/>
+    <dmn:variable id="_veh_resources_var" name="resources" typeRef="BDT.tResourceList"/>
+    <dmn:informationRequirement id="_veh_resources_req1">
+      <dmn:requiredInput href="#_veh_situation_input"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_veh_resources_req2">
+      <dmn:requiredInput href="#_veh_parameters_input"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_veh_resources_expr">
+      <dmn:text>if parameters.resources != null then parameters.resources else []</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
   <dmn:decision id="_F4A5B6C7-D8E9-0F1A-2B3C-4D5E6F7A8B9C" name="excludedAmount">
     <dmn:extensionElements/>
     <dmn:variable id="_A5B6C7D8-E9F0-1A2B-3C4D-5E6F7A8B9C0D" name="excludedAmount" typeRef="number"/>
     <dmn:informationRequirement id="_B6C7D8E9-F0A1-2B3C-4D5E-6F7A8B9C0D1E">
-      <dmn:requiredInput href="#_C7D8E9F0-A1B2-3C4D-5E6F-7A8B9C0D1E2F"/>
+      <dmn:requiredDecision href="#_veh_resources_decision"/>
     </dmn:informationRequirement>
     <dmn:literalExpression id="_D8E9F0A1-B2C3-4D5E-6F7A-8B9C0D1E2F3A">
-      <dmn:text>sum(for r in resources return if r.type = "vehicle" and r.isPrimaryVehicle = true then r.value else 0)</dmn:text>
+      <dmn:text>if resources = null then 0 else sum(for r in resources return if r.type = "vehicle" and r.isPrimaryVehicle = true then r.value else 0)</dmn:text>
     </dmn:literalExpression>
   </dmn:decision>
-  <dmn:inputData id="_C7D8E9F0-A1B2-3C4D-5E6F-7A8B9C0D1E2F" name="resources">
+
+  <dmn:decision id="_veh_checkResult_decision" name="checkResult">
+    <dmn:description>Returns true if any vehicle qualifies for exclusion</dmn:description>
     <dmn:extensionElements/>
-    <dmn:variable id="_E9F0A1B2-C3D4-5E6F-7A8B-9C0D1E2F3A4B" name="resources" typeRef="BDT.tResourceList"/>
-  </dmn:inputData>
+    <dmn:variable id="_veh_checkResult_var" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_veh_checkResult_req">
+      <dmn:requiredDecision href="#_F4A5B6C7-D8E9-0F1A-2B3C-4D5E6F7A8B9C"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_veh_checkResult_expr">
+      <dmn:text>excludedAmount > 0</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
   <dmn:decisionService id="_F0A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C" name="VehicleExclusionService">
     <dmn:extensionElements/>
-    <dmn:variable id="_A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D" name="VehicleExclusionService" typeRef="Any"/>
-    <dmn:outputDecision href="#_F4A5B6C7-D8E9-0F1A-2B3C-4D5E6F7A8B9C"/>
-    <dmn:inputData href="#_C7D8E9F0-A1B2-3C4D-5E6F-7A8B9C0D1E2F"/>
+    <dmn:variable id="_A1B2C3D4-E5F6-7A8B-9C0D-1E2F3A4B5C6D" name="VehicleExclusionService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_veh_checkResult_decision"/>
+    <dmn:encapsulatedDecision href="#_F4A5B6C7-D8E9-0F1A-2B3C-4D5E6F7A8B9C"/>
+    <dmn:encapsulatedDecision href="#_veh_resources_decision"/>
+    <dmn:inputData href="#_veh_situation_input"/>
+    <dmn:inputData href="#_veh_parameters_input"/>
   </dmn:decisionService>
+
   <dmn:textAnnotation id="_B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E" textFormat="text/plain">
     <dmn:text>SSI Vehicle Exclusion (POMS SI 01130.300)
 One automobile excluded if used for transportation</dmn:text>
   </dmn:textAnnotation>
+
   <dmndi:DMNDI>
     <dmndi:DMNDiagram id="_C3D4E5F6-A7B8-9C0D-1E2F-3A4B5C6D7E8F" name="DRG">
       <di:extension>
@@ -35,6 +84,24 @@ One automobile excluded if used for transportation</dmn:text>
           </kie:ComponentWidths>
         </kie:ComponentsWidthsExtension>
       </di:extension>
+      <dmndi:DMNShape id="dmnshape-drg-_veh_situation_input" dmnElementRef="_veh_situation_input" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="150" y="400" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_veh_parameters_input" dmnElementRef="_veh_parameters_input" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="350" y="400" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
       <dmndi:DMNShape id="dmnshape-drg-_F4A5B6C7-D8E9-0F1A-2B3C-4D5E6F7A8B9C" dmnElementRef="_F4A5B6C7-D8E9-0F1A-2B3C-4D5E6F7A8B9C" isCollapsed="false">
         <dmndi:DMNStyle>
           <dmndi:FillColor red="255" green="255" blue="255"/>
@@ -42,15 +109,6 @@ One automobile excluded if used for transportation</dmn:text>
           <dmndi:FontColor red="0" green="0" blue="0"/>
         </dmndi:DMNStyle>
         <dc:Bounds x="250" y="150" width="100" height="50"/>
-        <dmndi:DMNLabel/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="dmnshape-drg-_C7D8E9F0-A1B2-3C4D-5E6F-7A8B9C0D1E2F" dmnElementRef="_C7D8E9F0-A1B2-3C4D-5E6F-7A8B9C0D1E2F" isCollapsed="false">
-        <dmndi:DMNStyle>
-          <dmndi:FillColor red="255" green="255" blue="255"/>
-          <dmndi:StrokeColor red="0" green="0" blue="0"/>
-          <dmndi:FontColor red="0" green="0" blue="0"/>
-        </dmndi:DMNStyle>
-        <dc:Bounds x="250" y="280" width="100" height="50"/>
         <dmndi:DMNLabel/>
       </dmndi:DMNShape>
       <dmndi:DMNShape id="dmnshape-drg-_F0A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C" dmnElementRef="_F0A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C" isCollapsed="false">
@@ -71,10 +129,6 @@ One automobile excluded if used for transportation</dmn:text>
         <dc:Bounds x="450" y="150" width="300" height="80"/>
         <dmndi:DMNLabel/>
       </dmndi:DMNShape>
-      <dmndi:DMNEdge id="dmnedge-drg-_B6C7D8E9-F0A1-2B3C-4D5E-6F7A8B9C0D1E" dmnElementRef="_B6C7D8E9-F0A1-2B3C-4D5E-6F7A8B9C0D1E">
-        <di:waypoint x="300" y="280"/>
-        <di:waypoint x="300" y="200"/>
-      </dmndi:DMNEdge>
     </dmndi:DMNDiagram>
   </dmndi:DMNDI>
 </dmn:definitions>

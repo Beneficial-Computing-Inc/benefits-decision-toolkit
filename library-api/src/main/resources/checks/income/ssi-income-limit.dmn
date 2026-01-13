@@ -83,26 +83,10 @@ Wrapper check that uses CalculateCountableIncome to apply all income exclusions 
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 2: Calculate countable income -->
+      <!-- Step 2: Call CalculateCountableIncome decision service (returns boolean directly) -->
       <dmn:contextEntry>
-        <dmn:variable id="_B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E" name="calculation" typeRef="BDT.tIncomeCalculation"/>
         <dmn:literalExpression id="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
           <dmn:text>CalculateCountableIncome.CalculateCountableIncomeService(situation: situation, parameters: {personId: parameters.personId, FBR: FBR})</dmn:text>
-        </dmn:literalExpression>
-      </dmn:contextEntry>
-
-      <!-- Step 3: Extract result -->
-      <dmn:contextEntry>
-        <dmn:variable id="_C0D1E2F3-4A5B-6C7D-8E9F-0A1B2C3D4E5F" name="result" typeRef="boolean"/>
-        <dmn:literalExpression id="_D1E2F3A4-5B6C-7D8E-9F0A-1B2C3D4E5F6A">
-          <dmn:text>calculation.meetsIncomeLimit</dmn:text>
-        </dmn:literalExpression>
-      </dmn:contextEntry>
-
-      <!-- Step 4: Return result -->
-      <dmn:contextEntry>
-        <dmn:literalExpression id="_E2F3A4B5-6C7D-8E9F-0A1B-2C3D4E5F6A7B">
-          <dmn:text>result</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
     </dmn:context>

@@ -153,14 +153,14 @@ else
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 6: Check if within 7-year window -->
+      <!-- Step 6: Check if within 7-year window (false if not a refugee/asylee or past 7 years) -->
       <dmn:contextEntry>
         <dmn:variable id="_VAR_WITHIN_WINDOW" name="withinSevenYears" typeRef="boolean"/>
         <dmn:literalExpression id="_EXPR_WITHIN_WINDOW">
           <dmn:text>if yearsSinceAcquisition != null then
   yearsSinceAcquisition &lt; 7
 else
-  null</dmn:text>
+  false</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 

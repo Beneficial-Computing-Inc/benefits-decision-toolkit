@@ -199,13 +199,27 @@ else
     </dmn:context>
   </dmn:decision>
 
+  <!-- Decision: checkResult - boolean output for check pattern -->
+  <dmn:decision id="_checkResult_decision" name="checkResult">
+    <dmn:description>Returns true if income is below Federal Benefit Rate limit</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_checkResult_var" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_checkResult_req">
+      <dmn:requiredDecision href="#_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_checkResult_expr">
+      <dmn:text>incomeCalculation.meetsIncomeLimit</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
   <!-- Decision Service -->
   <dmn:decisionService id="_c35d738f-86ae-4567-9553-6a1dff9606d9" name="CalculateCountableIncomeService">
     <dmn:extensionElements/>
     <dmn:variable id="_78081f56-07ba-443e-b988-d624b18083f4"
                   name="CalculateCountableIncomeService"
-                  typeRef="BDT.tIncomeCalculation"/>
-    <dmn:outputDecision href="#_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C"/>
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_checkResult_decision"/>
+    <dmn:encapsulatedDecision href="#_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C"/>
     <dmn:inputData href="#_B1C2D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E"/>
     <dmn:inputData href="#_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A"/>
   </dmn:decisionService>
