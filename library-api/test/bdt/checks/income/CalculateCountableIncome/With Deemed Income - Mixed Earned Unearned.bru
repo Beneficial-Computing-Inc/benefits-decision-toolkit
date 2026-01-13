@@ -1,0 +1,65 @@
+meta {
+  name: With Deemed Income - Mixed Earned Unearned
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "child1",
+        "dateOfBirth": "2015-06-01",
+        "isSSIEligible": true,
+        "incomeSources": [
+          {"id": "inc1", "type": "unearned", "monthlyAmount": 100},
+          {"id": "inc2", "type": "earned", "monthlyAmount": 200}
+        ]
+      }]
+    },
+    "parameters": {
+      "personId": "child1",
+      "FBR": 967,
+      "deemedIncome": 300
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.incomeCalculation.deemedIncome: eq 300
+  res.body.incomeCalculation.totalUnearnedIncome: eq 100
+  res.body.incomeCalculation.totalEarnedIncome: eq 200
+  res.body.incomeCalculation.countableUnearnedIncome: eq 380
+  res.body.incomeCalculation.countableEarnedIncome: eq 67.5
+  res.body.incomeCalculation.totalCountableIncome: eq 447.5
+  res.body.incomeCalculation.meetsIncomeLimit: eq true
+}
+
+docs {
+  POMS SI 01320.001, SI 01320.730: Test deemed income with mixed earned/unearned.
+
+  Child has $100 unearned + $200 earned + $300 deemed from parent:
+
+  Unearned + Deemed:
+  - Combined: $100 + $300 = $400
+  - After $20 general exclusion: $400 - $20 = $380 countable unearned
+
+  Earned:
+  - Total: $200
+  - No spillover (unearned+deemed absorbed all $20)
+  - After $65 exclusion: $200 - $65 = $135
+  - After 50%: $135 / 2 = $67.50 countable earned
+
+  Total countable: $380 + $67.50 = $447.50
+  FBR: $967
+  Result: Passes income limit ($447.50 < $967)
+}

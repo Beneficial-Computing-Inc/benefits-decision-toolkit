@@ -1,0 +1,53 @@
+meta {
+  name: With Deemed Income - Over Limit
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "child1",
+        "dateOfBirth": "2015-06-01",
+        "isSSIEligible": true,
+        "incomeSources": [
+          {"id": "inc1", "type": "unearned", "monthlyAmount": 100}
+        ]
+      }]
+    },
+    "parameters": {
+      "personId": "child1",
+      "FBR": 967,
+      "deemedIncome": 900
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.incomeCalculation.deemedIncome: eq 900
+  res.body.incomeCalculation.totalUnearnedIncome: eq 100
+  res.body.incomeCalculation.countableUnearnedIncome: eq 980
+  res.body.incomeCalculation.totalCountableIncome: eq 980
+  res.body.incomeCalculation.meetsIncomeLimit: eq false
+}
+
+docs {
+  POMS SI 01320.001, SI 01320.730: Test deemed income causes income to exceed FBR.
+
+  Child has $100 unearned + $900 deemed from parent:
+  - Combined unearned + deemed: $100 + $900 = $1,000
+  - After $20 general exclusion: $1,000 - $20 = $980 countable
+  - Total countable: $980
+  - FBR: $967
+  - Result: Fails income limit ($980 > $967)
+}

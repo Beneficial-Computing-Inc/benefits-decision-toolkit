@@ -64,6 +64,10 @@
       <dmn:description>POMS SI 00501.020 - Whether person is regularly attending school, college, or job training per student requirements for SEIE</dmn:description>
       <dmn:typeRef>boolean</dmn:typeRef>
     </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM001-2026-0112-ELIG-ISSSIELIGIBLE" name="isSSIEligible" isCollection="false">
+      <dmn:description>POMS SI 01320.000 - Whether person meets basic SSI eligibility (age/blind/disabled, citizenship, residence). Used to identify ineligible spouse/parent/child for deeming.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
   </dmn:itemDefinition>
   <dmn:itemDefinition id="_2A3B4C5D-6E7F-8091-2345-6789ABCDEF01" name="tIncomeSource" isCollection="false">
     <dmn:itemComponent id="_3B4C5D6E-7F80-9123-4567-89ABCDEF0123" name="id" isCollection="false">
@@ -118,6 +122,49 @@
     </dmn:itemComponent>
     <dmn:itemComponent id="_SEIE002-2026-0112-SEIE-EXCLUSIONAPPLIED" name="seieExclusionApplied" isCollection="false">
       <dmn:description>POMS SI 00820.510 - Student Earned Income Exclusion amount applied this month</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM002-2026-0112-DEEM-DEEMEDINCOME" name="deemedIncome" isCollection="false">
+      <dmn:description>POMS SI 01320.000 - Income deemed from ineligible spouse or parent(s)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_DEEM003-2026-0112-DEEM-DEEMINGCALC" name="tDeemingCalculation" isCollection="false">
+    <dmn:description>POMS SI 01320.000 - Deeming calculation results showing income deemed from ineligible household members</dmn:description>
+    <dmn:itemComponent id="_DEEM004-2026-0112-DEEM-APPLIES" name="deemingApplies" isCollection="false">
+      <dmn:description>Whether deeming applies to this person based on household composition</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM005-2026-0112-DEEM-TYPE" name="deemingType" isCollection="false">
+      <dmn:description>Type of deeming: "spouse" (SI 01320.400), "parent" (SI 01320.500), or "none"</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM006-2026-0112-DEEM-DEEMORINCOME" name="deemorTotalIncome" isCollection="false">
+      <dmn:description>Total gross income of deemor(s) before exclusions</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM007-2026-0112-DEEM-COUNTABLE" name="deemorCountableIncome" isCollection="false">
+      <dmn:description>Countable income of deemor(s) after applying standard exclusions</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM008-2026-0112-DEEM-LIVINGALLOC" name="livingAllowanceAllocated" isCollection="false">
+      <dmn:description>Amount allocated for deemor(s)' living allowance per SI 01320.400/.500</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM009-2026-0112-DEEM-CHILDALLOC" name="ineligibleChildrenAllocation" isCollection="false">
+      <dmn:description>SI 01320.500 - Amount allocated for ineligible children in household (1/2 FBR each)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM010-2026-0112-DEEM-DEEMED" name="deemedIncome" isCollection="false">
+      <dmn:description>Final income deemed to eligible person after all allocations</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM011-2026-0112-DEEM-NUMCHILDREN" name="numberOfIneligibleChildren" isCollection="false">
+      <dmn:description>Count of ineligible children in household for allocation calculation</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM012-2026-0112-DEEM-NUMPARENTS" name="numberOfParents" isCollection="false">
+      <dmn:description>Count of parents in household (1 or 2) for parent deeming allocation</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
@@ -203,10 +250,11 @@
     </dmn:itemComponent>
   </dmn:itemDefinition>
   <dmn:itemDefinition id="_0C88835F-7F14-4224-B7EA-C46E87B5511E" name="tRelationship" isCollection="false">
+    <dmn:description>POMS SI 01320.000 - Relationship types for deeming: spouse, parent, child</dmn:description>
     <dmn:itemComponent id="_052D313F-6BA5-4566-8419-63EA324C5EA4" name="type" isCollection="false">
       <dmn:typeRef>string</dmn:typeRef>
       <dmn:allowedValues kie:constraintType="enumeration" id="_18C51F80-C535-4FBA-AEAD-DA84EA77A7F2">
-        <dmn:text>"spouse"</dmn:text>
+        <dmn:text>"spouse", "parent", "child"</dmn:text>
       </dmn:allowedValues>
     </dmn:itemComponent>
     <dmn:itemComponent id="_B6B1CB1E-19E5-451F-8096-1C60665EBFCD" name="personId" isCollection="false">

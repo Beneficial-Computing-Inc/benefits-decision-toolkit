@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_PARENT_DEEMING_2026_0112"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 id="_PARENT_DEEMING_MODULE_2026"
+                 name="ParentToChildDeeming"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_PARENT_DEEMING_2026_0112">
+
+  <dmn:description>POMS SI 01320.500 - Deeming of Income from Ineligible Parent(s)
+
+This decision service calculates deemed income from ineligible parent(s) to an eligible child under 18.
+
+Deeming applies when:
+- Eligible individual is under age 18
+- Lives with one or more ineligible parents
+
+Computation per SI 01320.500:
+1. Calculate parent(s)' combined countable income (applying standard exclusions)
+2. Allocate for parent(s)' living needs:
+   - 1 parent: Individual FBR ($967 in 2025)
+   - 2 parents: Couple FBR ($1,450 in 2025)
+3. Allocate for each ineligible child in household:
+   - 1/2 of Individual FBR per child ($483.50 in 2025)
+4. Remaining income after allocations is deemed to eligible child
+
+2025 Values:
+- Individual FBR: $967
+- Couple FBR: $1,450
+- Ineligible child allocation: $483.50 (1/2 of individual FBR)
+</dmn:description>
+
+  <!-- Import BDT base module -->
+  <dmn:import id="_PARENT_BDT_IMPORT_2026"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import Deeming base module -->
+  <dmn:import id="_PARENT_DEEMING_IMPORT_2026"
+              name="Deeming"
+              namespace="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112"
+              locationURI="Deeming.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import Age module for age calculation -->
+  <dmn:import id="_PARENT_AGE_IMPORT_2026"
+              name="Age"
+              namespace="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708"
+              locationURI="../../age/Age.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Parameters type definition -->
+  <dmn:itemDefinition id="_PARENT_PARAMS_TYPE_2026" name="tParentDeemingParameters" isCollection="false">
+    <dmn:itemComponent id="_PARENT_PARAM_PERSONID" name="personId" isCollection="false">
+      <dmn:description>ID of the eligible child for whom deeming is being calculated</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_PARENT_PARAM_IND_FBR" name="individualFBR" isCollection="false">
+      <dmn:description>2025 Individual Federal Benefit Rate: $967 (default if not provided)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_PARENT_PARAM_COUPLE_FBR" name="coupleFBR" isCollection="false">
+      <dmn:description>2025 Couple Federal Benefit Rate: $1,450 (default if not provided)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation -->
+  <dmn:inputData id="_PARENT_INPUT_SITUATION" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_PARENT_VAR_SITUATION" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters -->
+  <dmn:inputData id="_PARENT_INPUT_PARAMS" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_PARENT_VAR_PARAMS" name="parameters" typeRef="tParentDeemingParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: deemingCalculation -->
+  <dmn:decision id="_PARENT_DEEMING_CALC" name="deemingCalculation">
+    <dmn:description>POMS SI 01320.500 - Calculate deemed income from ineligible parent(s) to eligible child</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_PARENT_VAR_DEEMING_CALC" name="deemingCalculation" typeRef="BDT.tDeemingCalculation"/>
+    <dmn:informationRequirement id="_PARENT_REQ_SITUATION">
+      <dmn:requiredInput href="#_PARENT_INPUT_SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_PARENT_REQ_PARAMS">
+      <dmn:requiredInput href="#_PARENT_INPUT_PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_GET_INCOME">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_GET_DEEMOR_INCOME"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_CALC_COUNTABLE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_CALC_DEEMOR_COUNTABLE"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_PARENT_ALLOWANCE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_PARENT_ALLOWANCE"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_CHILD_ALLOCATION">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_CHILD_ALLOCATION"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_CALC_DEEMED">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_CALC_DEEMED"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_FIND_PARENTS">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_FIND_PARENTS"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_COUNT_CHILDREN">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_COUNT_INELIG_CHILDREN"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_PARENT_KR_AGE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708#_1919D943-09A4-4D5C-98A0-2B8377862E4C"/>
+    </dmn:knowledgeRequirement>
+
+    <dmn:context id="_PARENT_CTX_DEEMING">
+      <!-- Step 1: Get FBR values (use defaults if not provided) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_IND_FBR" name="individualFBR" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_IND_FBR">
+          <dmn:text>if parameters.individualFBR != null then parameters.individualFBR else 967</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_COUPLE_FBR" name="coupleFBR" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_COUPLE_FBR">
+          <dmn:text>if parameters.coupleFBR != null then parameters.coupleFBR else 1450</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Get evaluation date -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_EVAL_DATE" name="evaluationDate" typeRef="date"/>
+        <dmn:literalExpression id="_PARENT_EXPR_EVAL_DATE">
+          <dmn:text>if situation.evaluationDate != null then situation.evaluationDate else today()</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Find the eligible child -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_CHILD" name="eligibleChild" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_PARENT_EXPR_CHILD">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Check if child is under 18 (parent deeming only applies to children under 18) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_CHILD_AGE" name="childAge" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_CHILD_AGE">
+          <dmn:text>if eligibleChild != null and eligibleChild.dateOfBirth != null then
+  Age.as of date(eligibleChild.dateOfBirth, evaluationDate)
+else
+  99</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_IS_CHILD" name="isUnder18" typeRef="boolean"/>
+        <dmn:literalExpression id="_PARENT_EXPR_IS_CHILD">
+          <dmn:text>childAge &lt; 18</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Find parent IDs -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_PARENT_IDS" name="parentIds" typeRef="BDT.tStringList"/>
+        <dmn:literalExpression id="_PARENT_EXPR_PARENT_IDS">
+          <dmn:text>if isUnder18 then Deeming.find parents(situation.relationships, parameters.personId) else []</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Get parent person(s) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_PARENTS" name="parents" typeRef="BDT.tPersonList"/>
+        <dmn:literalExpression id="_PARENT_EXPR_PARENTS">
+          <dmn:text>situation.people[list contains(parentIds, item.id)]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 7: Count ineligible parents -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_INELIG_PARENTS" name="ineligibleParents" typeRef="BDT.tPersonList"/>
+        <dmn:literalExpression id="_PARENT_EXPR_INELIG_PARENTS">
+          <dmn:text>parents[item.isSSIEligible = null or item.isSSIEligible = false]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_NUM_PARENTS" name="numberOfParents" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_NUM_PARENTS">
+          <dmn:text>count(ineligibleParents)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 8: Check if deeming applies (under 18 with at least one ineligible parent) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_APPLIES" name="deemingApplies" typeRef="boolean"/>
+        <dmn:literalExpression id="_PARENT_EXPR_APPLIES">
+          <dmn:text>isUnder18 and numberOfParents > 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 9: Calculate combined parent income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_PARENT_INCOME" name="combinedParentIncome" typeRef="Any"/>
+        <dmn:literalExpression id="_PARENT_EXPR_PARENT_INCOME">
+          <dmn:text>if deemingApplies then {
+  totalEarnedIncome: sum(for p in ineligibleParents return
+    if p.incomeSources = null then 0
+    else sum(for i in p.incomeSources return if i.type = "earned" then i.monthlyAmount else 0)),
+  totalUnearnedIncome: sum(for p in ineligibleParents return
+    if p.incomeSources = null then 0
+    else sum(for i in p.incomeSources return if i.type = "unearned" then i.monthlyAmount else 0))
+} else {
+  totalEarnedIncome: 0,
+  totalUnearnedIncome: 0
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_TOTAL_GROSS" name="totalGrossIncome" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_TOTAL_GROSS">
+          <dmn:text>combinedParentIncome.totalEarnedIncome + combinedParentIncome.totalUnearnedIncome</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 10: Calculate parent(s)' countable income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_COUNTABLE" name="parentCountableIncome" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_COUNTABLE">
+          <dmn:text>if deemingApplies then
+  Deeming.calculate deemor countable income(combinedParentIncome.totalEarnedIncome, combinedParentIncome.totalUnearnedIncome)
+else
+  0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 11: Get parent living allowance -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_ALLOWANCE" name="livingAllowance" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_ALLOWANCE">
+          <dmn:text>if deemingApplies then
+  Deeming.get parent living allowance(numberOfParents, individualFBR, coupleFBR)
+else
+  0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 12: Count ineligible children in household -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_NUM_CHILDREN" name="numberOfIneligibleChildren" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_NUM_CHILDREN">
+          <dmn:text>if deemingApplies then
+  Deeming.count ineligible children(situation.people, parentIds, situation.relationships, parameters.personId)
+else
+  0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 13: Calculate ineligible children allocation -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_CHILD_ALLOC" name="childrenAllocation" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_CHILD_ALLOC">
+          <dmn:text>if deemingApplies then
+  Deeming.get ineligible children allocation(numberOfIneligibleChildren, individualFBR)
+else
+  0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 14: Calculate deemed income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_PARENT_VAR_DEEMED" name="deemedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_PARENT_EXPR_DEEMED">
+          <dmn:text>if deemingApplies then
+  Deeming.calculate deemed income(parentCountableIncome, livingAllowance, childrenAllocation)
+else
+  0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 15: Return full deeming calculation result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_PARENT_EXPR_RESULT">
+          <dmn:text>{
+  deemingApplies: deemingApplies,
+  deemingType: if deemingApplies then "parent" else "none",
+  deemorTotalIncome: totalGrossIncome,
+  deemorCountableIncome: parentCountableIncome,
+  livingAllowanceAllocated: livingAllowance,
+  ineligibleChildrenAllocation: childrenAllocation,
+  deemedIncome: deemedIncome,
+  numberOfIneligibleChildren: numberOfIneligibleChildren,
+  numberOfParents: numberOfParents
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision: checkResult - boolean output for check pattern -->
+  <dmn:decision id="_PARENT_CHECK_RESULT" name="checkResult">
+    <dmn:description>Returns true if deeming applies (child under 18 with ineligible parent(s))</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_PARENT_VAR_CHECK_RESULT" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_PARENT_REQ_CALC">
+      <dmn:requiredDecision href="#_PARENT_DEEMING_CALC"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_PARENT_EXPR_CHECK_RESULT">
+      <dmn:text>deemingCalculation.deemingApplies</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_PARENT_DEEMING_SERVICE" name="ParentToChildDeemingService">
+    <dmn:description>POMS SI 01320.500 - Calculate deemed income from ineligible parent(s) to eligible child</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_PARENT_VAR_SERVICE" name="ParentToChildDeemingService" typeRef="Any"/>
+    <dmn:outputDecision href="#_PARENT_CHECK_RESULT"/>
+    <dmn:outputDecision href="#_PARENT_DEEMING_CALC"/>
+    <dmn:inputData href="#_PARENT_INPUT_SITUATION"/>
+    <dmn:inputData href="#_PARENT_INPUT_PARAMS"/>
+  </dmn:decisionService>
+
+</dmn:definitions>

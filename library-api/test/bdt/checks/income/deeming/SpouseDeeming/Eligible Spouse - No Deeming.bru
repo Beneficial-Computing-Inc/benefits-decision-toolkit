@@ -1,0 +1,59 @@
+meta {
+  name: Eligible Spouse - No Deeming
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/checks/income/deeming/spouse-deeming
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1970-01-01",
+          "isSSIEligible": true
+        },
+        {
+          "id": "p2",
+          "dateOfBirth": "1972-05-15",
+          "isSSIEligible": true,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "earned",
+              "monthlyAmount": 500
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "type": "spouse",
+          "personId": "p1",
+          "relatedPersonId": "p2"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.deemingCalculation.deemingApplies: eq false
+  res.body.deemingCalculation.deemingType: eq "none"
+  res.body.deemingCalculation.deemedIncome: eq 0
+}
+
+docs {
+  POMS SI 01320.400 - Spouse deeming does not apply when spouse is SSI-eligible
+}

@@ -101,8 +101,13 @@ Implementing a complete SSI (Supplemental Security Income) eligibility screener 
   - Returns detailed tIncomeCalculation with all intermediary values
   - FBR configurable via `isCouple` parameter (defaults to $967 individual, $1,450 couple)
 - **Current Limitations**:
-  - Does not yet implement advanced exclusions (SEIE, PASS, IRWE, etc.)
+  - Does not yet implement advanced exclusions (PASS, IRWE, etc.)
   - See deferred enhancements below for future work
+- **SEIE Implemented** (2026-01-12):
+  - Students under 22 can exclude up to $2,350/month ($9,460/year in 2025)
+  - Applied BEFORE $20 general and $65 earned income exclusions per SI 00820.500
+  - New file: `calculate-seie.dmn` + updated `calculate-countable-income.dmn`
+  - Added `isStudent` field to tPerson in BDT.dmn
 
 ---
 
@@ -144,7 +149,12 @@ library-api/src/main/resources/
 │   ├── income/
 │   │   ├── Income.dmn                              # Base module
 │   │   ├── calculate-countable-income.dmn          ✅
-│   │   └── ssi-income-limit.dmn                    ✅
+│   │   ├── calculate-seie.dmn                      ✅
+│   │   ├── ssi-income-limit.dmn                    ✅
+│   │   └── deeming/
+│   │       ├── Deeming.dmn                         # Deeming base module (BKMs)
+│   │       ├── spouse-deeming.dmn                  ✅ (SI 01320.400)
+│   │       └── parent-to-child-deeming.dmn         ✅ (SI 01320.500)
 │   ├── resources/
 │   │   └── ssi-resource-limit.dmn                  ✅ (with couple support)
 │   └── residence/
@@ -253,8 +263,8 @@ builder-frontend/src/components/ssi-screener/
   - **Estimated effort**: 7.5-11 hours
 - ~~**Couple Resource Limit** (POMS SI 01110.210): Apply $3,000 limit for married couples~~ ✅ **COMPLETED 2026-01-09**
 - ~~**Couple FBR** (POMS SI 00835.000): Apply couple FBR ($1,450) instead of individual ($967)~~ ✅ **COMPLETED 2026-01-09**
-- **Deeming Rules** (POMS SI 01320.000): Income/resources deemed from ineligible spouse/parent
-- **Student Earned Income Exclusion (SEIE)** (POMS SI 00820.510): Up to $2,290/month, $9,230/year for students
+- ~~**Deeming Rules** (POMS SI 01320.000): Income/resources deemed from ineligible spouse/parent~~ ✅ **COMPLETED 2026-01-12**
+- ~~**Student Earned Income Exclusion (SEIE)** (POMS SI 00820.510): Up to $2,350/month, $9,460/year for students~~ ✅ **COMPLETED 2026-01-12**
 - **Plan to Achieve Self-Support (PASS)** (POMS SI 00870.000): Income/resource exclusions for approved plans
 - **Impairment-Related Work Expenses (IRWE)** (POMS SI 00820.540): Deduct disability-related work costs from earned income
 - **In-Kind Support and Maintenance (ISM)** (POMS SI 00835.000): Value of food/shelter provided by others reduces FBR
@@ -436,13 +446,206 @@ Core SSI eligibility is complete! To add enhancements, use these example command
 
 ---
 
-**Last Updated**: 2026-01-12
-**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements implemented + SSI Couple Eligibility + FEEL Expression Fixes + Check Pattern Fixes
-**Next Steps**: Consider implementing enhanced income exclusions (SEIE, PASS, IRWE) OR deeming rules (SI 01320.000)
+**Last Updated**: 2026-01-13
+**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements + Couple Eligibility + SEIE + Income Deeming (Spouse & Parent-to-Child) + Deeming Integration
+**Next Steps**: Consider implementing enhanced income exclusions (PASS, IRWE, ISM) or living arrangements
 
 ---
 
 ## Recent Accomplishments
+
+### ✅ Income Deeming Rules (January 12, 2026)
+
+**Summary**: Complete implementation of income deeming from ineligible spouse (SI 01320.400) and ineligible parents (SI 01320.500).
+
+**What Was Implemented**:
+
+1. **Data Model** (BDT.dmn)
+   - Extended tRelationship type to include "spouse", "parent", "child" values
+   - Added `isSSIEligible: boolean` field to tPerson
+   - Added `tDeemingCalculation` type with fields:
+     - `deemingApplies: boolean`
+     - `deemingType: string` ("spouse", "parent-to-child", "none")
+     - `deemorTotalIncome: number`
+     - `deemorCountableIncome: number`
+     - `livingAllowanceAllocated: number`
+     - `ineligibleChildrenAllocation: number`
+     - `deemedIncome: number`
+     - `numberOfIneligibleChildren: number`
+     - `numberOfParents: number`
+
+2. **Deeming Base Module** (deeming/Deeming.dmn)
+   - Shared Business Knowledge Models (BKMs) for deeming calculations:
+     - `get deemor income` - Extract earned/unearned income from person
+     - `calculate deemor countable income` - Apply standard exclusions ($20 general, $65 earned, 50%)
+     - `get spouse living allowance` - Couple FBR minus Individual FBR ($483)
+     - `get parent living allowance` - Individual FBR for single parent, Couple FBR for two parents
+     - `get ineligible children allocation` - $483.50 per ineligible child (½ Individual FBR)
+     - `calculate deemed income` - Countable minus allocations
+     - `find spouse`, `find parents`, `count ineligible children` - Relationship navigation
+
+3. **Spouse Deeming Endpoint** (deeming/spouse-deeming.dmn)
+   - POMS SI 01320.400 implementation
+   - Calculates deemed income from ineligible spouse to eligible individual
+   - Spouse living allowance: $483 (Couple FBR $1,450 - Individual FBR $967)
+   - Endpoint: `POST /api/v1/checks/income/deeming/spouse-deeming`
+   - Decision Service returns both `checkResult` (boolean) and `deemingCalculation` (full breakdown)
+
+4. **Parent-to-Child Deeming Endpoint** (deeming/parent-to-child-deeming.dmn)
+   - POMS SI 01320.500 implementation
+   - Calculates deemed income from ineligible parent(s) to eligible child under 18
+   - Parent living allowance: $967 for single parent, $1,450 for two parents
+   - Ineligible sibling allocation: $483.50 per ineligible sibling
+   - Age verification: Only applies to children under 18
+   - Endpoint: `POST /api/v1/checks/income/deeming/parent-to-child-deeming`
+
+5. **2025 FBR Values Used**:
+   - Individual FBR: $967
+   - Couple FBR: $1,450
+   - Spouse living allowance: $483
+   - Child allocation: $483.50 (½ Individual FBR)
+
+**Test Results**:
+- ✅ Spouse deeming: No spouse → no deeming
+- ✅ Spouse deeming: Eligible spouse → no deeming (both eligible = no deeming)
+- ✅ Spouse deeming: Ineligible spouse with $2,500 earned + $200 unearned → $964.50 deemed
+- ✅ Parent deeming: Adult (18+) → no deeming (age check)
+- ✅ Parent deeming: Child with one parent ($2,500 earned + $200 unearned) → $430.50 deemed
+- ✅ Parent deeming: Child with two parents and siblings → correct allocations applied
+
+**Example Calculations**:
+
+*Spouse Deeming (SI 01320.400)*:
+```
+Ineligible spouse income: $2,500 earned + $200 unearned = $2,700 total
+Step 1: Countable = (2700 - 20 - 65) * 0.5 + 20 + 65 = $1,392.50 + $85 = $1,447.50
+Step 2: Deemed = $1,447.50 - $483 (spouse allowance) = $964.50
+```
+
+*Parent-to-Child Deeming (SI 01320.500)*:
+```
+Single parent income: $2,500 earned + $200 unearned = $2,700 total
+Step 1: Countable = $1,397.50 (same calculation as above)
+Step 2: Parent allowance = $967 (Individual FBR for one parent)
+Step 3: Deemed = $1,397.50 - $967 = $430.50
+```
+
+**Files Created/Modified**:
+- `library-api/src/main/resources/BDT.dmn` (tRelationship extended, isSSIEligible, tDeemingCalculation)
+- `library-api/src/main/resources/checks/income/deeming/Deeming.dmn` (NEW - base module)
+- `library-api/src/main/resources/checks/income/deeming/spouse-deeming.dmn` (NEW)
+- `library-api/src/main/resources/checks/income/deeming/parent-to-child-deeming.dmn` (NEW)
+- `library-api/test/bdt/checks/income/deeming/SpouseDeeming/` (6 Bruno tests)
+- `library-api/test/bdt/checks/income/deeming/ParentToChildDeeming/` (3 Bruno tests)
+
+**Completed**: Deeming integration into main income calculation - see section below.
+
+---
+
+### ✅ Deeming Integration into Income Calculation (January 13, 2026)
+
+**Summary**: Integrated deemed income from spouse/parent deeming into the main `calculate-countable-income.dmn` per POMS SI 01320.001 and SI 01320.730.
+
+**POMS Policy Basis**:
+- **SI 01320.001**: "This deemed income is added to the individual's own earned and unearned income in order to determine the individual's eligibility for and amount of SSI payment"
+- **SI 01320.001**: "deemed income... is considered to be the eligible individual's own unearned income"
+- **SI 01320.730**: "Always treat deemed income as unearned income"
+
+**Implementation**:
+1. Added `deemedIncome` parameter to tParameters in `calculate-countable-income.dmn`
+2. Combined deemed income with person's own unearned income BEFORE applying $20 general exclusion
+3. Updated output to include `deemedIncome` field in `tIncomeCalculation`
+4. Changed `incomeCalculation` from encapsulated to output decision for API visibility
+
+**Calculation Flow**:
+```
+Unearned Income:
+1. Person's unearned + deemed income = combined unearned
+2. Apply $20 general exclusion to combined
+3. Result = countable unearned (includes deemed)
+
+Earned Income:
+4. Apply spillover of unused $20 (if any)
+5. Apply $65 earned exclusion
+6. Apply 50% exclusion
+7. Result = countable earned
+
+Total: countable unearned + countable earned
+```
+
+**Test Results** (manually verified via curl):
+| Test | Own Income | Deemed | Total Countable | meetsIncomeLimit |
+|------|------------|--------|-----------------|------------------|
+| Under Limit | $50 unearned | $430.50 | $460.50 | true |
+| Over Limit | $100 unearned | $900 | $980 | false |
+| Mixed | $100 unearned + $200 earned | $300 | $447.50 | true |
+| Backward Compat | $200 unearned + $500 earned | $0 | $397.50 | true |
+
+**Files Modified**:
+- `library-api/src/main/resources/checks/income/calculate-countable-income.dmn`
+
+**Bruno Tests Created**:
+- `test/bdt/checks/income/CalculateCountableIncome/With Deemed Income - Under Limit.bru`
+- `test/bdt/checks/income/CalculateCountableIncome/With Deemed Income - Over Limit.bru`
+- `test/bdt/checks/income/CalculateCountableIncome/With Deemed Income - Mixed Earned Unearned.bru`
+- `test/bdt/checks/income/CalculateCountableIncome/No Deemed Income - Backwards Compatible.bru`
+
+**Usage Example**:
+```json
+{
+  "situation": { ... },
+  "parameters": {
+    "personId": "child1",
+    "FBR": 967,
+    "deemedIncome": 430.50  // From parent-to-child or spouse deeming
+  }
+}
+```
+
+---
+
+### ✅ Student Earned Income Exclusion (SEIE) (January 12, 2026)
+
+**Summary**: Complete implementation of SEIE per POMS SI 00820.510 for students under 22.
+
+**What Was Implemented**:
+
+1. **Data Model** (BDT.dmn)
+   - Added `isStudent: boolean` field to tPerson
+   - Added `seieExclusionApplied: number` field to tIncomeCalculation
+   - Per POMS SI 00501.020 student status requirements
+
+2. **CalculateSeie Endpoint** (calculate-seie.dmn)
+   - New standalone check for SEIE qualification and calculation
+   - Returns `tSeieResult` with: qualifiesForSeie, seieExclusionAmount, remainingYearlyLimit, monthlyLimit, yearlyLimit
+   - Endpoint: `POST /api/v1/checks/income/calculate-seie`
+
+3. **Updated Income Calculation** (calculate-countable-income.dmn)
+   - SEIE applied BEFORE $20 general and $65 earned exclusions (per SI 00820.500)
+   - Added Age module import with knowledgeRequirement for age calculation
+   - Added `seieUsedYTD` parameter for yearly limit tracking
+   - Returns seieExclusionApplied in tIncomeCalculation
+
+4. **2025 SEIE Limits**:
+   - Monthly: $2,350
+   - Yearly: $9,460
+
+**Test Results**:
+- ✅ All 13 DynamicEndpointPatternTest tests passing
+- ✅ Student (age 20) with $2,500 income: `checkResult: true` (SEIE applies)
+- ✅ Non-student (same age/income): `checkResult: false` (no SEIE)
+- ✅ Yearly limit tracking working correctly
+
+**Files Modified**:
+- `library-api/src/main/resources/BDT.dmn` (added isStudent to tPerson)
+- `library-api/src/main/resources/checks/income/calculate-seie.dmn` (NEW)
+- `library-api/src/main/resources/checks/income/calculate-countable-income.dmn` (SEIE integration)
+
+**Key FEEL Patterns Learned**:
+- `not()` is a function in FEEL, not a prefix: use `not(value)` not `not value`
+- BKM imports require explicit `knowledgeRequirement` elements
+
+---
 
 ### ✅ SSI Couple Eligibility (January 9, 2026)
 

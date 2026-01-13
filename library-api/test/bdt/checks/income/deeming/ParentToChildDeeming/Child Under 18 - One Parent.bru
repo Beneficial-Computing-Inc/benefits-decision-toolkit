@@ -1,0 +1,82 @@
+meta {
+  name: Child Under 18 - One Parent
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/checks/income/deeming/parent-to-child-deeming
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [
+        {
+          "id": "child1",
+          "dateOfBirth": "2015-06-01",
+          "isSSIEligible": true,
+          "isBlindOrDisabled": true
+        },
+        {
+          "id": "parent1",
+          "dateOfBirth": "1985-01-01",
+          "isSSIEligible": false,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "earned",
+              "monthlyAmount": 2500
+            },
+            {
+              "id": "inc2",
+              "type": "unearned",
+              "monthlyAmount": 200
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "type": "parent",
+          "personId": "parent1",
+          "relatedPersonId": "child1"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "child1",
+      "individualFBR": 967,
+      "coupleFBR": 1450
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.deemingCalculation.deemingApplies: eq true
+  res.body.deemingCalculation.deemingType: eq "parent"
+  res.body.deemingCalculation.numberOfParents: eq 1
+  res.body.deemingCalculation.livingAllowanceAllocated: eq 967
+  res.body.deemingCalculation.numberOfIneligibleChildren: eq 0
+}
+
+docs {
+  POMS SI 01320.500 - Parent-to-child deeming for child under 18 with one parent.
+
+  Child born 2015-06-01 is 9 years old as of 2025-01-15.
+  Parent income: $2,500 earned + $200 unearned = $2,700 total
+
+  Countable calculation:
+  - $200 unearned - $20 = $180 countable unearned
+  - $2,500 earned - $0 spillover - $65 = $2,435, then /2 = $1,217.50 countable earned
+  - Total countable: $180 + $1,217.50 = $1,397.50
+
+  One parent living allowance: $967 (individual FBR)
+  No ineligible children allocation.
+  Deemed income: $1,397.50 - $967 = $430.50
+}

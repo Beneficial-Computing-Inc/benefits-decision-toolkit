@@ -1,0 +1,53 @@
+meta {
+  name: With Deemed Income - Under Limit
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "child1",
+        "dateOfBirth": "2015-06-01",
+        "isSSIEligible": true,
+        "incomeSources": [
+          {"id": "inc1", "type": "unearned", "monthlyAmount": 50}
+        ]
+      }]
+    },
+    "parameters": {
+      "personId": "child1",
+      "FBR": 967,
+      "deemedIncome": 430.50
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.incomeCalculation.deemedIncome: eq 430.5
+  res.body.incomeCalculation.totalUnearnedIncome: eq 50
+  res.body.incomeCalculation.countableUnearnedIncome: eq 460.5
+  res.body.incomeCalculation.totalCountableIncome: eq 460.5
+  res.body.incomeCalculation.meetsIncomeLimit: eq true
+}
+
+docs {
+  POMS SI 01320.001, SI 01320.730: Test deemed income integration into countable income.
+
+  Child has $50 unearned + $430.50 deemed from parent:
+  - Combined unearned + deemed: $50 + $430.50 = $480.50
+  - After $20 general exclusion: $480.50 - $20 = $460.50 countable
+  - Total countable: $460.50
+  - FBR: $967
+  - Result: Passes income limit ($460.50 < $967)
+}

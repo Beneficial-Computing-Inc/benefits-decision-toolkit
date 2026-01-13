@@ -1,0 +1,60 @@
+meta {
+  name: No Deemed Income - Backwards Compatible
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "person1",
+        "dateOfBirth": "1990-01-01",
+        "incomeSources": [
+          {"id": "inc1", "type": "unearned", "monthlyAmount": 200},
+          {"id": "inc2", "type": "earned", "monthlyAmount": 500}
+        ]
+      }]
+    },
+    "parameters": {
+      "personId": "person1",
+      "FBR": 967
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.incomeCalculation.deemedIncome: eq 0
+  res.body.incomeCalculation.totalUnearnedIncome: eq 200
+  res.body.incomeCalculation.totalEarnedIncome: eq 500
+  res.body.incomeCalculation.countableUnearnedIncome: eq 180
+  res.body.incomeCalculation.countableEarnedIncome: eq 217.5
+  res.body.incomeCalculation.totalCountableIncome: eq 397.5
+  res.body.incomeCalculation.meetsIncomeLimit: eq true
+}
+
+docs {
+  Test backwards compatibility when no deemedIncome parameter is provided.
+
+  Person has $200 unearned + $500 earned (no deemed):
+
+  Unearned:
+  - After $20 general exclusion: $200 - $20 = $180 countable unearned
+
+  Earned:
+  - After $65 exclusion: $500 - $65 = $435
+  - After 50%: $435 / 2 = $217.50 countable earned
+
+  Total countable: $180 + $217.50 = $397.50
+  FBR: $967
+  Result: Passes income limit ($397.50 < $967)
+}

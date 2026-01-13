@@ -11,14 +11,18 @@
 
   <dmn:description>POMS SI 00810.000 - SI 00830.000: Calculate countable income by applying earned/unearned exclusions in correct order.
 
-Calculation order per SI 00820.500:
-1. Apply SEIE (Student Earned Income Exclusion) if student under 22 - SI 00820.510
-2. Apply $20 general exclusion to unearned income first
-3. Spillover unused general exclusion to earned income
-4. Apply $65 earned income exclusion
-5. Exclude 50% of remaining earned income
-6. Sum countable unearned + countable earned
-7. Compare to Federal Benefit Rate (FBR)
+Calculation order per SI 00820.500 and SI 01320.730:
+1. Add deemed income (from spouse/parent) to unearned income - SI 01320.001
+2. Apply SEIE (Student Earned Income Exclusion) if student under 22 - SI 00820.510
+3. Apply $20 general exclusion to unearned income (including deemed) first
+4. Spillover unused general exclusion to earned income
+5. Apply $65 earned income exclusion
+6. Exclude 50% of remaining earned income
+7. Sum countable unearned + countable earned
+8. Compare to Federal Benefit Rate (FBR)
+
+Per SI 01320.001: "deemed income... is considered to be the eligible individual's own unearned income"
+Per SI 01320.730: "Always treat deemed income as unearned income"
 
 2025 SEIE Limits: $2,350/month, $9,460/year</dmn:description>
 
@@ -46,6 +50,10 @@ Calculation order per SI 00820.500:
     </dmn:itemComponent>
     <dmn:itemComponent id="_SEIE_PARAM_YTD_2026" name="seieUsedYTD" isCollection="false">
       <dmn:description>SEIE already applied in prior months this calendar year (default 0)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM_PARAM_DEEMED_2026" name="deemedIncome" isCollection="false">
+      <dmn:description>POMS SI 01320.001 - Income deemed from ineligible spouse or parent(s). Treated as unearned income.</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
@@ -118,6 +126,21 @@ else
   0
 else
   sum(for i in incomeSources return if i.type = "unearned" then i.monthlyAmount else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2.5: Add deemed income to unearned (SI 01320.001, SI 01320.730) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_DEEM_VAR_DEEMED_2026" name="deemedIncomeAmount" typeRef="number"/>
+        <dmn:literalExpression id="_DEEM_EXPR_DEEMED_2026">
+          <dmn:text>if parameters.deemedIncome != null then parameters.deemedIncome else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_DEEM_VAR_COMBINED_2026" name="unearnedPlusDeemedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_DEEM_EXPR_COMBINED_2026">
+          <dmn:text>totalUnearnedIncome + deemedIncomeAmount</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
@@ -199,26 +222,26 @@ else
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 3: Apply $20 general exclusion to unearned income first -->
+      <!-- Step 3: Apply $20 general exclusion to unearned+deemed income first (SI 01320.730) -->
       <dmn:contextEntry>
         <dmn:variable id="_A8B9C0D1-2E3F-4A5B-6C7D-8E9F0A1B2C3D" name="generalExclusionToUnearned" typeRef="number"/>
         <dmn:literalExpression id="_B9C0D1E2-3F4A-5B6C-7D8E-9F0A1B2C3D4E">
-          <dmn:text>if totalUnearnedIncome >= 20 then 20 else totalUnearnedIncome</dmn:text>
+          <dmn:text>if unearnedPlusDeemedIncome >= 20 then 20 else unearnedPlusDeemedIncome</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
       <dmn:contextEntry>
         <dmn:variable id="_C0D1E2F3-4A5B-6C7D-8E9F-0A1B2C3D4E5F" name="unusedGeneralExclusion" typeRef="number"/>
         <dmn:literalExpression id="_D1E2F3A4-5B6C-7D8E-9F0A-1B2C3D4E5F6A">
-          <dmn:text>if totalUnearnedIncome &lt; 20 then 20 - totalUnearnedIncome else 0</dmn:text>
+          <dmn:text>if unearnedPlusDeemedIncome &lt; 20 then 20 - unearnedPlusDeemedIncome else 0</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 4: Calculate countable unearned income -->
+      <!-- Step 4: Calculate countable unearned income (includes deemed) -->
       <dmn:contextEntry>
         <dmn:variable id="_E2F3A4B5-6C7D-8E9F-0A1B-2C3D4E5F6A7B" name="countableUnearnedIncome" typeRef="number"/>
         <dmn:literalExpression id="_F3A4B5C6-7D8E-9F0A-1B2C-3D4E5F6A7B8C">
-          <dmn:text>if totalUnearnedIncome > 20 then totalUnearnedIncome - 20 else 0</dmn:text>
+          <dmn:text>if unearnedPlusDeemedIncome > 20 then unearnedPlusDeemedIncome - 20 else 0</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
@@ -282,6 +305,7 @@ else
           <dmn:text>{
   totalEarnedIncome: totalEarnedIncome,
   totalUnearnedIncome: totalUnearnedIncome,
+  deemedIncome: deemedIncomeAmount,
   generalExclusionApplied: generalExclusionToUnearned + unusedGeneralExclusion,
   earnedIncomeExclusionApplied: earnedExclusionApplied,
   countableUnearnedIncome: countableUnearnedIncome,
@@ -316,7 +340,7 @@ else
                   name="CalculateCountableIncomeService"
                   typeRef="BDT.tCheckResponse"/>
     <dmn:outputDecision href="#_checkResult_decision"/>
-    <dmn:encapsulatedDecision href="#_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C"/>
+    <dmn:outputDecision href="#_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C"/>
     <dmn:inputData href="#_B1C2D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E"/>
     <dmn:inputData href="#_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A"/>
   </dmn:decisionService>

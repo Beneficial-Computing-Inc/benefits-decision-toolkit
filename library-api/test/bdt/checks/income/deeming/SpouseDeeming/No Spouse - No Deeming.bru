@@ -1,0 +1,41 @@
+meta {
+  name: No Spouse - No Deeming
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/checks/income/deeming/spouse-deeming
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1970-01-01",
+          "isSSIEligible": true
+        }
+      ],
+      "relationships": []
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.deemingCalculation.deemingApplies: eq false
+  res.body.deemingCalculation.deemingType: eq "none"
+  res.body.deemingCalculation.deemedIncome: eq 0
+}
+
+docs {
+  POMS SI 01320.400 - Spouse deeming does not apply when there is no spouse
+}

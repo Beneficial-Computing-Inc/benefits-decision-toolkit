@@ -1,0 +1,76 @@
+meta {
+  name: Ineligible Spouse - Deeming Applies
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/income/deeming/spouse-deeming
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1970-01-01",
+          "isSSIEligible": true
+        },
+        {
+          "id": "p2",
+          "dateOfBirth": "1972-05-15",
+          "isSSIEligible": false,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "earned",
+              "monthlyAmount": 2000
+            },
+            {
+              "id": "inc2",
+              "type": "unearned",
+              "monthlyAmount": 500
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "type": "spouse",
+          "personId": "p1",
+          "relatedPersonId": "p2"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1",
+      "individualFBR": 967,
+      "coupleFBR": 1450
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.deemingCalculation.deemingApplies: eq true
+  res.body.deemingCalculation.deemingType: eq "spouse"
+  res.body.deemingCalculation.deemorTotalIncome: eq 2500
+  res.body.deemingCalculation.livingAllowanceAllocated: eq 483
+}
+
+docs {
+  POMS SI 01320.400 - Spouse deeming applies when spouse is ineligible.
+
+  Spouse income: $2,000 earned + $500 unearned = $2,500 total
+  Countable calculation:
+  - $500 unearned - $20 = $480 countable unearned
+  - $2,000 earned - $0 spillover - $65 = $1,935, then /2 = $967.50 countable earned
+  - Total countable: $480 + $967.50 = $1,447.50
+
+  Living allowance: $1,450 - $967 = $483
+  Deemed income: $1,447.50 - $483 = $964.50
+}
