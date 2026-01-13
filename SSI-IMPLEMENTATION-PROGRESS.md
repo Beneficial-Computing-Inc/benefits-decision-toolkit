@@ -39,27 +39,40 @@ Implementing a complete SSI (Supplemental Security Income) eligibility screener 
 - **Form Field**: `residenceState` (dropdown of valid states)
 
 #### 4. Resource Limits (POMS SI 01110.000 - SI 01150.000)
-- **Status**: ✅ Implemented (Simplified Version) - **Full implementation planned**
-- **Location**: `library-api/src/main/resources/checks/resources/ssi-resource-limit.dmn`
-- **Current Logic**: Countable resources < $2,000 for individuals (couple limit $3,000 deferred to future enhancement)
-- **Tests**: Bruno tests in `test/bdt/checks/resources/SsiResourceLimit/` (Pass, Fail, Edge Case - Null)
-- **Form Field**: `countableResources` (number)
-- **Current Implementation Notes**:
-  - Added `countableResources` field to `tPerson` type in BDT.dmn
-  - **SIMPLIFIED**: Accepts pre-calculated countable resources from user
-  - **LIMITATION**: User must manually calculate exclusions
-  - Null handling: Returns null if countableResources is not provided
-  - Individual limit only ($2,000)
+- **Status**: ✅ Implemented (FULL EXCLUSIONS + Couple Support) ✨ **COMPLETED 2026-01-09**
+- **Location**:
+  - `library-api/src/main/resources/checks/resources/ssi-resource-limit.dmn` (full implementation with inline exclusions)
+  - `library-api/src/main/resources/checks/resources/calculate-countable-resources.dmn` (detailed calculation endpoint)
+- **Logic**:
+  - Countable resources < $2,000 for individuals
+  - Countable resources < $3,000 for couples
+  - **Automatic application of ALL 7 POMS exclusion rules** ✅
+- **Tests**: Manual tests passing (Bruno tests need .seq field fixes)
+- **Form Fields**: Dynamic `resources` list with conditional fields based on resource type
+- **Implementation Notes**:
+  - Added `tResource`, `tResourceList`, `tResourceCalculation` types to BDT.dmn
+  - Consolidated architecture (no imports between decision files) due to Kogito limitation
+  - Both DMN files contain full exclusion logic inline
+  - Couple detection via relationships (spouse)
+- **7 POMS Exclusions Implemented**:
+  1. **Home** (SI 01130.100): Primary residence - full exclusion
+  2. **Life Insurance** (SI 01130.500): Policies with face value ≤ $1,500
+  3. **Household Goods** (SI 01130.200): All household goods/personal effects
+  4. **Vehicle** (SI 01130.200): Primary vehicle - full exclusion
+  5. **Burial Fund** (SI 01130.400): Up to $1,500 per person
+  6. **ABLE Account** (SI 01130.740): Up to $100,000 per person
+  7. **Self-Support Property** (SI 01130.515): Up to $6,000 per person
 - **POMS References**:
-  - SI 01110.200 - Countable Resources
-  - SI 01110.210 - Resource Limits
-- **⚠️ Important Limitation**: Current implementation does NOT automatically apply POMS exclusion rules
-  - User must know to exclude: primary residence, one vehicle, household goods ($2K), life insurance ($1.5K face value), burial funds ($1.5K), ABLE accounts ($100K), self-support property ($6K)
-  - This works for screening/awareness but not for accurate eligibility determination
-  - **See SSI-RESOURCE-LIMITS-PLAN.md for full implementation plan**
+  - SI 01110.003 - Resource Limits ($2,000 individual, $3,000 couple)
+  - SI 01130.100 - Home Exclusion
+  - SI 01130.200 - Household Goods and Vehicle Exclusions
+  - SI 01130.400 - Burial Fund Exclusion
+  - SI 01130.500 - Life Insurance Exclusion
+  - SI 01130.515 - Self-Support Property Exclusion
+  - SI 01130.740 - ABLE Account Exclusion
 
 #### 5. Income Limits (POMS SI 00810.000 - SI 00830.000)
-- **Status**: ✅ Implemented
+- **Status**: ✅ Implemented (with Couple Support)
 - **Location**: `library-api/src/main/resources/checks/income/`
 - **Files**:
   - `Income.dmn` - Base module with shared BKMs
@@ -71,7 +84,9 @@ Implementing a complete SSI (Supplemental Security Income) eligibility screener 
   - Spillover of unused $20 general exclusion to earned income
   - $65 earned income exclusion
   - 50% of remaining earned income excluded
-  - Compares total countable income to FBR ($967 individual, $1,450 couple)
+  - Compares total countable income to FBR:
+    - $967 for individuals
+    - $1,450 for couples ✅ (implemented 2026-01-09)
 - **Tests**: Bruno tests in `test/bdt/checks/income/SsiIncomeLimit/`
 - **Form Fields**: `incomeSources` (list of tIncomeSource with type, category, monthlyAmount, etc.)
 - **POMS References**:
@@ -79,14 +94,14 @@ Implementing a complete SSI (Supplemental Security Income) eligibility screener 
   - SI 00810.420 - $20 General Income Exclusion
   - SI 00820.500 - Earned Income Exclusions
   - SI 00830.000 - Unearned Income
+  - SI 00810.010 - Couple FBR ($1,450/month)
 - **Implementation Notes**:
   - Uses tIncomeSource, tIncomeSourceList, tIncomeCalculation types in BDT.dmn
   - Exclusions applied in correct POMS order
   - Returns detailed tIncomeCalculation with all intermediary values
-  - FBR configurable via parameters (defaults to $967 individual)
+  - FBR configurable via `isCouple` parameter (defaults to $967 individual, $1,450 couple)
 - **Current Limitations**:
   - Does not yet implement advanced exclusions (SEIE, PASS, IRWE, etc.)
-  - Individual limit only (couple logic can be added via parameters)
   - See deferred enhancements below for future work
 
 ---
@@ -100,24 +115,46 @@ Implementing a complete SSI (Supplemental Security Income) eligibility screener 
 ### DMN Files
 ```
 library-api/src/main/resources/
-├── BDT.dmn (base types including tSituation, tPerson with countableResources)
-├── Benefits.dmn (tBenefitResponse type)
-├── benefits/federal/
-│   └── ssi-eligibility.dmn (main benefit composition)
-└── checks/
-    ├── categorical/
-    │   ├── categorical-eligibility.dmn
-    │   ├── person-age-65-or-older.dmn
-    │   └── blind-or-disabled.dmn
-    ├── citizenship/
-    │   ├── citizenship-eligibility.dmn
-    │   ├── us-citizen.dmn
-    │   ├── qualified-alien.dmn
-    │   └── refugee-asylee-within-seven-years.dmn
-    ├── residence/
-    │   └── ssi-residence-requirement.dmn
-    └── resources/
-        └── ssi-resource-limit.dmn
+├── BDT.dmn                                           # Base types and utilities
+├── Benefits.dmn                                      # tBenefitResponse type
+├── checks/
+│   ├── age/
+│   │   └── Age.dmn                                   # Age BKMs
+│   ├── categorical/
+│   │   ├── Categorical.dmn                          # Base module
+│   │   ├── person-age-65-or-older.dmn              ✅
+│   │   ├── blind-or-disabled.dmn                   ✅
+│   │   └── categorical-eligibility.dmn              ✅
+│   ├── citizenship/
+│   │   ├── Citizenship.dmn                          # Base module
+│   │   ├── person-us-citizen.dmn                   ✅
+│   │   ├── naturalized-citizen.dmn                 ✅
+│   │   ├── permanent-resident-qualified.dmn        ✅
+│   │   ├── refugee-asylee-status.dmn               ✅
+│   │   ├── refugee-asylee-within-seven-years.dmn   ✅
+│   │   ├── vietnamese-amerasian.dmn                ✅
+│   │   ├── cuban-haitian-entrant.dmn               ✅
+│   │   ├── paroled-alien.dmn                       ✅
+│   │   ├── withheld-deportation.dmn                ✅
+│   │   └── citizenship-eligibility.dmn              ✅
+│   ├── enrollment/
+│   │   ├── Enrollment.dmn                          # Base module
+│   │   ├── person-enrolled-in-benefit.dmn          ✅
+│   │   └── person-not-enrolled-in-benefit.dmn      ✅
+│   ├── income/
+│   │   ├── Income.dmn                              # Base module
+│   │   ├── calculate-countable-income.dmn          ✅
+│   │   └── ssi-income-limit.dmn                    ✅
+│   ├── resources/
+│   │   └── ssi-resource-limit.dmn                  ✅ (with couple support)
+│   └── residence/
+│       └── ssi-residence-requirement.dmn           ✅
+└── benefits/
+    ├── federal/
+    │   └── ssi-eligibility.dmn                      ✅ (with couple detection)
+    └── pa/phl/
+        ├── phl-homestead-exemption.dmn             ✅
+        └── phl-senior-citizen-tax-freeze.dmn       ✅
 ```
 
 ### Frontend Components
@@ -129,14 +166,47 @@ builder-frontend/src/components/ssi-screener/
 ```
 
 ### Data Model
-- **tSituation**: Container for all household data
-- **tPerson**: Individual person data including:
-  - dateOfBirth
-  - citizenshipStatus
-  - residenceState
-  - isBlindOrDisabled
-  - countableResources (number)
-  - Various citizenship date fields
+
+**tSituation** - Container for all household data:
+- `primaryPersonId: string`
+- `evaluationDate: date` - for time-based eligibility calculations
+- `people: tPersonList` with extended tPerson:
+  - `id: string`
+  - `dateOfBirth: date`
+  - `citizenshipStatus: string`
+  - `isBlindOrDisabled: boolean`
+  - `refugeeAdmissionDate: date`
+  - `asylumGrantDate: date`
+  - `withheldDeportationGrantDate: date`
+  - `cubanHaitianEntryDate: date`
+  - `amerasianAdmissionDate: date`
+  - `residenceState: string` - for residence checks
+  - `resources: tResourceList` - for resource limit checks ✅ (added 2026-01-09)
+    - `id: string`
+    - `type: string` (bank_account, real_property, vehicle, life_insurance, etc.)
+    - `value: number`
+    - `description: string`
+    - `isPrimaryResidence: boolean` (for real_property)
+    - `isPrimaryVehicle: boolean` (for vehicle)
+    - `lifeInsuranceFaceValue: number` (for life_insurance)
+    - `isEssentialForSelfSupport: boolean` (for any resource type)
+  - `incomeSources: tIncomeSourceList` - for income calculations
+    - `id: string`
+    - `type: string` (earned/unearned)
+    - `category: string` (wages, SSA benefits, etc.)
+    - `monthlyAmount: number`
+    - `description: string`
+    - `isInfrequentOrIrregular: boolean`
+- `enrollments: tEnrollmentList` (personId, benefit)
+- `relationships: tRelationshipList` (type, personId, relatedPersonId)
+- `simpleChecks: tSimpleChecks` (boolean flags)
+
+**Future Additions for Enhancements**:
+- Detailed resource types (home, vehicle, burial funds)
+- Student status (for SEIE)
+- PASS plan indicator
+- 40 QQ, veteran status fields (for LAPR exceptions)
+- Parent/child relationships (for deeming)
 
 ---
 
@@ -166,12 +236,12 @@ builder-frontend/src/components/ssi-screener/
 
 ### High Priority
 
-- **⭐ Full Resource Exclusions Implementation** (POMS SI 01130.000):
-  - Automatically apply POMS exclusion rules instead of accepting pre-calculated countable resources
+- ~~**⭐ Full Resource Exclusions Implementation** (POMS SI 01130.000)~~ ✅ **COMPLETED 2026-01-09**
+  - Automatically apply POMS exclusion rules
   - Resource type modeling (bank accounts, vehicles, real property, life insurance, etc.)
-  - Individual exclusion checks (home, vehicle, household goods, life insurance, burial funds, ABLE accounts, self-support property)
-  - **See SSI-RESOURCE-LIMITS-PLAN.md for detailed implementation plan**
-  - **Estimated effort**: 7.5-12 hours
+  - All 7 individual exclusion checks implemented inline
+  - Form schema updated with dynamic resources list
+  - **See "SSI Full Resource Exclusions" in Recent Accomplishments below**
 
 ### Medium Priority
 
@@ -181,8 +251,8 @@ builder-frontend/src/components/ssi-screener/
   - $20 general exclusion + $65 earned + 50% calculation
   - **See SSI-INCOME-LIMITS-PLAN.md for detailed implementation plan**
   - **Estimated effort**: 7.5-11 hours
-- **Couple Resource Limit** (POMS SI 01110.210): Apply $3,000 limit for married couples
-- **Couple FBR** (POMS SI 00835.000): Apply couple FBR ($1,450) instead of individual ($967)
+- ~~**Couple Resource Limit** (POMS SI 01110.210): Apply $3,000 limit for married couples~~ ✅ **COMPLETED 2026-01-09**
+- ~~**Couple FBR** (POMS SI 00835.000): Apply couple FBR ($1,450) instead of individual ($967)~~ ✅ **COMPLETED 2026-01-09**
 - **Deeming Rules** (POMS SI 01320.000): Income/resources deemed from ineligible spouse/parent
 - **Student Earned Income Exclusion (SEIE)** (POMS SI 00820.510): Up to $2,290/month, $9,230/year for students
 - **Plan to Achieve Self-Support (PASS)** (POMS SI 00870.000): Income/resource exclusions for approved plans
@@ -214,6 +284,40 @@ builder-frontend/src/components/ssi-screener/
   - ✅ Fail scenario (ineligible)
   - ✅ Edge case - Null/missing data (unable to determine)
 
+### Null Value Pattern (Three-Valued Logic)
+
+SSI eligibility checks use a **three-valued logic** pattern where results can be:
+
+| Result | Meaning | When It Occurs |
+|--------|---------|----------------|
+| `true` | Check passed, requirement met | All required data present and condition satisfied |
+| `false` | Check failed, requirement not met | All required data present and condition NOT satisfied |
+| `null` | Unable to determine | Insufficient data to evaluate the check |
+
+**Why This Matters**:
+- **Forms**: Null results indicate missing required fields that the user needs to complete
+- **API Consumers**: Null signals that more data is needed before a determination can be made
+- **Eligibility Composition**: `all()` returns null if any check is null (can't confirm eligibility without complete data)
+
+**Example**: If a person's `citizenshipStatus` field is not provided, the citizenship check returns `null` rather than `false`, indicating the system cannot determine eligibility without that information.
+
+**Implementation**: Each check DMN follows this pattern:
+```feel
+// Returns null if person not found, false if condition not met, true if met
+person.citizenshipStatus = "US_CITIZEN"
+```
+
+### Current Test Coverage
+- **Categorical**: 9/9 Bruno tests passing
+- **Citizenship**: 25/25 Bruno tests passing (includes 7 tests for RefugeeAsyleeWithinSevenYears)
+- **Income**: 6/6 Bruno tests created
+- **Resources**: 3/3 Bruno tests created
+- **Residence**: 3/3 Bruno tests created
+- **SSI Eligibility (integrated)**: 10/10 Bruno tests created
+  - Pass scenarios: 4 tests (basic eligibility, edge cases, multiple income sources)
+  - Fail scenarios: 6 tests (each check failure, multiple check failures)
+- **SSI Couple Eligibility**: 5/5 Bruno tests created (added 2026-01-09)
+
 ---
 
 ## Known Issues & Technical Debt
@@ -225,15 +329,196 @@ builder-frontend/src/components/ssi-screener/
 
 ---
 
+## Change Log
+
+### 2026-01-12: FEEL Expression Fixes
+Fixed critical FEEL expression errors that were blocking SSI eligibility endpoint:
+
+1. **Fixed `spouse id` function call** (BDT.dmn, senior-citizen-tax-freeze.dmn)
+   - Changed `spouse id(...)` to inline FEEL expression
+   - The space in the function name caused FEEL syntax errors
+   - Fixed pattern: `situation.relationships[item.personId = situation.primaryPersonId and item.type = "spouse"][1].relatedPersonId`
+
+2. **Fixed `checks.categoricalEligible` variable access** (ssi-eligibility.dmn)
+   - Changed direct property access to use `get entries()` pattern
+   - Original: `[checks.categoricalEligible, ...]` (Kogito couldn't resolve)
+   - Fixed: `for check in (get entries(checks))[item.key in [...]] return check.value`
+
+**Result**: SSI eligibility endpoint now functional, server starts without FEEL errors
+
+---
+
+## Architecture Patterns
+
+The SSI implementation follows established DMN patterns:
+
+1. **Individual Checks**: Simple boolean status/calculation checks
+   - Example: `person-age-65-or-older.dmn`, `refugee-asylee-status.dmn`
+   - Returns boolean result based on situation data
+
+2. **Composition Checks**: Combine individual checks with OR/AND logic
+   - Example: `categorical-eligibility.dmn` (Age 65+ OR Blind OR Disabled)
+   - Example: `citizenship-eligibility.dmn` (ANY of 8 qualified alien categories)
+
+3. **Base Modules**: Shared types and Business Knowledge Models (BKMs)
+   - `BDT.dmn` - Core types (tSituation, tPerson), shared BKMs
+   - `Age.dmn` - Age calculation BKMs
+   - `Enrollment.dmn` - Enrollment lookup BKMs
+   - `Citizenship.dmn` - Citizenship-specific types and BKMs
+   - `Income.dmn` - Income types and calculation BKMs
+
+4. **Benefits**: Orchestrate multiple checks into program eligibility
+   - Example: `ssi-eligibility.dmn` - Combines categorical, citizenship, income, resources, residence
+   - Returns detailed `tBenefitResponse` with individual check results + overall eligibility
+
+---
+
+## Implementation Commands
+
+Core SSI eligibility is complete! To add enhancements, use these example commands:
+
+```bash
+# Add income deeming from ineligible spouse/parents
+"Let's implement income deeming from ineligible spouse/parents per POMS SI 01320.000"
+
+# Add resource exclusions
+"Let's implement home, vehicle, and burial fund exclusions for SSI resources per POMS SI 01130.000"
+
+# Add Student Earned Income Exclusion
+"Let's implement SEIE for SSI per POMS SI 00820.510"
+
+# Add remaining citizenship time limits
+"Let's add 7-year time limits for WithheldDeportation, CubanHaitianEntrant, and VietnameseAmerasian"
+
+# Test the complete SSI screener
+"Let's test the SSI eligibility endpoint with various scenarios"
+```
+
+---
+
 ## Resources
 
 - **POMS (Program Operations Manual System)**: https://secure.ssa.gov/poms.nsf/
 - **SSI Overview**: POMS SI 00501.000
 - **DMN Specification**: https://www.omg.org/spec/DMN/
 - **Form.js Documentation**: https://bpmn.io/toolkit/form-js/
+- **API Endpoints**: http://localhost:8083/q/swagger-ui
+- **SSI Eligibility Endpoint**: POST /api/v1/benefits/federal/ssi-eligibility
 
 ---
 
-**Last Updated**: 2026-01-05
-**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements implemented
+**Last Updated**: 2026-01-12
+**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements implemented + SSI Couple Eligibility + FEEL Expression Fixes
 **Next Steps**: Consider implementing full resource exclusions OR enhanced income exclusions (SEIE, PASS, etc.)
+
+---
+
+## Recent Accomplishments
+
+### ✅ SSI Couple Eligibility (January 9, 2026)
+
+**Summary**: Complete implementation of SSI couple eligibility rules per POMS SI 00501.010, SI 01110.003, and SI 00810.010.
+
+**What Was Implemented**:
+
+1. **Eligible Spouse Detection BKM** (in BDT.dmn)
+   - New Business Knowledge Model: "has eligible spouse"
+   - Detects when two members in a household form an eligible couple
+   - Logic: Checks both members meet categorical AND citizenship requirements
+   - POMS Reference: SI 00501.010
+
+2. **Couple Resource Limit** (ssi-resource-limit.dmn)
+   - Added `isCouple` parameter (boolean)
+   - Applies $3,000 limit for couples vs $2,000 for individuals
+   - POMS Reference: SI 01110.003
+
+3. **Couple Income FBR** (ssi-income-limit.dmn)
+   - Added `isCouple` parameter (boolean)
+   - Calculates FBR as $1,450 for couples vs $967 for individuals
+   - POMS Reference: SI 00810.010
+
+4. **SSI Eligibility Couple Status Detection** (ssi-eligibility.dmn)
+   - Uses "has eligible spouse" BKM to detect couple status
+   - Passes couple status to resource and income limit checks
+   - Both members must meet categorical and citizenship requirements
+
+**Test Coverage**:
+- 5 Bruno test files with comprehensive assertions:
+  - Eligible couple passes all checks ✓
+  - Couple exceeding resource limit fails appropriately ✓
+  - Couple exceeding income FBR fails appropriately ✓
+  - Individual (no spouse) still works correctly ✓
+
+**Files Modified**:
+- `library-api/src/main/resources/BDT.dmn` (added "has eligible spouse" BKM)
+- `library-api/src/main/resources/checks/resources/ssi-resource-limit.dmn` (couple resource limit)
+- `library-api/src/main/resources/checks/income/ssi-income-limit.dmn` (couple FBR)
+- `library-api/src/main/resources/benefits/federal/ssi-eligibility.dmn` (couple detection logic)
+- `library-api/test/bdt/benefits/federal/SsiEligibility/` (5 new Bruno tests)
+
+---
+
+### ✅ SSI Full Resource Exclusions (January 9, 2026)
+
+**Summary**: Complete implementation of ALL 7 POMS resource exclusion rules per SI 01130 series, enabling automatic calculation of countable resources.
+
+**What Was Implemented**:
+
+1. **Data Model** (BDT.dmn)
+   - New types: `tResource`, `tResourceList`, `tResourceCalculation`
+   - Resource fields: type, value, description, isPrimaryResidence, isPrimaryVehicle, lifeInsuranceFaceValue, isEssentialForSelfSupport
+   - 10 resource types supported: bank_account, cash, real_property, vehicle, life_insurance, stocks_bonds, burial_fund, able_account, household_goods, other
+
+2. **CalculateCountableResources Endpoint** (calculate-countable-resources.dmn)
+   - Consolidated implementation with all 7 exclusions inline (no imports)
+   - Calculates: totalResources, excludedResources, countableResources, applicableLimit, meetsResourceLimit
+   - Returns full `tResourceCalculation` with breakdown
+   - Endpoint: `POST /api/v1/checks/resources/calculate-countable-resources`
+   - POMS References: SI 01130.100, SI 01130.200, SI 01130.400, SI 01130.500, SI 01130.515, SI 01130.740
+
+3. **SsiResourceLimit Endpoint** (ssi-resource-limit.dmn)
+   - Consolidated implementation with all 7 exclusions inline
+   - Returns boolean `checkResult` (pass/fail)
+   - Reads resources from `situation.people[x].resources`
+   - Couple detection via relationships (spouse)
+   - Endpoint: `POST /api/v1/checks/resources/ssi-resource-limit`
+
+4. **7 POMS Exclusions Implemented**:
+   - **Home** (SI 01130.100): Primary residence - full exclusion
+   - **Life Insurance** (SI 01130.500): Face value ≤ $1,500 - full exclusion
+   - **Household Goods** (SI 01130.200): All household goods/personal effects - full exclusion
+   - **Vehicle** (SI 01130.200): Primary vehicle - full exclusion
+   - **Burial Fund** (SI 01130.400): Capped at $1,500 per person
+   - **ABLE Account** (SI 01130.740): Capped at $100,000 per person
+   - **Self-Support Property** (SI 01130.515): Capped at $6,000 per person
+
+5. **Form Schema Update** (builder-frontend)
+   - Added resources section with yes/no gate question
+   - Dynamic list (repeatable group) for adding multiple resources
+   - Resource type dropdown (10 options)
+   - Current value (number input)
+   - Optional description field
+   - Conditional fields based on resource type:
+     - "Is this your primary residence?" (real_property only)
+     - "Is this your primary vehicle?" (vehicle only)
+     - "Life Insurance Face Value" (life_insurance only)
+     - "Is this property essential for self-support?" (all types)
+
+**Test Results**:
+- ✅ Manual testing via curl - all scenarios passing:
+  - Resources below limit ($1,500 countable): `checkResult: true`
+  - Resources above limit ($3,000 countable): `checkResult: false`
+  - Multiple exclusions ($216,500 total, $215,000 excluded, $1,500 countable): `checkResult: true`
+- Note: Bruno tests need `.seq` field fixes
+
+**Technical Architecture Decision**:
+- **Consolidated Implementation**: Both DMN files contain full exclusion logic inline (no imports between decision files)
+- **Reason**: Kogito compiles FEEL expressions BEFORE resolving imports during build, causing "Unknown variable" errors
+- **Solution**: All exclusion calculations duplicated in both `calculate-countable-resources.dmn` and `ssi-resource-limit.dmn`
+- **Trade-off**: Some code duplication, but avoids complex import resolution issues
+
+**Files Modified**:
+- `library-api/src/main/resources/BDT.dmn` (added tResource, tResourceList, tResourceCalculation types)
+- `library-api/src/main/resources/checks/resources/calculate-countable-resources.dmn` (consolidated implementation)
+- `library-api/src/main/resources/checks/resources/ssi-resource-limit.dmn` (consolidated implementation)
+- `builder-frontend/src/components/ssi-screener/ssiFormSchema.json` (added resources section)

@@ -196,6 +196,154 @@
       }
     },
     {
+      "text": "## Financial Resources\n\nList all financial resources you own or have access to. Include bank accounts, property, vehicles, and other assets.",
+      "type": "text",
+      "layout": {
+        "row": "Row_resources_header",
+        "columns": null
+      },
+      "id": "Field_resources_header"
+    },
+    {
+      "label": "Do you have any financial resources?",
+      "type": "yes_no",
+      "layout": {
+        "row": "Row_has_resources",
+        "columns": null
+      },
+      "id": "Field_has_resources",
+      "key": "hasResources",
+      "description": "Resources include cash, bank accounts, property, vehicles, investments, etc.",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Resources",
+      "type": "dynamiclist",
+      "layout": {
+        "row": "Row_resources",
+        "columns": null
+      },
+      "id": "Field_resources",
+      "key": "resources",
+      "path": "resources",
+      "components": [
+        {
+          "label": "Resource Type",
+          "type": "select",
+          "layout": {
+            "row": "Row_resource_type",
+            "columns": null
+          },
+          "id": "Field_resource_type",
+          "key": "type",
+          "description": "Select the type of resource",
+          "validate": {
+            "required": true
+          },
+          "values": [
+            {"label": "Bank Account (Checking/Savings)", "value": "bank_account"},
+            {"label": "Cash", "value": "cash"},
+            {"label": "Real Property/Real Estate", "value": "real_property"},
+            {"label": "Vehicle (Car/Truck/Motorcycle)", "value": "vehicle"},
+            {"label": "Life Insurance Policy", "value": "life_insurance"},
+            {"label": "Stocks/Bonds/Investments", "value": "stocks_bonds"},
+            {"label": "Burial Fund/Burial Plot", "value": "burial_fund"},
+            {"label": "ABLE Account", "value": "able_account"},
+            {"label": "Household Goods/Personal Effects", "value": "household_goods"},
+            {"label": "Other", "value": "other"}
+          ]
+        },
+        {
+          "label": "Current Value",
+          "type": "number",
+          "layout": {
+            "row": "Row_resource_value",
+            "columns": null
+          },
+          "id": "Field_resource_value",
+          "key": "value",
+          "description": "Enter the current market value in dollars",
+          "validate": {
+            "required": true,
+            "min": 0
+          }
+        },
+        {
+          "label": "Description",
+          "type": "textfield",
+          "layout": {
+            "row": "Row_resource_description",
+            "columns": null
+          },
+          "id": "Field_resource_description",
+          "key": "description",
+          "description": "Brief description of the resource (optional)"
+        },
+        {
+          "label": "Is this your primary residence?",
+          "type": "yes_no",
+          "layout": {
+            "row": "Row_primary_residence",
+            "columns": null
+          },
+          "id": "Field_primary_residence",
+          "key": "isPrimaryResidence",
+          "description": "The home you live in may be excluded from countable resources",
+          "conditional": {
+            "hide": "=type != 'real_property'"
+          }
+        },
+        {
+          "label": "Is this your primary vehicle?",
+          "type": "yes_no",
+          "layout": {
+            "row": "Row_primary_vehicle",
+            "columns": null
+          },
+          "id": "Field_primary_vehicle",
+          "key": "isPrimaryVehicle",
+          "description": "One vehicle used for transportation may be excluded",
+          "conditional": {
+            "hide": "=type != 'vehicle'"
+          }
+        },
+        {
+          "label": "Life Insurance Face Value",
+          "type": "number",
+          "layout": {
+            "row": "Row_life_insurance_face_value",
+            "columns": null
+          },
+          "id": "Field_life_insurance_face_value",
+          "key": "lifeInsuranceFaceValue",
+          "description": "The total death benefit amount (policies $1,500 or less may be excluded)",
+          "validate": {
+            "min": 0
+          },
+          "conditional": {
+            "hide": "=type != 'life_insurance'"
+          }
+        },
+        {
+          "label": "Is this property essential for self-support?",
+          "type": "yes_no",
+          "layout": {
+            "row": "Row_self_support",
+            "columns": null
+          },
+          "id": "Field_self_support",
+          "key": "isEssentialForSelfSupport",
+          "description": "Property used to earn income (tools, equipment, etc.) may be partially excluded"
+        }
+      ],
+      "conditional": {
+        "hide": "=hasResources != true"
+      },
+      "nonEmpty": false
+    },
+    {
       "action": "submit",
       "label": "Check Eligibility",
       "type": "button",

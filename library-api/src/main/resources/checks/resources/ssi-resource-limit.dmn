@@ -9,11 +9,17 @@
                  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
                  namespace="https://kie.apache.org/dmn/_C471DC1E-D0A3-4C2A-B270-834758321D16">
 
-  <dmn:description>POMS SI 01110.003 - SSI resource limit check
-- Individual limit: $2,000
-- Couple limit: $3,000
+  <dmn:description>POMS SI 01110.003 - SSI resource limit check with full exclusion calculations inline
+Individual limit: $2,000 | Couple limit: $3,000
 
-Countable resources must be below the applicable limit for SSI eligibility</dmn:description>
+Applies exclusions from POMS SI 01130:
+- Home (SI 01130.100): Primary residence
+- Life Insurance (SI 01130.500): Face value ≤ $1,500
+- Household Goods (SI 01130.200): All household goods
+- Vehicle (SI 01130.200): Primary vehicle
+- Burial Fund (SI 01130.400): Up to $1,500
+- ABLE Account (SI 01130.740): Up to $100,000
+- Self-Support Property (SI 01130.515): Up to $6,000</dmn:description>
 
   <!-- Import BDT base module -->
   <dmn:import id="_B7C8D9E0-F1A2-3B4C-5D6E-7F8A9B0C1D2E"
@@ -27,14 +33,10 @@ Countable resources must be below the applicable limit for SSI eligibility</dmn:
     <dmn:itemComponent id="_D9E0F1A2-3B4C-5D6E-7F8A-9B0C1D2E3F4A" name="personId" isCollection="false">
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
-    <dmn:itemComponent id="_E9F0A1B2-4C5D-6E7F-8A9B-0C1D2E3F4A5B" name="isCouple" isCollection="false">
-      <dmn:typeRef>boolean</dmn:typeRef>
-    </dmn:itemComponent>
   </dmn:itemDefinition>
 
   <!-- Input: situation -->
   <dmn:inputData id="_E0F1A2B3-4C5D-6E7F-8A9B-0C1D2E3F4A5B" name="situation">
-    <dmn:extensionElements/>
     <dmn:variable id="_F1A2B3C4-5D6E-7F8A-9B0C-1D2E3F4A5B6C"
                   name="situation"
                   typeRef="BDT.tSituation"/>
@@ -42,16 +44,14 @@ Countable resources must be below the applicable limit for SSI eligibility</dmn:
 
   <!-- Input: parameters -->
   <dmn:inputData id="_A2B3C4D5-6E7F-8A9B-0C1D-2E3F4A5B6C7D" name="parameters">
-    <dmn:extensionElements/>
     <dmn:variable id="_B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E"
                   name="parameters"
                   typeRef="tParameters"/>
   </dmn:inputData>
 
-  <!-- Decision: checkResult -->
+  <!-- Decision: checkResult with inline exclusion calculations -->
   <dmn:decision id="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F" name="checkResult">
     <dmn:description>POMS SI 01110.003 - Countable resources must be less than limit ($2,000 individual, $3,000 couple)</dmn:description>
-    <dmn:extensionElements/>
     <dmn:variable id="_D5E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A"
                   name="checkResult"
                   typeRef="boolean"/>
@@ -63,45 +63,149 @@ Countable resources must be below the applicable limit for SSI eligibility</dmn:
     </dmn:informationRequirement>
 
     <dmn:context id="_A8B9C0D1-2E3F-4A5B-6C7D-8E9F0A1B2C3D">
-      <!-- Step 1: Extract primary person -->
+      <!-- Extract person -->
       <dmn:contextEntry>
-        <dmn:variable id="_B9C0D1E2-3F4A-5B6C-7D8E-9F0A1B2C3D4E" name="person" typeRef="BDT.tPerson"/>
-        <dmn:literalExpression id="_C0D1E2F3-4A5B-6C7D-8E9F-0A1B2C3D4E5F">
-          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        <dmn:variable id="_1111AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="personId" typeRef="string"/>
+        <dmn:literalExpression id="_2222AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>parameters.personId</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 2: Extract countable resources -->
       <dmn:contextEntry>
-        <dmn:variable id="_D1E2F3A4-5B6C-7D8E-9F0A-1B2C3D4E5F6A" name="countableResources" typeRef="number"/>
-        <dmn:literalExpression id="_E2F3A4B5-6C7D-8E9F-0A1B-2C3D4E5F6A7B">
-          <dmn:text>person.countableResources</dmn:text>
+        <dmn:variable id="_3333AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_4444AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>situation.people[id = personId]</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 3: Determine resource limit based on couple status -->
       <dmn:contextEntry>
-        <dmn:variable id="_G4A5B6C7-8D9E-0F1A-2B3C-4D5E6F7A8B9C" name="resourceLimit" typeRef="number"/>
-        <dmn:literalExpression id="_H5B6C7D8-9E0F-1A2B-3C4D-5E6F7A8B9C0D">
-          <dmn:text>if parameters.isCouple then 3000 else 2000</dmn:text>
+        <dmn:variable id="_5555AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="resources" typeRef="BDT.tResourceList"/>
+        <dmn:literalExpression id="_6666AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>if person = null or person.resources = null then [] else person.resources</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 4: Check if resources are below limit -->
+      <!-- Calculate total resources -->
       <dmn:contextEntry>
-        <dmn:variable id="_F3A4B5C6-7D8E-9F0A-1B2C-3D4E5F6A7B8C" name="result" typeRef="boolean"/>
-        <dmn:literalExpression id="_A4B5C6D7-8E9F-0A1B-2C3D-4E5F6A7B8C9D">
-          <dmn:text>if countableResources = null then
-  null
-else
-  countableResources &lt; resourceLimit</dmn:text>
+        <dmn:variable id="_7777AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="totalResources" typeRef="number"/>
+        <dmn:literalExpression id="_8888AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>if resources = null or count(resources) = 0 then 0 else sum(for r in resources return r.value)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 5: Return result -->
+      <!-- Apply exclusions -->
+      <!-- Home Exclusion (SI 01130.100) -->
       <dmn:contextEntry>
-        <dmn:literalExpression id="_B5C6D7E8-9F0A-1B2C-3D4E-5F6A7B8C9D0E">
-          <dmn:text>result</dmn:text>
+        <dmn:variable id="_9999AAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="homeExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_AAAA1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>sum(for r in resources return if r.type = "real_property" and r.isPrimaryResidence = true then r.value else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Life Insurance Exclusion (SI 01130.500) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_BBBB1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="lifeInsuranceExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_CCCC1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>sum(for r in resources return if r.type = "life_insurance" and r.lifeInsuranceFaceValue != null and r.lifeInsuranceFaceValue &lt;= 1500 then r.value else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Household Goods Exclusion (SI 01130.200) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_DDDD1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="householdGoodsExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_EEEE1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>sum(for r in resources return if r.type = "household_goods" then r.value else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Vehicle Exclusion (SI 01130.200) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_FFFF1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="vehicleExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_AAAA2222-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>sum(for r in resources return if r.type = "vehicle" and r.isPrimaryVehicle = true then r.value else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Burial Fund Exclusion (SI 01130.400) - up to $1,500 -->
+      <dmn:contextEntry>
+        <dmn:variable id="_BBBB2222-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="burialFundsTotal" typeRef="number"/>
+        <dmn:literalExpression id="_CCCC2222-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>sum(for r in resources return if r.type = "burial_fund" then r.value else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_DDDD2222-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="burialFundExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_EEEE2222-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>if burialFundsTotal &gt; 1500 then 1500 else burialFundsTotal</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- ABLE Account Exclusion (SI 01130.740) - up to $100,000 -->
+      <dmn:contextEntry>
+        <dmn:variable id="_FFFF2222-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="ableAccountsTotal" typeRef="number"/>
+        <dmn:literalExpression id="_AAAA3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>sum(for r in resources return if r.type = "able_account" then r.value else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_BBBB3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="ableAccountExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_CCCC3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>if ableAccountsTotal &gt; 100000 then 100000 else ableAccountsTotal</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Self-Support Property Exclusion (SI 01130.515) - up to $6,000 -->
+      <dmn:contextEntry>
+        <dmn:variable id="_DDDD3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="selfSupportTotal" typeRef="number"/>
+        <dmn:literalExpression id="_EEEE3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>sum(for r in resources return if r.isEssentialForSelfSupport = true then r.value else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_FFFF3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="selfSupportPropertyExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_AAAA4444-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>if selfSupportTotal &gt; 6000 then 6000 else selfSupportTotal</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Total exclusions -->
+      <dmn:contextEntry>
+        <dmn:variable id="_BBBB4444-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="totalExcluded" typeRef="number"/>
+        <dmn:literalExpression id="_CCCC4444-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>homeExcluded + lifeInsuranceExcluded + householdGoodsExcluded + vehicleExcluded + burialFundExcluded + ableAccountExcluded + selfSupportPropertyExcluded</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Countable resources -->
+      <dmn:contextEntry>
+        <dmn:variable id="_DDDD4444-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="countableResources" typeRef="number"/>
+        <dmn:literalExpression id="_EEEE4444-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>totalResources - totalExcluded</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Determine applicable limit (individual $2,000 vs couple $3,000) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_FFFF4444-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="hasEligibleSpouse" typeRef="boolean"/>
+        <dmn:literalExpression id="_AAAA5555-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>count(situation.relationships[type = "spouse" and personId = personId]) &gt; 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_BBBB5555-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="applicableLimit" typeRef="number"/>
+        <dmn:literalExpression id="_CCCC5555-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>if hasEligibleSpouse then 3000 else 2000</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Final result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_DDDD5555-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+          <dmn:text>countableResources &lt; applicableLimit</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
     </dmn:context>
@@ -109,7 +213,6 @@ else
 
   <!-- Decision Service -->
   <dmn:decisionService id="_C6D7E8F9-0A1B-2C3D-4E5F-6A7B8C9D0E1F" name="SsiResourceLimitService">
-    <dmn:extensionElements/>
     <dmn:variable id="_D7E8F9A0-1B2C-3D4E-5F6A-7B8C9D0E1F2A"
                   name="SsiResourceLimitService"
                   typeRef="BDT.tCheckResponse"/>

@@ -380,11 +380,14 @@ Future enhancements: Couple limits, full resource exclusions, SEIE, PASS, deemin
       <dmn:requiredDecision href="#_checks"/>
     </dmn:informationRequirement>
     <dmn:context id="_isEligible_context">
-      <!-- Build list of actual check results (excluding helper fields) -->
+      <!-- Build list of actual check results (excluding helper fields like spouseId, isCouple) -->
       <dmn:contextEntry>
         <dmn:variable id="_var_checksAsList" name="checksAsList" typeRef="BDT.tBooleanList"/>
         <dmn:literalExpression id="_expr_checksAsList">
-          <dmn:text>[checks.categoricalEligible, checks.citizenshipEligible, checks.residenceEligible, checks.resourceEligible, checks.incomeEligible]</dmn:text>
+          <dmn:text>// Filter to only the 5 core eligibility checks (exclude spouseId, isCouple, spouse checks)
+for check in (get entries(checks))[item.key in ["categoricalEligible", "citizenshipEligible", "residenceEligible", "resourceEligible", "incomeEligible"]]
+return
+  check.value</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <!-- Evaluate all checks -->

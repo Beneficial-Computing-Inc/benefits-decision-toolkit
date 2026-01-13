@@ -54,8 +54,8 @@
     <dmn:itemComponent id="_5E7A9F2C-8B3D-4E1A-9C6F-2D8B4A7E3C5F" name="residenceState" isCollection="false">
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
-    <dmn:itemComponent id="_9A8B7C6D-5E4F-3A2B-1C9D-8E7F6A5B4C3D" name="countableResources" isCollection="false">
-      <dmn:typeRef>number</dmn:typeRef>
+    <dmn:itemComponent id="_9A8B7C6D-5E4F-3A2B-1C9D-8E7F6A5B4C3D" name="resources" isCollection="false">
+      <dmn:typeRef>tResourceList</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_1F2E3D4C-5B6A-7980-1234-567890ABCDEF" name="incomeSources" isCollection="false">
       <dmn:typeRef>tIncomeSourceList</dmn:typeRef>
@@ -110,6 +110,55 @@
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_3BCDEF01-2345-6789-ABCD-EF0123456789" name="meetsIncomeLimit" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_4CDEF012-3456-789A-BCDE-F0123456789A" name="tResource" isCollection="false">
+    <dmn:itemComponent id="_5DEF0123-4567-89AB-CDEF-0123456789AB" name="id" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_6EF01234-5678-9ABC-DEF0-123456789ABC" name="type" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_7F012345-6789-ABCD-EF01-23456789ABCD" name="value" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_8012345D-789A-BCDE-F012-3456789ABCDE" name="description" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_9123456E-89AB-CDEF-0123-456789ABCDEF" name="isPrimaryResidence" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_A23456F0-9ABC-DEF0-1234-56789ABCDEF0" name="isPrimaryVehicle" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_B3456701-ABCD-EF01-2345-6789ABCDEF01" name="lifeInsuranceFaceValue" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_C4567812-BCDE-F012-3456-789ABCDEF012" name="isBurialFundDesignated" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_D5678923-CDEF-0123-4567-89ABCDEF0123" name="isEssentialForSelfSupport" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_E6789A34-DEF0-1234-5678-9ABCDEF01234" name="tResourceList" isCollection="true">
+    <dmn:typeRef>tResource</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_F789AB45-EF01-2345-6789-ABCDEF012345" name="tResourceCalculation" isCollection="false">
+    <dmn:itemComponent id="_089ABC56-F012-3456-789A-BCDEF0123456" name="totalResources" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_19ABCD67-0123-4567-89AB-CDEF01234567" name="excludedResources" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_2ABCDE78-1234-5678-9ABC-DEF012345678" name="countableResources" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_3BCDEF89-2345-6789-ABCD-EF0123456789" name="applicableLimit" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_4CDEF09A-3456-789A-BCDE-F0123456789A" name="meetsResourceLimit" isCollection="false">
       <dmn:typeRef>boolean</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
@@ -256,7 +305,7 @@
         <dmn:contextEntry>
           <dmn:variable id="_A7B8C9D0-E1F2-4345-0123-456789012345" name="spouseId" typeRef="string"/>
           <dmn:literalExpression id="_B8C9D0E1-F2A3-4456-1234-567890123456">
-            <dmn:text>spouse id(situation.relationships, personId)</dmn:text>
+            <dmn:text>spouseId(situation.relationships, personId)</dmn:text>
           </dmn:literalExpression>
         </dmn:contextEntry>
         <dmn:contextEntry>

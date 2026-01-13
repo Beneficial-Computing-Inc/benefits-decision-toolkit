@@ -16,9 +16,17 @@ body:json {
       "people": [
         {
           "id": "p1",
-          "countableResources": 2500
+          "resources": [
+            {
+              "id": "r1",
+              "type": "bank_account",
+              "value": 2500,
+              "description": "Savings account"
+            }
+          ]
         }
-      ]
+      ],
+      "relationships": []
     },
     "parameters": {
       "personId": "p1"

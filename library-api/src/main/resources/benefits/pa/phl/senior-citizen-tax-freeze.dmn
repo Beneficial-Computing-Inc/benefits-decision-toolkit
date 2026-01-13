@@ -227,7 +227,7 @@ all(checksAsList)</dmn:text>
                 <dmn:contextEntry>
                   <dmn:variable id="_1DDB0368-6F7B-4BBD-9319-12334A4EADC9" name="personId" typeRef="string"/>
                   <dmn:literalExpression id="_13801E1D-F8AE-4036-BBF2-6D18BACC99AC">
-                    <dmn:text>BDT.spouse id(situation.relationships, situation.primaryPersonId)</dmn:text>
+                    <dmn:text>situation.relationships[item.personId = situation.primaryPersonId and item.type = "spouse"][1].relatedPersonId</dmn:text>
                   </dmn:literalExpression>
                 </dmn:contextEntry>
                 <dmn:contextEntry>

@@ -1,0 +1,87 @@
+meta {
+  name: Pass - Multiple Exclusions Applied
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/resources/ssi-resource-limit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1",
+          "resources": [
+            {
+              "id": "r1",
+              "type": "real_property",
+              "value": 250000,
+              "description": "Primary residence",
+              "isPrimaryResidence": true
+            },
+            {
+              "id": "r2",
+              "type": "vehicle",
+              "value": 15000,
+              "description": "Car",
+              "isPrimaryVehicle": true
+            },
+            {
+              "id": "r3",
+              "type": "life_insurance",
+              "value": 1200,
+              "description": "Life insurance policy",
+              "lifeInsuranceFaceValue": 1500
+            },
+            {
+              "id": "r4",
+              "type": "burial_fund",
+              "value": 1500,
+              "description": "Burial fund",
+              "isBurialFundDesignated": true
+            },
+            {
+              "id": "r5",
+              "type": "household_goods",
+              "value": 5000,
+              "description": "Furniture and appliances"
+            },
+            {
+              "id": "r6",
+              "type": "bank_account",
+              "value": 1200,
+              "description": "Checking account"
+            }
+          ]
+        }
+      ],
+      "relationships": []
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+tests {
+  // Total resources: $273,900
+  // Excluded: $272,700 (home $250k + car $15k + life insurance $1.2k + burial $1.5k + household goods $5k)
+  // Countable: $1,200 (only bank account)
+  // Limit: $2,000
+  // Result: PASS (countable < limit)
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
