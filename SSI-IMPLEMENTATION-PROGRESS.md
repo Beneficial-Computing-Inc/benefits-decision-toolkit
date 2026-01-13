@@ -331,6 +331,35 @@ person.citizenshipStatus = "US_CITIZEN"
 
 ## Change Log
 
+### 2026-01-12: Check Pattern Fixes and Skill Documentation
+
+Fixed DMN files that were causing `DynamicEndpointPatternTest` failures:
+
+1. **Fixed `refugee-asylee-within-seven-years.dmn`**
+   - Issue: Check returned `null` instead of `false` when person wasn't a refugee/asylee
+   - Fix: Changed return value from `null` to `false` in the `withinSevenYears` context entry
+   - Pattern: Checks must ALWAYS return boolean (true/false), never null
+
+2. **Fixed `ssi-income-limit.dmn`**
+   - Issue: Was trying to access `.checkResult` on decision service invocation result
+   - Fix: Removed `.checkResult` - inline FEEL decision service calls return output directly
+   - Pattern: For single-output decision services, FEEL returns the value directly
+
+3. **Fixed `calculate-countable-resources.dmn`**
+   - Issue: Used `typeRef="Any"` for parameters instead of proper type definition
+   - Fix: Added proper `tParameters` itemDefinition with `personId` (string) and `resources` (BDT.tResourceList)
+   - Pattern: Always define specific tParameters types for OpenAPI generation
+
+4. **Updated BDT DMN Authoring Skill File (v1.2)**
+   - Added documentation for tParameters with imported complex types
+   - Clarified that inline FEEL decision service calls return output directly (no `.checkResult`)
+   - Added critical warning that checks must return false, never null
+   - Updated troubleshooting section with these common errors
+
+**Result**: All `DynamicEndpointPatternTest` tests passing (3 tests, 0 failures)
+
+---
+
 ### 2026-01-12: FEEL Expression Fixes
 Fixed critical FEEL expression errors that were blocking SSI eligibility endpoint:
 
@@ -408,8 +437,8 @@ Core SSI eligibility is complete! To add enhancements, use these example command
 ---
 
 **Last Updated**: 2026-01-12
-**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements implemented + SSI Couple Eligibility + FEEL Expression Fixes
-**Next Steps**: Consider implementing full resource exclusions OR enhanced income exclusions (SEIE, PASS, etc.)
+**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements implemented + SSI Couple Eligibility + FEEL Expression Fixes + Check Pattern Fixes
+**Next Steps**: Consider implementing enhanced income exclusions (SEIE, PASS, IRWE) OR deeming rules (SI 01320.000)
 
 ---
 

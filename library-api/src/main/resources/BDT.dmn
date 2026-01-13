@@ -60,6 +60,10 @@
     <dmn:itemComponent id="_1F2E3D4C-5B6A-7980-1234-567890ABCDEF" name="incomeSources" isCollection="false">
       <dmn:typeRef>tIncomeSourceList</dmn:typeRef>
     </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE001-2026-0112-STUD-ISREGULARSTUD" name="isStudent" isCollection="false">
+      <dmn:description>POMS SI 00501.020 - Whether person is regularly attending school, college, or job training per student requirements for SEIE</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
   </dmn:itemDefinition>
   <dmn:itemDefinition id="_2A3B4C5D-6E7F-8091-2345-6789ABCDEF01" name="tIncomeSource" isCollection="false">
     <dmn:itemComponent id="_3B4C5D6E-7F80-9123-4567-89ABCDEF0123" name="id" isCollection="false">
@@ -111,6 +115,10 @@
     </dmn:itemComponent>
     <dmn:itemComponent id="_3BCDEF01-2345-6789-ABCD-EF0123456789" name="meetsIncomeLimit" isCollection="false">
       <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE002-2026-0112-SEIE-EXCLUSIONAPPLIED" name="seieExclusionApplied" isCollection="false">
+      <dmn:description>POMS SI 00820.510 - Student Earned Income Exclusion amount applied this month</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
   <dmn:itemDefinition id="_4CDEF012-3456-789A-BCDE-F0123456789A" name="tResource" isCollection="false">
