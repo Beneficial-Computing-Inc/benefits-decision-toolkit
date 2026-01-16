@@ -1,0 +1,43 @@
+meta {
+  name: Fail - Insufficient Work Credits
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/benefits/federal/ssdi-eligibility
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 2
+        }
+      ]
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checks.reportsDisablingCondition.checkResult: eq true
+  res.body.checks.hasSufficientWorkCredits.checkResult: eq false
+  res.body.checks.notAtFullRetirementAge.checkResult: eq true
+  res.body.checks.notPerformingSga.checkResult: eq true
+  res.body.isEligible: eq false
+}
+
+docs {
+  POMS DI 10105.060, RS 00301.120 - Work Credits Requirement
+  Person age 45 needs 5 years of work in last 10 years (20/40 test) but only has 2 years.
+  SSDI is an insurance program - must have contributed through work history.
+}

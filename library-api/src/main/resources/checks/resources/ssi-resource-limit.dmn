@@ -14,12 +14,12 @@ Individual limit: $2,000 | Couple limit: $3,000
 
 Applies exclusions from POMS SI 01130:
 - Home (SI 01130.100): Primary residence
-- Life Insurance (SI 01130.500): Face value ≤ $1,500
-- Household Goods (SI 01130.200): All household goods
+- Life Insurance (SI 01130.300): Face value ≤ $1,500
+- Household Goods (SI 01130.430): All household goods
 - Vehicle (SI 01130.200): Primary vehicle
 - Burial Fund (SI 01130.400): Up to $1,500
 - ABLE Account (SI 01130.740): Up to $100,000
-- Self-Support Property (SI 01130.515): Up to $6,000</dmn:description>
+- Self-Support Property (SI 01130.502): Up to $6,000</dmn:description>
 
   <!-- Import BDT base module -->
   <dmn:import id="_B7C8D9E0-F1A2-3B4C-5D6E-7F8A9B0C1D2E"
@@ -102,7 +102,7 @@ Applies exclusions from POMS SI 01130:
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Life Insurance Exclusion (SI 01130.500) -->
+      <!-- Life Insurance Exclusion (SI 01130.300) -->
       <dmn:contextEntry>
         <dmn:variable id="_BBBB1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="lifeInsuranceExcluded" typeRef="number"/>
         <dmn:literalExpression id="_CCCC1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
@@ -110,7 +110,7 @@ Applies exclusions from POMS SI 01130:
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Household Goods Exclusion (SI 01130.200) -->
+      <!-- Household Goods Exclusion (SI 01130.430) -->
       <dmn:contextEntry>
         <dmn:variable id="_DDDD1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="householdGoodsExcluded" typeRef="number"/>
         <dmn:literalExpression id="_EEEE1111-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
@@ -156,7 +156,7 @@ Applies exclusions from POMS SI 01130:
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Self-Support Property Exclusion (SI 01130.515) - up to $6,000 -->
+      <!-- Self-Support Property Exclusion (SI 01130.502) - up to $6,000 -->
       <dmn:contextEntry>
         <dmn:variable id="_DDDD3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE" name="selfSupportTotal" typeRef="number"/>
         <dmn:literalExpression id="_EEEE3333-BBBB-CCCC-DDDD-EEEEEEEEEEEE">

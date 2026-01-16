@@ -1,0 +1,43 @@
+meta {
+  name: Pass - All Checks Met
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/benefits/federal/ssdi-eligibility
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 6
+        }
+      ]
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checks.reportsDisablingCondition.checkResult: eq true
+  res.body.checks.hasSufficientWorkCredits.checkResult: eq true
+  res.body.checks.notAtFullRetirementAge.checkResult: eq true
+  res.body.checks.notPerformingSga.checkResult: eq true
+  res.body.isEligible: eq true
+}
+
+docs {
+  POMS DI 10105.000 - SSDI Eligibility
+  Person age 45, reports disability, has 6 years work in last 10 (needs 5), under FRA of 67, no current earnings.
+  All 4 requirements met = eligible for SSDI.
+}

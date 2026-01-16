@@ -1,0 +1,43 @@
+meta {
+  name: Pass - Blind Only Needs Ever Worked
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/ssdi/work-credits/has-sufficient-work-credits
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isBlind": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 2
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.workCreditsCalculation.ageRuleApplied: eq "blind_fully_insured"
+  res.body.workCreditsCalculation.requiredYearsOfWork: eq 0
+  res.body.workCreditsCalculation.meetsWorkRequirement: eq true
+}
+
+docs {
+  RS 00301.120 - Blind individuals only need "fully insured" status (ever worked).
+  They are exempt from the 20/40 recent work test. Age 44, only 2 years worked,
+  but has worked and paid SS taxes, so eligible.
+}

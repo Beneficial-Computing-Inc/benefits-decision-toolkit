@@ -1,0 +1,40 @@
+meta {
+  name: Pass - Both Disabled And Blind
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/ssdi/disability/reports-disabling-condition
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": true,
+          "isBlind": true
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.disabilityInfo.isDisabled: eq true
+  res.body.disabilityInfo.isBlind: eq true
+  res.body.disabilityInfo.hasDisablingCondition: eq true
+}
+
+docs {
+  Person reports both disability and blindness. Either is sufficient.
+}

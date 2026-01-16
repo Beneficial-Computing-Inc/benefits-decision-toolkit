@@ -1,0 +1,43 @@
+meta {
+  name: Fail - 40 QQ Within 5 Year Bar
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/citizenship/lapr-with-exception
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "person1",
+      "evaluationDate": "2025-01-15",
+      "people": [
+        {
+          "id": "person1",
+          "dateOfBirth": "1980-01-01",
+          "citizenshipStatus": "LAPR",
+          "qualifyingQuarters": 40,
+          "usEntryDate": "2023-06-01"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "person1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  POMS SI 00502.135B.1 - LAPR with 40 QQs who entered after 8/22/96 but still within 5-year bar.
+  Entry 2023-06-01 + 5 years = 2028-06-01, evaluation 2025-01-15, so still within 5-year bar.
+  No other exception conditions met, so LAPR is not yet SSI-eligible.
+}

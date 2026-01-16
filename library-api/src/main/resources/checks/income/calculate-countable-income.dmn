@@ -108,6 +108,15 @@ Includes SEIE (SI 00820.510) for students under 22.</dmn:description>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
+      <!-- Step 1b: Check if we have income data (three-valued logic) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_HAS_INCOME_DATA_VAR" name="hasIncomeData" typeRef="boolean"/>
+        <dmn:literalExpression id="_HAS_INCOME_DATA_EXPR">
+          <dmn:text>// Have income data if: incomeSources provided OR deemedIncome parameter provided
+(incomeSources != null and count(incomeSources) > 0) or (parameters.deemedIncome != null and parameters.deemedIncome > 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
       <!-- Step 2: Calculate total earned and unearned income -->
       <dmn:contextEntry>
         <dmn:variable id="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F" name="totalEarnedIncome" typeRef="number"/>
@@ -291,11 +300,11 @@ else
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 9: Check if meets income limit -->
+      <!-- Step 9: Check if meets income limit (null if no income data per three-valued logic) -->
       <dmn:contextEntry>
         <dmn:variable id="_19e0a3c5-0e1d-4548-b9a7-734519aed41c" name="meetsIncomeLimit" typeRef="boolean"/>
         <dmn:literalExpression id="_3d1af80d-8a80-4405-bb8b-948a89386f1e">
-          <dmn:text>totalCountableIncome &lt; applicableFBR</dmn:text>
+          <dmn:text>if not(hasIncomeData) then null else totalCountableIncome &lt; applicableFBR</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 

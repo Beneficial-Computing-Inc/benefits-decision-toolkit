@@ -83,10 +83,10 @@ Wrapper check that uses CalculateCountableIncome to apply all income exclusions 
         </dmn:literalExpression>
       </dmn:contextEntry>
 
-      <!-- Step 2: Call CalculateCountableIncome decision service (returns boolean directly) -->
+      <!-- Step 2: Call CalculateCountableIncome decision service and extract checkResult -->
       <dmn:contextEntry>
         <dmn:literalExpression id="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F">
-          <dmn:text>CalculateCountableIncome.CalculateCountableIncomeService(situation: situation, parameters: {personId: parameters.personId, FBR: FBR})</dmn:text>
+          <dmn:text>CalculateCountableIncome.CalculateCountableIncomeService(situation: situation, parameters: {personId: parameters.personId, FBR: FBR}).checkResult</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
     </dmn:context>

@@ -1,0 +1,40 @@
+meta {
+  name: Pass - IsDisabled True
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/checks/ssdi/disability/reports-disabling-condition
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": true
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.disabilityInfo.isDisabled: eq true
+  res.body.disabilityInfo.hasDisablingCondition: eq true
+}
+
+docs {
+  POMS DI 10105.065 - Person self-reports having a disability.
+  For screener purposes, isDisabled = true means they meet the disability
+  self-report requirement. SSA will make the actual medical determination.
+}

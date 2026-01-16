@@ -1,0 +1,43 @@
+meta {
+  name: Fail - Not LAPR
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{host}}/checks/citizenship/lapr-with-exception
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "person1",
+      "evaluationDate": "2025-01-15",
+      "people": [
+        {
+          "id": "person1",
+          "dateOfBirth": "1970-01-01",
+          "citizenshipStatus": "US_CITIZEN",
+          "qualifyingQuarters": 50,
+          "isVeteran": true
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "person1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  This check is specifically for LAPRs. Non-LAPR statuses (like US_CITIZEN) should fail
+  this check. US citizens should use PersonUSCitizen check instead.
+  This ensures the LAPR exception check only applies to LAPRs as per POMS SI 00502.100.
+}

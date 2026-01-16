@@ -1,0 +1,41 @@
+meta {
+  name: Fail - Age 35 Worked 3 Years
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/checks/ssdi/work-credits/has-sufficient-work-credits
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1990-01-15",
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 3
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.workCreditsCalculation.ageRuleApplied: eq "age_31_plus"
+  res.body.workCreditsCalculation.requiredYearsOfWork: eq 5
+  res.body.workCreditsCalculation.meetsWorkRequirement: eq false
+}
+
+docs {
+  RS 00301.120 - Age 35 person with only 3 years of work in last 10 years.
+  Rule: Age 31+ needs 5 years. 3 < 5, so ineligible for SSDI.
+}

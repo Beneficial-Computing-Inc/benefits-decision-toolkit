@@ -1,0 +1,38 @@
+meta {
+  name: Fail - Age 66 Born 1950
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/ssdi/age/not-at-full-retirement-age
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1950-01-15"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.fraCalculation.fullRetirementAge: eq 66
+  res.body.fraCalculation.hasAttainedFra: eq true
+}
+
+docs {
+  POMS DI 10105.080 - Age 76, born 1950 (FRA = 66).
+  Age 76 >= FRA 66, so HAS attained FRA = not eligible for SSDI.
+}

@@ -1,0 +1,49 @@
+meta {
+  name: Fail - Performing SGA
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/benefits/federal/ssdi-eligibility
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 6,
+          "incomeSources": [
+            {
+              "type": "earned",
+              "monthlyAmount": 2000
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checks.reportsDisablingCondition.checkResult: eq true
+  res.body.checks.hasSufficientWorkCredits.checkResult: eq true
+  res.body.checks.notAtFullRetirementAge.checkResult: eq true
+  res.body.checks.notPerformingSga.checkResult: eq false
+  res.body.isEligible: eq false
+}
+
+docs {
+  POMS DI 10501.015 - Substantial Gainful Activity
+  Person earns $2,000/month which exceeds the 2025 SGA threshold of $1,620 for non-blind.
+  If performing SGA, person is not eligible for SSDI regardless of disability.
+}

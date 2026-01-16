@@ -1,0 +1,50 @@
+meta {
+  name: Fail - Above SGA Non-Blind
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/checks/sga/not-performing-sga
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "isBlind": false,
+          "isDisabled": true,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "earned",
+              "category": "wages",
+              "monthlyAmount": 2000
+            }
+          ]
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.sgaCalculation.monthlyEarnedIncome: eq 2000
+  res.body.sgaCalculation.sgaThreshold: eq 1620
+  res.body.sgaCalculation.isBlind: eq false
+  res.body.sgaCalculation.isBelowSga: eq false
+}
+
+docs {
+  POMS DI 10501.015 - Non-blind person earning $2,000/month exceeds the $1,620 SGA threshold.
+  Per DI 10105.065: "If an individual is working and the work is determined to be SGA,
+  we will find that the individual is not disabled regardless of his/her medical condition."
+}

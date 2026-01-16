@@ -1,0 +1,47 @@
+meta {
+  name: Pass - No Earned Income
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/sga/not-performing-sga
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "isBlind": false,
+          "isDisabled": true,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "unearned",
+              "category": "ssdi_benefits",
+              "monthlyAmount": 1200
+            }
+          ]
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.sgaCalculation.monthlyEarnedIncome: eq 0
+  res.body.sgaCalculation.isBelowSga: eq true
+}
+
+docs {
+  Person with only unearned income (SSDI benefits) has $0 earned income, which is below SGA.
+  Unearned income does not count toward SGA determination.
+}

@@ -1,11 +1,11 @@
 meta {
-  name: Pass - LAPR
+  name: Pass - 40 QQ Pre-Welfare-Reform Entry
   type: http
-  seq: 3
+  seq: 1
 }
 
 post {
-  url: {{host}}/checks/citizenship/citizenship-eligibility
+  url: {{host}}/checks/citizenship/lapr-with-exception
   body: json
   auth: none
 }
@@ -21,7 +21,7 @@ body:json {
           "dateOfBirth": "1960-01-01",
           "citizenshipStatus": "LAPR",
           "qualifyingQuarters": 40,
-          "usEntryDate": "1990-01-01"
+          "usEntryDate": "1990-06-15"
         }
       ]
     },
@@ -37,6 +37,6 @@ assert {
 }
 
 docs {
-  POMS SI 00502.100 - LAPR with 40 qualifying quarters exception.
-  Entry before 8/22/96 so no 5-year bar applies.
+  POMS SI 00502.135 - LAPR with 40 qualifying quarters who entered before 8/22/96.
+  No 5-year bar applies since entry was before welfare reform date.
 }

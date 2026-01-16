@@ -12,7 +12,7 @@
   typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
   namespace="https://kie.apache.org/dmn/_9A93C7FE-6B0B-4A21-8E68-39B35E4163D7">
 
-  <dmn:description>Implements SSI citizenship requirements from POMS SI 00501.100</dmn:description>
+  <dmn:description>Implements SSI citizenship requirements from POMS SI 00501.400</dmn:description>
 
   <!-- Import BDT (required) -->
   <dmn:import
@@ -58,7 +58,7 @@
 
   <!-- Decision: checkResult -->
   <dmn:decision id="_69256834-9A45-4B7E-A815-E1D26CBA45D1" name="checkResult">
-    <dmn:description>POMS SI 00501.100.A - Individual must be US citizen for SSI eligibility</dmn:description>
+    <dmn:description>POMS SI 00501.400.B.2.a - Individual must be US citizen or national for SSI eligibility</dmn:description>
     <dmn:extensionElements/>
     <dmn:variable id="_336BBB80-B52A-408A-B0AB-1A4F56446693"
                   name="checkResult"

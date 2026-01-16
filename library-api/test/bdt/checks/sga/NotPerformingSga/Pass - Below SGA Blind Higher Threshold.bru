@@ -1,0 +1,49 @@
+meta {
+  name: Pass - Below SGA Blind Higher Threshold
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/sga/not-performing-sga
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "isBlind": true,
+          "isDisabled": true,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "earned",
+              "category": "wages",
+              "monthlyAmount": 2500
+            }
+          ]
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.sgaCalculation.monthlyEarnedIncome: eq 2500
+  res.body.sgaCalculation.sgaThreshold: eq 2700
+  res.body.sgaCalculation.isBlind: eq true
+  res.body.sgaCalculation.isBelowSga: eq true
+}
+
+docs {
+  POMS DI 10501.015 - Blind person earning $2,500/month is below the higher blind SGA threshold of $2,700.
+  This amount would fail for non-blind ($1,620 threshold) but passes for blind individuals.
+}

@@ -1,0 +1,39 @@
+meta {
+  name: Fail - Never Worked
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/checks/ssdi/work-credits/has-sufficient-work-credits
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1990-01-15",
+          "hasWorkedAndPaidSSTaxes": false,
+          "yearsWorkedInLast10Years": 0
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.workCreditsCalculation.meetsWorkRequirement: eq false
+}
+
+docs {
+  Person has never worked. SSDI requires work history since it's an insurance
+  program based on paying into Social Security. Ineligible.
+}

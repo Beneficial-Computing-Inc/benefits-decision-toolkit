@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_LAPR001-EXC-2026-0115-LAPRWITHEXCEPTION"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+  id="_LAPR001-EXC-MAIN-2026-0115"
+  name="LaprWithException"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_LAPR001-EXC-2026-0115-LAPRWITHEXCEPTION">
+
+  <dmn:description>POMS SI 00502.100 - LAPR (Lawfully Admitted for Permanent Residence) SSI eligibility with exception conditions.
+
+Per POMS SI 00502.100, LAPRs must meet BOTH requirements:
+1. Be in qualified alien status (LAPR)
+2. Meet an exception condition per SI 00502.100A.3:
+   - 40 Qualifying Quarters (SI 00502.135) with 5-year bar for post-8/22/96 entry
+   - Veteran/Active Duty Military or spouse/child thereof (SI 00502.140)
+   - Blind/Disabled AND lawfully residing in US on 8/22/96 (SI 00502.142)
+   - Receiving SSI on 8/22/96 (grandfathered)
+
+This check returns true only if LAPR status AND at least one exception condition are met.</dmn:description>
+
+  <!-- Import BDT -->
+  <dmn:import
+    id="_LAPR_IMPORT_BDT"
+    name="BDT"
+    namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+    locationURI="../../bdt.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters -->
+  <dmn:itemDefinition id="_LAPR_TPARAMS" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_LAPR_TPARAMS_PID" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_LAPR_SERVICE" name="LaprWithExceptionService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPR_SERVICE_VAR"
+                  name="LaprWithExceptionService"
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_LAPR_DECISION"/>
+    <dmn:inputData href="#_LAPR_SIT"/>
+    <dmn:inputData href="#_LAPR_PARAMS"/>
+  </dmn:decisionService>
+
+  <!-- Input Data: situation -->
+  <dmn:inputData id="_LAPR_SIT" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPR_SIT_VAR"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input Data: parameters -->
+  <dmn:inputData id="_LAPR_PARAMS" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPR_PARAMS_VAR"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: checkResult -->
+  <dmn:decision id="_LAPR_DECISION" name="checkResult">
+    <dmn:description>POMS SI 00502.100 - LAPR must have qualified alien status AND meet an exception condition.
+
+Exception conditions checked:
+1. 40 QQs (SI 00502.135) - with 5-year bar for entry on/after 8/22/96
+2. Veteran/Military (SI 00502.140) - veteran, active duty, or spouse/dependent child
+3. Blind/Disabled + 8/22/96 residence (SI 00502.142)
+4. Receiving SSI on 8/22/96 (grandfathered)</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPR_DECISION_VAR"
+                  name="checkResult"
+                  typeRef="boolean"/>
+    <dmn:informationRequirement id="_LAPR_REQ_SIT">
+      <dmn:requiredInput href="#_LAPR_SIT"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_LAPR_REQ_PARAMS">
+      <dmn:requiredInput href="#_LAPR_PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_LAPR_CONTEXT">
+      <!-- Step 1: Get person from situation -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_PERSON" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_LAPR_EXPR_PERSON">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Check if person is LAPR -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_ISLAPR" name="isLapr" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_ISLAPR">
+          <dmn:text>person.citizenshipStatus = "LAPR"</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Check 40 QQ exception (with 5-year bar logic) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_WELFAREDATE" name="welfareReformDate" typeRef="date"/>
+        <dmn:literalExpression id="_LAPR_EXPR_WELFAREDATE">
+          <dmn:text>date("1996-08-22")</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_HAS40QQ" name="has40QualifyingQuarters" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_HAS40QQ">
+          <dmn:text>// POMS SI 00502.135 - Has 40 or more qualifying quarters
+(person.qualifyingQuarters != null and person.qualifyingQuarters >= 40)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_ENTEREDPRE822" name="enteredBeforeWelfareReform" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_ENTEREDPRE822">
+          <dmn:text>// POMS SI 00502.135B.1 - Entered US before 8/22/96
+(person.usEntryDate != null and date(person.usEntryDate) &lt; welfareReformDate)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_FIVEYEARSINCE" name="fiveYearsSinceEntry" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_FIVEYEARSINCE">
+          <dmn:text>// POMS SI 00502.135B.1 - 5-year bar has passed
+(person.usEntryDate != null and situation.evaluationDate != null and
+ date(person.usEntryDate) + duration("P5Y") &lt;= date(situation.evaluationDate))</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_40QQEXCEPTION" name="meets40QQException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_40QQEXCEPTION">
+          <dmn:text>// 40 QQ Exception: has 40 QQs AND (entered before 8/22/96 OR 5-year bar has passed)
+has40QualifyingQuarters and (enteredBeforeWelfareReform or fiveYearsSinceEntry)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Check Veteran/Military exception -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_VETMILEXC" name="meetsVeteranMilitaryException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_VETMILEXC">
+          <dmn:text>// POMS SI 00502.140 - Veteran, active duty, or spouse/dependent child
+(person.isVeteran = true) or
+(person.isActiveDutyMilitary = true) or
+(person.isSpouseOfVeteranOrActiveDuty = true) or
+(person.isDependentChildOfVeteranOrActiveDuty = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Check Blind/Disabled + 8/22/96 residence exception -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_BLINDDISEXC" name="meetsBlindDisabledResidenceException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_BLINDDISEXC">
+          <dmn:text>// POMS SI 00502.142 - Blind or disabled AND lawfully residing on 8/22/96
+(person.isBlindOrDisabled = true and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Check Receiving SSI on 8/22/96 (grandfathered) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_GRANDFATHEREXC" name="meetsGrandfatheredException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_GRANDFATHEREXC">
+          <dmn:text>// POMS SI 00502.100A.1 - Was receiving SSI on 8/22/96
+(person.wasReceivingSSIOn8221996 = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 7: Check if ANY exception condition is met -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_ANYEXC" name="meetsAnyExceptionCondition" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_ANYEXC">
+          <dmn:text>meets40QQException or meetsVeteranMilitaryException or meetsBlindDisabledResidenceException or meetsGrandfatheredException</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 8: Final result - LAPR AND meets exception -->
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPR_VAR_RESULT" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPR_EXPR_RESULT">
+          <dmn:text>isLapr and meetsAnyExceptionCondition</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_LAPR_EXPR_RETURN">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+</dmn:definitions>

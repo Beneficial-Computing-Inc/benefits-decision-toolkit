@@ -1,0 +1,39 @@
+meta {
+  name: Pass - IsBlind True
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/checks/ssdi/disability/reports-disabling-condition
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isBlind": true
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.disabilityInfo.isBlind: eq true
+  res.body.disabilityInfo.hasDisablingCondition: eq true
+}
+
+docs {
+  POMS DI 10105.065B - Statutory blindness meets the disability requirement.
+  Blind individuals have special rules but blindness is a qualifying disability.
+}

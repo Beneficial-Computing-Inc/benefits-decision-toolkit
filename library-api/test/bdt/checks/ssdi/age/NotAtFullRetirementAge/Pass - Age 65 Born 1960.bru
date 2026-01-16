@@ -1,0 +1,38 @@
+meta {
+  name: Pass - Age 65 Born 1960
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/checks/ssdi/age/not-at-full-retirement-age
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1960-06-15"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.fraCalculation.fullRetirementAge: eq 67
+  res.body.fraCalculation.hasAttainedFra: eq false
+}
+
+docs {
+  POMS DI 10105.080 - Age 65, born 1960 (FRA = 67).
+  Age 65 < FRA 67, so NOT at FRA = eligible for SSDI consideration.
+}

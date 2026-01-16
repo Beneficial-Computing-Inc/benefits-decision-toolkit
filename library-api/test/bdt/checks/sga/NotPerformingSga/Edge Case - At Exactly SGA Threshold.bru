@@ -1,0 +1,48 @@
+meta {
+  name: Edge Case - At Exactly SGA Threshold
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/checks/sga/not-performing-sga
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "isBlind": false,
+          "isDisabled": true,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "earned",
+              "category": "wages",
+              "monthlyAmount": 1620
+            }
+          ]
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.sgaCalculation.monthlyEarnedIncome: eq 1620
+  res.body.sgaCalculation.sgaThreshold: eq 1620
+  res.body.sgaCalculation.isBelowSga: eq true
+}
+
+docs {
+  POMS DI 10501.015 - Earnings at exactly the SGA threshold ($1,620) are NOT considered SGA.
+  The policy states earnings "more than" the threshold indicate SGA, so equal-to passes.
+}

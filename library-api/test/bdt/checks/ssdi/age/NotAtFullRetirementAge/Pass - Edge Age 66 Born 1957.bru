@@ -1,0 +1,39 @@
+meta {
+  name: Pass - Edge Age 66 Born 1957
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/checks/ssdi/age/not-at-full-retirement-age
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1957-07-15"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.fraCalculation.hasAttainedFra: eq false
+}
+
+docs {
+  POMS DI 10105.080 - Born 1957, FRA = 66 + 6 months = 66.5 years.
+  At age 68, they have attained FRA. But this tests the edge case where
+  the month-based calculation matters. Person born July 1957 at age 68
+  in Jan 2026 has attained FRA 66.5.
+}

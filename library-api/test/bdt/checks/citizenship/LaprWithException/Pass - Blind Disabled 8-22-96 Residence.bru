@@ -1,0 +1,42 @@
+meta {
+  name: Pass - Blind Disabled 8-22-96 Residence
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{host}}/checks/citizenship/lapr-with-exception
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "person1",
+      "evaluationDate": "2025-01-15",
+      "people": [
+        {
+          "id": "person1",
+          "dateOfBirth": "1965-01-01",
+          "citizenshipStatus": "LAPR",
+          "isBlindOrDisabled": true,
+          "wasLawfullyResidingOn8221996": true
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "person1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+docs {
+  POMS SI 00502.142 - LAPR who is blind or disabled AND was lawfully residing in US on 8/22/96.
+  Eligibility applies regardless of age, when disability onset occurred, or when application filed.
+}

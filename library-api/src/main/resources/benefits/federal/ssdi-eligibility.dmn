@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_SSDI-ELIG-2026-0115"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+  xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+  xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+  xmlns:Benefits="https://kie.apache.org/dmn/_9514D95A-63FB-4345-911B-D83E1867F709"
+  xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+  xmlns:NotPerformingSga="https://kie.apache.org/dmn/_SGA-NOT-PERFORMING-2026-0115"
+  xmlns:HasSufficientWorkCredits="https://kie.apache.org/dmn/_SSDI-WORK-CREDITS-2026-0115"
+  xmlns:NotAtFullRetirementAge="https://kie.apache.org/dmn/_SSDI-FRA-2026-0115"
+  xmlns:ReportsDisablingCondition="https://kie.apache.org/dmn/_SSDI-DISAB-2026-0115"
+  id="_SSDI-ELIG-DEF"
+  name="SsdiEligibility"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_SSDI-ELIG-2026-0115">
+
+  <dmn:description>SSDI (Social Security Disability Insurance) Eligibility Screener - POMS DI 10105.000
+
+Composes all 4 core SSDI eligibility requirements:
+
+1. Disability (DI 10105.065): Person reports a disabling condition (self-reported for screener)
+2. Work Credits (DI 10105.060): Person has sufficient work history based on age
+3. Not at FRA (DI 10105.060): Person has not reached Full Retirement Age
+4. Not Performing SGA (DI 10501.015): Current earnings below SGA threshold
+
+Unlike SSI (needs-based), SSDI is an insurance program requiring both disability AND sufficient work history.
+No income or resource limits apply - SSDI is an earned benefit based on prior contributions.
+
+A person is potentially eligible for SSDI if ALL 4 requirements are met.</dmn:description>
+
+  <dmn:extensionElements/>
+
+  <!-- Import Benefits (for tBenefitResponse) -->
+  <dmn:import
+    id="_SSDI-IMPORT-BENEFITS"
+    name="Benefits"
+    namespace="https://kie.apache.org/dmn/_9514D95A-63FB-4345-911B-D83E1867F709"
+    locationURI="../Benefits.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import BDT (for tSituation) -->
+  <dmn:import
+    id="_SSDI-IMPORT-BDT"
+    name="BDT"
+    namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+    locationURI="../../BDT.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import NotPerformingSga check -->
+  <dmn:import
+    id="_SSDI-IMPORT-SGA"
+    name="NotPerformingSga"
+    namespace="https://kie.apache.org/dmn/_SGA-NOT-PERFORMING-2026-0115"
+    locationURI="../../checks/sga/not-performing-sga.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import HasSufficientWorkCredits check -->
+  <dmn:import
+    id="_SSDI-IMPORT-WORKCREDITS"
+    name="HasSufficientWorkCredits"
+    namespace="https://kie.apache.org/dmn/_SSDI-WORK-CREDITS-2026-0115"
+    locationURI="../../checks/ssdi/work-credits/has-sufficient-work-credits.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import NotAtFullRetirementAge check -->
+  <dmn:import
+    id="_SSDI-IMPORT-FRA"
+    name="NotAtFullRetirementAge"
+    namespace="https://kie.apache.org/dmn/_SSDI-FRA-2026-0115"
+    locationURI="../../checks/ssdi/age/not-at-full-retirement-age.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import ReportsDisablingCondition check -->
+  <dmn:import
+    id="_SSDI-IMPORT-DISABILITY"
+    name="ReportsDisablingCondition"
+    namespace="https://kie.apache.org/dmn/_SSDI-DISAB-2026-0115"
+    locationURI="../../checks/ssdi/disability/reports-disabling-condition.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Decision Service: SsdiEligibilityService -->
+  <dmn:decisionService id="_SSDI-SERVICE" name="SsdiEligibilityService">
+    <dmn:description>SSDI Eligibility Decision Service - Returns eligibility result based on 4 core requirements.</dmn:description>
+    <dmn:variable id="_SSDI-SERVICE-VAR" name="SsdiEligibilityService" typeRef="Benefits.tBenefitResponse"/>
+    <dmn:outputDecision href="#_SSDI-DEC-CHECKS"/>
+    <dmn:outputDecision href="#_SSDI-DEC-ISELIGIBLE"/>
+    <dmn:inputData href="#_SSDI-INPUT-SITUATION"/>
+  </dmn:decisionService>
+
+  <!-- Input Data: situation -->
+  <dmn:inputData id="_SSDI-INPUT-SITUATION" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_SSDI-INPUT-SITUATION-VAR" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Decision: checks -->
+  <dmn:decision id="_SSDI-DEC-CHECKS" name="checks">
+    <dmn:description>Evaluates all 4 SSDI eligibility checks and returns individual results</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SSDI-DEC-CHECKS-VAR" name="checks" typeRef="context"/>
+    <dmn:informationRequirement id="_SSDI-IR-CHECKS-SITUATION">
+      <dmn:requiredInput href="#_SSDI-INPUT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_SSDI-KR-SGA">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_SGA-NOT-PERFORMING-2026-0115#_SGA-SERVICE"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_SSDI-KR-WORKCREDITS">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_SSDI-WORK-CREDITS-2026-0115#_WC-SERVICE"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_SSDI-KR-FRA">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_SSDI-FRA-2026-0115#_FRA-DS"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_SSDI-KR-DISABILITY">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_SSDI-DISAB-2026-0115#_DISAB-DS"/>
+    </dmn:knowledgeRequirement>
+    <dmn:context id="_SSDI-CHECKS-CONTEXT">
+      <!-- Check 1: Reports Disabling Condition (POMS DI 10105.065) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SSDI-VAR-DISABILITY" name="reportsDisablingCondition" typeRef="boolean"/>
+        <dmn:invocation id="_SSDI-INVOKE-DISABILITY">
+          <dmn:literalExpression id="_SSDI-INVOKE-DISABILITY-EXPR">
+            <dmn:text>ReportsDisablingCondition.ReportsDisablingConditionService</dmn:text>
+          </dmn:literalExpression>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-DISABILITY-SITUATION" name="situation" typeRef="BDT.tSituation"/>
+            <dmn:literalExpression id="_SSDI-BIND-DISABILITY-SITUATION">
+              <dmn:text>situation</dmn:text>
+            </dmn:literalExpression>
+          </dmn:binding>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-DISABILITY-PARAMS" name="parameters" typeRef="ReportsDisablingCondition.tParameters"/>
+            <dmn:context id="_SSDI-BIND-DISABILITY-PARAMS">
+              <dmn:contextEntry>
+                <dmn:variable id="_SSDI-PARAM-DISABILITY-PERSONID" name="personId" typeRef="string"/>
+                <dmn:literalExpression id="_SSDI-BIND-DISABILITY-PERSONID">
+                  <dmn:text>situation.primaryPersonId</dmn:text>
+                </dmn:literalExpression>
+              </dmn:contextEntry>
+            </dmn:context>
+          </dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+
+      <!-- Check 2: Has Sufficient Work Credits (POMS DI 10105.060, RS 00301.120) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SSDI-VAR-WORKCREDITS" name="hasSufficientWorkCredits" typeRef="boolean"/>
+        <dmn:invocation id="_SSDI-INVOKE-WORKCREDITS">
+          <dmn:literalExpression id="_SSDI-INVOKE-WORKCREDITS-EXPR">
+            <dmn:text>HasSufficientWorkCredits.HasSufficientWorkCreditsService</dmn:text>
+          </dmn:literalExpression>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-WORKCREDITS-SITUATION" name="situation" typeRef="BDT.tSituation"/>
+            <dmn:literalExpression id="_SSDI-BIND-WORKCREDITS-SITUATION">
+              <dmn:text>situation</dmn:text>
+            </dmn:literalExpression>
+          </dmn:binding>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-WORKCREDITS-PARAMS" name="parameters" typeRef="HasSufficientWorkCredits.tParameters"/>
+            <dmn:context id="_SSDI-BIND-WORKCREDITS-PARAMS">
+              <dmn:contextEntry>
+                <dmn:variable id="_SSDI-PARAM-WORKCREDITS-PERSONID" name="personId" typeRef="string"/>
+                <dmn:literalExpression id="_SSDI-BIND-WORKCREDITS-PERSONID">
+                  <dmn:text>situation.primaryPersonId</dmn:text>
+                </dmn:literalExpression>
+              </dmn:contextEntry>
+            </dmn:context>
+          </dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+
+      <!-- Check 3: Not at Full Retirement Age (POMS DI 10105.060, DI 10105.080) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SSDI-VAR-FRA" name="notAtFullRetirementAge" typeRef="boolean"/>
+        <dmn:invocation id="_SSDI-INVOKE-FRA">
+          <dmn:literalExpression id="_SSDI-INVOKE-FRA-EXPR">
+            <dmn:text>NotAtFullRetirementAge.NotAtFullRetirementAgeService</dmn:text>
+          </dmn:literalExpression>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-FRA-SITUATION" name="situation" typeRef="BDT.tSituation"/>
+            <dmn:literalExpression id="_SSDI-BIND-FRA-SITUATION">
+              <dmn:text>situation</dmn:text>
+            </dmn:literalExpression>
+          </dmn:binding>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-FRA-PARAMS" name="parameters" typeRef="NotAtFullRetirementAge.tParameters"/>
+            <dmn:context id="_SSDI-BIND-FRA-PARAMS">
+              <dmn:contextEntry>
+                <dmn:variable id="_SSDI-PARAM-FRA-PERSONID" name="personId" typeRef="string"/>
+                <dmn:literalExpression id="_SSDI-BIND-FRA-PERSONID">
+                  <dmn:text>situation.primaryPersonId</dmn:text>
+                </dmn:literalExpression>
+              </dmn:contextEntry>
+            </dmn:context>
+          </dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+
+      <!-- Check 4: Not Performing SGA (POMS DI 10501.015) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SSDI-VAR-SGA" name="notPerformingSga" typeRef="boolean"/>
+        <dmn:invocation id="_SSDI-INVOKE-SGA">
+          <dmn:literalExpression id="_SSDI-INVOKE-SGA-EXPR">
+            <dmn:text>NotPerformingSga.NotPerformingSgaService</dmn:text>
+          </dmn:literalExpression>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-SGA-SITUATION" name="situation" typeRef="BDT.tSituation"/>
+            <dmn:literalExpression id="_SSDI-BIND-SGA-SITUATION">
+              <dmn:text>situation</dmn:text>
+            </dmn:literalExpression>
+          </dmn:binding>
+          <dmn:binding>
+            <dmn:parameter id="_SSDI-PARAM-SGA-PARAMS" name="parameters" typeRef="NotPerformingSga.tParameters"/>
+            <dmn:context id="_SSDI-BIND-SGA-PARAMS">
+              <dmn:contextEntry>
+                <dmn:variable id="_SSDI-PARAM-SGA-PERSONID" name="personId" typeRef="string"/>
+                <dmn:literalExpression id="_SSDI-BIND-SGA-PERSONID">
+                  <dmn:text>situation.primaryPersonId</dmn:text>
+                </dmn:literalExpression>
+              </dmn:contextEntry>
+            </dmn:context>
+          </dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision: isEligible -->
+  <dmn:decision id="_SSDI-DEC-ISELIGIBLE" name="isEligible">
+    <dmn:description>Returns true if ALL 4 SSDI eligibility requirements are met (POMS DI 10105.000):
+1. reportsDisablingCondition - Person has a disabling condition
+2. hasSufficientWorkCredits - Person has enough work history for their age
+3. notAtFullRetirementAge - Person has not reached FRA
+4. notPerformingSga - Person's earnings are below SGA threshold</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SSDI-DEC-ISELIGIBLE-VAR" name="isEligible" typeRef="boolean"/>
+    <dmn:informationRequirement id="_SSDI-IR-ISELIGIBLE-CHECKS">
+      <dmn:requiredDecision href="#_SSDI-DEC-CHECKS"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_SSDI-ISELIGIBLE-CONTEXT">
+      <!-- Build list of check results -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SSDI-VAR-CHECKSLIST" name="checksAsList" typeRef="BDT.tBooleanList"/>
+        <dmn:literalExpression id="_SSDI-EXPR-CHECKSLIST">
+          <dmn:text>[checks.reportsDisablingCondition.checkResult, checks.hasSufficientWorkCredits.checkResult, checks.notAtFullRetirementAge.checkResult, checks.notPerformingSga.checkResult]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <!-- Evaluate all checks -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SSDI-VAR-RESULT" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_SSDI-EXPR-RESULT">
+          <dmn:text>all(checksAsList)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <!-- Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_SSDI-EXPR-RETURN">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+</dmn:definitions>

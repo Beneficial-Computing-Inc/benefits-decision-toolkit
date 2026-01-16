@@ -1,0 +1,49 @@
+meta {
+  name: Pass - Below SGA Non-Blind
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/checks/sga/not-performing-sga
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "isBlind": false,
+          "isDisabled": true,
+          "incomeSources": [
+            {
+              "id": "inc1",
+              "type": "earned",
+              "category": "wages",
+              "monthlyAmount": 1500
+            }
+          ]
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.sgaCalculation.monthlyEarnedIncome: eq 1500
+  res.body.sgaCalculation.sgaThreshold: eq 1620
+  res.body.sgaCalculation.isBlind: eq false
+  res.body.sgaCalculation.isBelowSga: eq true
+}
+
+docs {
+  POMS DI 10501.015 - Non-blind person earning $1,500/month is below the $1,620 SGA threshold.
+  Should be eligible for SSDI consideration.
+}

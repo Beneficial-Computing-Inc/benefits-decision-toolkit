@@ -1,0 +1,43 @@
+meta {
+  name: Fail - Not Disabled
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/benefits/federal/ssdi-eligibility
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": false,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 6
+        }
+      ]
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checks.reportsDisablingCondition.checkResult: eq false
+  res.body.checks.hasSufficientWorkCredits.checkResult: eq true
+  res.body.checks.notAtFullRetirementAge.checkResult: eq true
+  res.body.checks.notPerformingSga.checkResult: eq true
+  res.body.isEligible: eq false
+}
+
+docs {
+  POMS DI 10105.065 - Disability Requirement
+  Person does not report a disabling condition. All other checks pass but
+  disability is required for SSDI eligibility.
+}

@@ -1,11 +1,11 @@
 meta {
-  name: Pass - LAPR
+  name: Pass - Spouse of Veteran
   type: http
-  seq: 3
+  seq: 6
 }
 
 post {
-  url: {{host}}/checks/citizenship/citizenship-eligibility
+  url: {{host}}/checks/citizenship/lapr-with-exception
   body: json
   auth: none
 }
@@ -18,10 +18,9 @@ body:json {
       "people": [
         {
           "id": "person1",
-          "dateOfBirth": "1960-01-01",
+          "dateOfBirth": "1975-01-01",
           "citizenshipStatus": "LAPR",
-          "qualifyingQuarters": 40,
-          "usEntryDate": "1990-01-01"
+          "isSpouseOfVeteranOrActiveDuty": true
         }
       ]
     },
@@ -37,6 +36,6 @@ assert {
 }
 
 docs {
-  POMS SI 00502.100 - LAPR with 40 qualifying quarters exception.
-  Entry before 8/22/96 so no 5-year bar applies.
+  POMS SI 00502.140A.5 - LAPR spouse of veteran or active duty service member.
+  Includes unremarried surviving spouse. Exception has no time limit.
 }

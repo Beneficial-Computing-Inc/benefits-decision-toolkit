@@ -1,0 +1,35 @@
+meta {
+  name: Fail - No DOB
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/checks/ssdi/age/not-at-full-retirement-age
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  Edge case: No date of birth provided. Cannot determine FRA status.
+  Conservative handling: return false (cannot verify eligibility without DOB).
+}

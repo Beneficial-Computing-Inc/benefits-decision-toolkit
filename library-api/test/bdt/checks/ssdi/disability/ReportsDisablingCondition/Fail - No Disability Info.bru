@@ -1,0 +1,37 @@
+meta {
+  name: Fail - No Disability Info
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/checks/ssdi/disability/reports-disabling-condition
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.disabilityInfo.hasDisablingCondition: eq false
+}
+
+docs {
+  No disability information provided. Defaults to not having a
+  disabling condition (cannot screen into SSDI without affirming disability).
+}

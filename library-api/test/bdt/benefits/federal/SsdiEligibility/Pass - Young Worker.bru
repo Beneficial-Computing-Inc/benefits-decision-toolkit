@@ -1,0 +1,44 @@
+meta {
+  name: Pass - Young Worker
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{host}}/benefits/federal/ssdi-eligibility
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "2004-06-15",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 2
+        }
+      ]
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checks.reportsDisablingCondition.checkResult: eq true
+  res.body.checks.hasSufficientWorkCredits.checkResult: eq true
+  res.body.checks.notAtFullRetirementAge.checkResult: eq true
+  res.body.checks.notPerformingSga.checkResult: eq true
+  res.body.isEligible: eq true
+}
+
+docs {
+  POMS RS 00301.140 - Young Worker Rules
+  Person age 21 (under 24) only needs ~1.5 years of work in last 3 years.
+  Person has 2 years of work, which meets the young worker requirement.
+  Young workers have less stringent work credit requirements.
+}

@@ -34,6 +34,11 @@
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_8F23A5C9-6D8E-4B1A-9F7C-3A9B2E5D4F6A" name="isBlindOrDisabled" isCollection="false">
+      <dmn:description>DEPRECATED - Use isBlind and isDisabled separately. Kept for backwards compatibility. True if person meets statutory blindness OR has qualifying disability.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SSDI002-2026-0115-DISAB-ISDISABLED" name="isDisabled" isCollection="false">
+      <dmn:description>POMS DI 10105.065 - Whether person has a medically determinable physical or mental impairment expected to last 12+ months or result in death, and is unable to engage in SGA. Used for SSI categorical eligibility and SSDI disability requirement.</dmn:description>
       <dmn:typeRef>boolean</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_007C0A99-0361-48A3-A52B-4FAECB30663E" name="refugeeAdmissionDate" isCollection="false">
@@ -67,6 +72,52 @@
     <dmn:itemComponent id="_DEEM001-2026-0112-ELIG-ISSSIELIGIBLE" name="isSSIEligible" isCollection="false">
       <dmn:description>POMS SI 01320.000 - Whether person meets basic SSI eligibility (age/blind/disabled, citizenship, residence). Used to identify ineligible spouse/parent/child for deeming.</dmn:description>
       <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SSDI001-2026-0115-BLIND-ISBLIND" name="isBlind" isCollection="false">
+      <dmn:description>POMS DI 10501.015 - Whether person meets statutory blindness definition. Used for SSDI SGA threshold selection (blind: $2,700/month vs non-blind: $1,620/month in 2025). Note: Blind individuals under Title XVI (SSI) are NOT subject to SGA limitations.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <!-- LPR Exception Condition Fields - POMS SI 00502.100A.3 -->
+    <dmn:itemComponent id="_LPR001-2026-0115-QQ-QUALIFYINGQUARTERS" name="qualifyingQuarters" isCollection="false">
+      <dmn:description>POMS SI 00502.135 - Total qualifying quarters (QQ) of earnings. Includes own QQs, parent's QQs (while under 18), and spouse's QQs (during marriage). 40 QQs required for LAPR exception.</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR002-2026-0115-ENTRY-USENTRYDATE" name="usEntryDate" isCollection="false">
+      <dmn:description>POMS SI 00502.135B.1 - Date of entry into US as a qualified alien. Used for 5-year bar calculation for LAPRs entering on/after 8/22/96.</dmn:description>
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR003-2026-0115-VET-ISVETERAN" name="isVeteran" isCollection="false">
+      <dmn:description>POMS SI 00502.140 - Whether person is a veteran (honorably discharged, 2+ years active duty or equivalent).</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR004-2026-0115-MIL-ISACTIVEDUTYMILITARY" name="isActiveDutyMilitary" isCollection="false">
+      <dmn:description>POMS SI 00502.140A.2 - Whether person is currently on active duty in US Armed Forces.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR005-2026-0115-VETSP-ISSPOUSEOFVETERAN" name="isSpouseOfVeteranOrActiveDuty" isCollection="false">
+      <dmn:description>POMS SI 00502.140A.5 - Whether person is spouse of veteran or active duty service member (includes unremarried surviving spouse).</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR006-2026-0115-VETCH-ISDEPENDENTCHILDOFVETERAN" name="isDependentChildOfVeteranOrActiveDuty" isCollection="false">
+      <dmn:description>POMS SI 00502.140A.6 - Whether person is unmarried dependent child (under 18, or under 22 if student) of veteran or active duty service member.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR007-2026-0115-RES96-WASLAWFULLYRESIDING8221996" name="wasLawfullyResidingOn8221996" isCollection="false">
+      <dmn:description>POMS SI 00502.142B.2 - Whether person was lawfully residing in US on 8/22/96. Required for blind/disabled LAPR exception.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR008-2026-0115-SSI96-WASRECEIVINGSSI8221996" name="wasReceivingSSIOn8221996" isCollection="false">
+      <dmn:description>POMS SI 00502.100A.1 - Whether person was receiving SSI benefits on 8/22/96 (grandfathered eligibility).</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <!-- SSDI Work Credits Fields - POMS DI 10105.060, RS 00301.120 -->
+    <dmn:itemComponent id="_SSDI003-2026-0115-WORK-HASWORKED" name="hasWorkedAndPaidSSTaxes" isCollection="false">
+      <dmn:description>POMS DI 10105.060 - Whether person has ever worked and paid Social Security taxes. Basic requirement for SSDI eligibility.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SSDI004-2026-0115-WORK-YEARSLAST10" name="yearsWorkedInLast10Years" isCollection="false">
+      <dmn:description>RS 00301.120 - Approximate years worked in the last 10 years. Used for 20/40 test: need ~5 years for ages 31+. Also used for young worker rules.</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
   <dmn:itemDefinition id="_2A3B4C5D-6E7F-8091-2345-6789ABCDEF01" name="tIncomeSource" isCollection="false">

@@ -1,11 +1,11 @@
 meta {
-  name: Pass - LAPR
+  name: Pass - 40 QQ Post-Welfare-Reform 5 Years Passed
   type: http
-  seq: 3
+  seq: 2
 }
 
 post {
-  url: {{host}}/checks/citizenship/citizenship-eligibility
+  url: {{host}}/checks/citizenship/lapr-with-exception
   body: json
   auth: none
 }
@@ -18,10 +18,10 @@ body:json {
       "people": [
         {
           "id": "person1",
-          "dateOfBirth": "1960-01-01",
+          "dateOfBirth": "1970-01-01",
           "citizenshipStatus": "LAPR",
-          "qualifyingQuarters": 40,
-          "usEntryDate": "1990-01-01"
+          "qualifyingQuarters": 45,
+          "usEntryDate": "2010-01-01"
         }
       ]
     },
@@ -37,6 +37,6 @@ assert {
 }
 
 docs {
-  POMS SI 00502.100 - LAPR with 40 qualifying quarters exception.
-  Entry before 8/22/96 so no 5-year bar applies.
+  POMS SI 00502.135B.1 - LAPR with 40 QQs who entered after 8/22/96 but 5-year bar has passed.
+  Entry 2010-01-01 + 5 years = 2015-01-01, evaluation 2025-01-15, so 5-year bar passed.
 }

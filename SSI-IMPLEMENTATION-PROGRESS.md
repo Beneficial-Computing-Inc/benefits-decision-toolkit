@@ -111,7 +111,53 @@ Implementing a complete SSI (Supplemental Security Income) eligibility screener 
 
 ---
 
-### 🚧 NOT YET IMPLEMENTED (Future Enhancements)
+### 🚧 NOT YET IMPLEMENTED - Critical Gaps Identified (January 15, 2026)
+
+Based on POMS research, the following significant SSI rules have not yet been implemented:
+
+#### ⚠️ HIGH PRIORITY - Potentially Critical for Accuracy
+
+1. **Sponsor Deeming (POMS SI 00502.200)** - SIGNIFICANT GAP
+   - For LAPRs who entered with I-864 Affidavit of Support, sponsor's income AND resources are deemed to the alien
+   - Applies IN ADDITION to LAPR exception conditions (an LAPR could meet all exceptions but still be ineligible due to sponsor's resources)
+   - Many family-sponsored LAPRs have sponsors - this affects a large population
+   - Includes indigence exception, deeming period calculations
+   - **Complexity**: High
+   - **Impact**: Could incorrectly show LAPRs as eligible when they're not
+
+2. **Deemed Resources from Spouse/Parent (POMS SI 01330)**
+   - We implemented income deeming (SI 01320) but NOT resource deeming
+   - Ineligible spouse/parent resources are deemed similarly to income
+   - Formula: Spouse/parent's resources minus exclusions → deemed to eligible individual
+   - **Complexity**: Medium (follows income deeming pattern)
+
+3. **Fleeing Felon / Probation Violator (POMS SI 00530.010)**
+   - Hard disqualifying condition - anyone with outstanding felony warrant or parole/probation violation is ineligible
+   - Simple boolean check: `isFugitiveFelonOrProbationViolator`
+   - **Complexity**: Low (single boolean field)
+   - **Impact**: Disqualifying condition that should be checked early
+
+#### 🔶 MEDIUM PRIORITY - Additional Citizenship Pathways
+
+4. **Battered Spouse/Child - Deemed Qualified Alien (POMS SI 00502.116)**
+   - Non-citizens who suffered battery or extreme cruelty by family member gain "deemed qualified alien" status
+   - Another citizenship pathway not currently implemented
+   - **Complexity**: Medium
+
+5. **Time-Limited Qualified Aliens - 7-Year Limits (POMS SI 00502.106)**
+   - Beyond refugees/asylees, other statuses have 7-year limits:
+     - Cuban-Haitian Entrant
+     - Vietnamese Amerasian
+     - Withheld Deportation
+   - We have `RefugeeAsyleeWithinSevenYears` but may need similar checks for other statuses
+   - **Complexity**: Medium (follows existing pattern)
+
+#### 🔷 LOWER PRIORITY - Payment Calculation vs Eligibility
+
+6. **Institutionalization - $30 Payment Limit (POMS SI 00520)**
+   - Recipients in nursing homes/institutions receive only $30/month
+   - Affects payment amount calculation, not basic eligibility determination
+   - **Complexity**: Medium
 
 ---
 
@@ -134,7 +180,7 @@ library-api/src/main/resources/
 │   │   ├── Citizenship.dmn                          # Base module
 │   │   ├── person-us-citizen.dmn                   ✅
 │   │   ├── naturalized-citizen.dmn                 ✅
-│   │   ├── permanent-resident-qualified.dmn        ✅
+│   │   ├── lapr-with-exception.dmn                 ✅ (LAPR with 4 exception conditions)
 │   │   ├── refugee-asylee-status.dmn               ✅
 │   │   ├── refugee-asylee-within-seven-years.dmn   ✅
 │   │   ├── vietnamese-amerasian.dmn                ✅
@@ -213,10 +259,10 @@ builder-frontend/src/components/ssi-screener/
 
 **Future Additions for Enhancements**:
 - Detailed resource types (home, vehicle, burial funds)
-- Student status (for SEIE)
+- ~~Student status (for SEIE)~~ ✅ Implemented 2026-01-12
 - PASS plan indicator
-- 40 QQ, veteran status fields (for LAPR exceptions)
-- Parent/child relationships (for deeming)
+- ~~40 QQ, veteran status fields (for LAPR exceptions)~~ ✅ Implemented 2026-01-15
+- ~~Parent/child relationships (for deeming)~~ ✅ Implemented 2026-01-12
 
 ---
 
@@ -244,7 +290,13 @@ builder-frontend/src/components/ssi-screener/
 
 ## Additional Enhancements (Future)
 
-### High Priority
+### High Priority - Critical for Accuracy
+
+- **⚠️ Sponsor Deeming** (POMS SI 00502.200): Sponsor's income/resources deemed to LAPR - critical for LAPR population accuracy
+- **⚠️ Deemed Resources** (POMS SI 01330): Resource deeming from ineligible spouse/parent (income deeming done, resources not)
+- **Fleeing Felon / Probation Violator** (POMS SI 00530.010): Disqualifying condition - simple boolean check
+
+### Completed - High Priority
 
 - ~~**⭐ Full Resource Exclusions Implementation** (POMS SI 01130.000)~~ ✅ **COMPLETED 2026-01-09**
   - Automatically apply POMS exclusion rules
@@ -252,9 +304,14 @@ builder-frontend/src/components/ssi-screener/
   - All 7 individual exclusion checks implemented inline
   - Form schema updated with dynamic resources list
   - **See "SSI Full Resource Exclusions" in Recent Accomplishments below**
+- ~~**LAPR Exception Conditions** (POMS SI 00502.100, SI 00502.135, SI 00502.140, SI 00502.142)~~ ✅ **COMPLETED 2026-01-15**
+  - 40 QQs with 5-year bar, Veteran/Military, Blind/Disabled+8/22/96, Grandfathered SSI
+  - **See "LAPR Exception Conditions" in Recent Accomplishments below**
 
 ### Medium Priority
 
+- **Battered Spouse/Child** (POMS SI 00502.116): Deemed qualified alien status for abuse victims
+- **Time-Limited Qualified Aliens** (POMS SI 00502.106): 7-year limits for Cuban-Haitian, Vietnamese Amerasian, Withheld Deportation
 - **⭐ Full Income Exclusions Implementation** (POMS SI 00810.000 - SI 00830.000):
   - Automatically apply POMS income exclusion rules
   - Earned vs. unearned income modeling
@@ -263,7 +320,7 @@ builder-frontend/src/components/ssi-screener/
   - **Estimated effort**: 7.5-11 hours
 - ~~**Couple Resource Limit** (POMS SI 01110.210): Apply $3,000 limit for married couples~~ ✅ **COMPLETED 2026-01-09**
 - ~~**Couple FBR** (POMS SI 00835.000): Apply couple FBR ($1,450) instead of individual ($967)~~ ✅ **COMPLETED 2026-01-09**
-- ~~**Deeming Rules** (POMS SI 01320.000): Income/resources deemed from ineligible spouse/parent~~ ✅ **COMPLETED 2026-01-12**
+- ~~**Income Deeming Rules** (POMS SI 01320.000): Income deemed from ineligible spouse/parent~~ ✅ **COMPLETED 2026-01-12**
 - ~~**Student Earned Income Exclusion (SEIE)** (POMS SI 00820.510): Up to $2,350/month, $9,460/year for students~~ ✅ **COMPLETED 2026-01-12**
 - **Plan to Achieve Self-Support (PASS)** (POMS SI 00870.000): Income/resource exclusions for approved plans
 - **Impairment-Related Work Expenses (IRWE)** (POMS SI 00820.540): Deduct disability-related work costs from earned income
@@ -273,6 +330,7 @@ builder-frontend/src/components/ssi-screener/
 
 ### Lower Priority
 
+- **Institutionalization - $30 Payment Limit** (POMS SI 00520): Reduced benefits for institutional residents
 - **State Supplements**: Vary by state, optional to implement
 - **Transfer of Resources Penalties** (POMS SI 01150.000): 36-month lookback, period of ineligibility calculation
 
@@ -319,7 +377,7 @@ person.citizenshipStatus = "US_CITIZEN"
 
 ### Current Test Coverage
 - **Categorical**: 9/9 Bruno tests passing
-- **Citizenship**: 25/25 Bruno tests passing (includes 7 tests for RefugeeAsyleeWithinSevenYears)
+- **Citizenship**: 36/36 Bruno tests passing (includes 7 RefugeeAsyleeWithinSevenYears + 11 LaprWithException)
 - **Income**: 6/6 Bruno tests created
 - **Resources**: 3/3 Bruno tests created
 - **Residence**: 3/3 Bruno tests created
@@ -336,6 +394,7 @@ person.citizenshipStatus = "US_CITIZEN"
 2. **Form Validation**: Could add client-side validation for better UX
 3. **Error Messages**: Could provide more specific feedback when checks fail
 4. **POMS Updates**: Need to track POMS policy changes and update logic accordingly
+5. **POMS Citations**: Some DMN files have missing or incomplete POMS citations in their descriptions. The DMN Audit Tool flags checks without citations for review. Citations should be verified against source POMS sections during policy review.
 
 ---
 
@@ -446,13 +505,87 @@ Core SSI eligibility is complete! To add enhancements, use these example command
 
 ---
 
-**Last Updated**: 2026-01-13
-**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements + Couple Eligibility + SEIE + Income Deeming (Spouse & Parent-to-Child) + Deeming Integration
-**Next Steps**: Consider implementing enhanced income exclusions (PASS, IRWE, ISM) or living arrangements
+**Last Updated**: 2026-01-15
+**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements + Couple Eligibility + SEIE + Income Deeming + LAPR Exception Conditions
+**Next Steps**: HIGH PRIORITY: Sponsor Deeming (SI 00502.200), Resource Deeming (SI 01330), Fleeing Felon check (SI 00530.010)
 
 ---
 
 ## Recent Accomplishments
+
+### ✅ LAPR Exception Conditions (January 15, 2026)
+
+**Summary**: Complete implementation of LAPR (Lawfully Admitted for Permanent Residence) SSI eligibility exception conditions per POMS SI 00502.100, SI 00502.135, SI 00502.140, and SI 00502.142.
+
+**POMS Policy Basis**:
+- **SI 00502.100**: LAPRs must meet BOTH qualified alien status AND an exception condition
+- **SI 00502.100A.3**: Four exception conditions for LAPR eligibility
+- **SI 00502.135**: 40 Qualifying Quarters exception with 5-year bar for post-8/22/96 entry
+- **SI 00502.140**: Veteran/Active Duty Military exception (or spouse/dependent child thereof)
+- **SI 00502.142**: Blind/Disabled AND lawfully residing on 8/22/96 exception
+
+**What Was Implemented**:
+
+1. **Data Model** (BDT.dmn) - 8 new tPerson fields:
+   - `qualifyingQuarters: number` - Total QQs (own + parent's + spouse's)
+   - `usEntryDate: date` - Date of entry into US as qualified alien (for 5-year bar)
+   - `isVeteran: boolean` - Honorably discharged veteran (2+ years active duty)
+   - `isActiveDutyMilitary: boolean` - Currently serving on active duty
+   - `isSpouseOfVeteranOrActiveDuty: boolean` - Spouse of veteran/active duty
+   - `isDependentChildOfVeteranOrActiveDuty: boolean` - Dependent child of veteran/active duty
+   - `wasLawfullyResidingOn8221996: boolean` - Lawfully residing in US on 8/22/96
+   - `wasReceivingSSIOn8221996: boolean` - Was receiving SSI on 8/22/96 (grandfathered)
+
+2. **LaprWithException Check** (checks/citizenship/lapr-with-exception.dmn)
+   - New check that validates LAPR status AND exception conditions
+   - Implements all 4 POMS exception conditions:
+     - 40 QQs with 5-year bar logic
+     - Veteran/Military (self, spouse, or dependent child)
+     - Blind/Disabled + 8/22/96 residence
+     - Receiving SSI on 8/22/96 (grandfathered)
+   - Endpoint: `POST /api/v1/checks/citizenship/lapr-with-exception`
+
+3. **5-Year Bar Logic** (SI 00502.135B.1):
+   - LAPRs entering before 8/22/96: No bar, 40 QQs sufficient
+   - LAPRs entering on/after 8/22/96: Must wait 5 years after entry before 40 QQs exception applies
+   - FEEL implementation:
+   ```feel
+   // 40 QQ Exception: has 40 QQs AND (entered before 8/22/96 OR 5-year bar has passed)
+   has40QualifyingQuarters and (enteredBeforeWelfareReform or fiveYearsSinceEntry)
+   ```
+
+4. **Updated CitizenshipEligibility** (citizenship-eligibility.dmn)
+   - Replaced `PermanentResidentQualified` import with `LaprWithException`
+   - LAPR eligibility now requires exception condition, not just LAPR status
+
+**Test Coverage** (11 Bruno tests):
+| Test Scenario | Expected Result |
+|---------------|-----------------|
+| 40 QQs, pre-welfare-reform entry (1990) | true ✓ |
+| 40 QQs, post-welfare-reform within 5-year bar | false ✓ |
+| 40 QQs, post-welfare-reform 5 years passed | true ✓ |
+| Veteran | true ✓ |
+| Active duty military | true ✓ |
+| Spouse of veteran | true ✓ |
+| Dependent child of veteran | true ✓ |
+| Blind/disabled + 8/22/96 residence | true ✓ |
+| Grandfathered SSI recipient (8/22/96) | true ✓ |
+| LAPR with no exception condition | false ✓ |
+| Non-LAPR (US citizen) | false ✓ |
+
+**Files Created/Modified**:
+- `library-api/src/main/resources/BDT.dmn` (8 new tPerson fields)
+- `library-api/src/main/resources/checks/citizenship/lapr-with-exception.dmn` (NEW)
+- `library-api/src/main/resources/checks/citizenship/citizenship-eligibility.dmn` (updated import/invocation)
+- `library-api/test/bdt/checks/citizenship/LaprWithException/` (11 Bruno tests)
+- `library-api/test/bdt/checks/citizenship/CitizenshipEligibility/Pass - LAPR.bru` (updated)
+
+**Key FEEL Patterns**:
+- Date comparison requires wrapping: `date(person.usEntryDate) < welfareReformDate`
+- Duration arithmetic: `date(person.usEntryDate) + duration("P5Y") <= date(situation.evaluationDate)`
+- XML escape for `<` in expressions: Use `&lt;` in DMN XML
+
+---
 
 ### ✅ Income Deeming Rules (January 12, 2026)
 

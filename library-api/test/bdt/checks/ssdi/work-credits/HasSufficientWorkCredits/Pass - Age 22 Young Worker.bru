@@ -1,0 +1,41 @@
+meta {
+  name: Pass - Age 22 Young Worker
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/ssdi/work-credits/has-sufficient-work-credits
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "2003-06-15",
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 2
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.workCreditsCalculation.ageRuleApplied: eq "under_24"
+  res.body.workCreditsCalculation.requiredYearsOfWork: eq 1.5
+  res.body.workCreditsCalculation.meetsWorkRequirement: eq true
+}
+
+docs {
+  RS 00301.140 - Young worker under age 24 with 2 years of work.
+  Rule: Under 24 needs ~1.5 years (6 QCs in 12 quarters). 2 >= 1.5, so eligible.
+}

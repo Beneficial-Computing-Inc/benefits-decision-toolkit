@@ -1,0 +1,42 @@
+meta {
+  name: Fail - LAPR No Exception
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{host}}/checks/citizenship/lapr-with-exception
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "person1",
+      "evaluationDate": "2025-01-15",
+      "people": [
+        {
+          "id": "person1",
+          "dateOfBirth": "1980-01-01",
+          "citizenshipStatus": "LAPR",
+          "qualifyingQuarters": 20
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "person1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  POMS SI 00502.100A.3 - LAPR with no exception condition met.
+  Only 20 QQs (need 40), not veteran/military, not blind/disabled with 8/22/96 residence,
+  and not receiving SSI on 8/22/96. Cannot be SSI-eligible until exception condition met.
+}

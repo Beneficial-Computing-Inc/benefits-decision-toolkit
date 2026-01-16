@@ -1,0 +1,43 @@
+meta {
+  name: Fail - At Full Retirement Age
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/benefits/federal/ssdi-eligibility
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1957-01-15",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 6
+        }
+      ]
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checks.reportsDisablingCondition.checkResult: eq true
+  res.body.checks.hasSufficientWorkCredits.checkResult: eq true
+  res.body.checks.notAtFullRetirementAge.checkResult: eq false
+  res.body.checks.notPerformingSga.checkResult: eq true
+  res.body.isEligible: eq false
+}
+
+docs {
+  POMS DI 10105.060, DI 10105.080 - Age Requirement
+  Person born 1957, now age 69 (as of 2026-01-15). FRA for 1957 birth year is 66.5.
+  At age 69, person has exceeded FRA and should apply for retirement benefits, not SSDI.
+}

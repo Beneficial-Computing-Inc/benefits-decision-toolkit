@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_SSDI-DISAB-2026-0115"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+                 id="_SSDI-DISAB-2026-0115-MAIN"
+                 name="ReportsDisablingCondition"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_SSDI-DISAB-2026-0115">
+
+  <dmn:description>POMS DI 10105.065 - SSDI Disability Requirement: Person must have a medically determinable physical or mental impairment that prevents SGA and is expected to last 12+ months or result in death. For screener purposes, this is self-reported via the isDisabled field.</dmn:description>
+
+  <dmn:import id="_DISAB-IMPORT-BDT"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"
+              locationURI="../../../BDT.dmn"/>
+
+  <dmn:itemDefinition id="_DISAB-TYPEDEF-PARAMS" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_DISAB-PARAM-PERSONID" name="personId" isCollection="false">
+      <dmn:description>ID of person to check. If not provided, uses primaryPersonId.</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:itemDefinition id="_DISAB-TYPEDEF-DISABINFO" name="tDisabilityInfo" isCollection="false">
+    <dmn:itemComponent id="_DISAB-INFO-ISDISABLED" name="isDisabled" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DISAB-INFO-ISBLIND" name="isBlind" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DISAB-INFO-HASCONDITION" name="hasDisablingCondition" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:decisionService id="_DISAB-DS" name="ReportsDisablingConditionService">
+    <dmn:description>POMS DI 10105.065 - Returns true if person self-reports having a disabling condition (isDisabled = true OR isBlind = true).</dmn:description>
+    <dmn:variable id="_DISAB-DS-VAR" name="ReportsDisablingConditionService"/>
+    <dmn:outputDecision href="#_DISAB-DEC-CHECKRESULT"/>
+    <dmn:outputDecision href="#_DISAB-DEC-DISABINFO"/>
+    <dmn:inputData href="#_DISAB-INPUT-SITUATION"/>
+    <dmn:inputData href="#_DISAB-INPUT-PARAMS"/>
+  </dmn:decisionService>
+
+  <dmn:inputData id="_DISAB-INPUT-SITUATION" name="situation">
+    <dmn:variable id="_DISAB-INPUT-SITUATION-VAR" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <dmn:inputData id="_DISAB-INPUT-PARAMS" name="parameters">
+    <dmn:variable id="_DISAB-INPUT-PARAMS-VAR" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <dmn:decision id="_DISAB-DEC-DISABINFO" name="disabilityInfo">
+    <dmn:description>Extract disability-related information from the person record.</dmn:description>
+    <dmn:variable id="_DISAB-DEC-DISABINFO-VAR" name="disabilityInfo" typeRef="tDisabilityInfo"/>
+    <dmn:informationRequirement id="_DISAB-IR-1">
+      <dmn:requiredInput href="#_DISAB-INPUT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_DISAB-IR-2">
+      <dmn:requiredInput href="#_DISAB-INPUT-PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_DISAB-CTX">
+      <dmn:contextEntry id="_DISAB-CTX-PERSONID">
+        <dmn:variable id="_DISAB-CTX-PERSONID-VAR" name="personId" typeRef="string"/>
+        <dmn:literalExpression id="_DISAB-EXPR-PERSONID">
+          <dmn:text>if parameters.personId != null then parameters.personId else situation.primaryPersonId</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DISAB-CTX-PERSON">
+        <dmn:variable id="_DISAB-CTX-PERSON-VAR" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_DISAB-EXPR-PERSON">
+          <dmn:text>situation.people[id = personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DISAB-CTX-ISDISABLED">
+        <dmn:variable id="_DISAB-CTX-ISDISABLED-VAR" name="isDisabled" typeRef="boolean"/>
+        <dmn:literalExpression id="_DISAB-EXPR-ISDISABLED">
+          <dmn:text>if person.isDisabled = null then false else person.isDisabled</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DISAB-CTX-ISBLIND">
+        <dmn:variable id="_DISAB-CTX-ISBLIND-VAR" name="isBlind" typeRef="boolean"/>
+        <dmn:literalExpression id="_DISAB-EXPR-ISBLIND">
+          <dmn:text>if person.isBlind = null then false else person.isBlind</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DISAB-CTX-HASCONDITION">
+        <dmn:variable id="_DISAB-CTX-HASCONDITION-VAR" name="hasDisablingCondition" typeRef="boolean"/>
+        <dmn:literalExpression id="_DISAB-EXPR-HASCONDITION">
+          <dmn:text>isDisabled or isBlind</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DISAB-CTX-RESULT">
+        <dmn:literalExpression id="_DISAB-EXPR-RESULT">
+          <dmn:text>{
+  "isDisabled": isDisabled,
+  "isBlind": isBlind,
+  "hasDisablingCondition": hasDisablingCondition
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <dmn:decision id="_DISAB-DEC-CHECKRESULT" name="checkResult">
+    <dmn:description>POMS DI 10105.065 - True if person reports having a disabling condition (eligible for SSDI consideration).</dmn:description>
+    <dmn:variable id="_DISAB-DEC-CHECKRESULT-VAR" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_DISAB-IR-CALC">
+      <dmn:requiredDecision href="#_DISAB-DEC-DISABINFO"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_DISAB-EXPR-CHECKRESULT">
+      <dmn:text>disabilityInfo.hasDisablingCondition</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+</dmn:definitions>

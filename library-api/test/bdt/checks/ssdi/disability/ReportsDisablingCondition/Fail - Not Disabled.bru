@@ -1,0 +1,39 @@
+meta {
+  name: Fail - Not Disabled
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/ssdi/disability/reports-disabling-condition
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": false
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.disabilityInfo.isDisabled: eq false
+  res.body.disabilityInfo.hasDisablingCondition: eq false
+}
+
+docs {
+  POMS DI 10105.065 - Person explicitly reports NOT having a disability.
+  Cannot qualify for SSDI without a disabling condition.
+}

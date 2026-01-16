@@ -1,0 +1,38 @@
+meta {
+  name: Fail - Age 67 At FRA
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/ssdi/age/not-at-full-retirement-age
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1958-01-15"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.fraCalculation.hasAttainedFra: eq true
+}
+
+docs {
+  POMS DI 10105.060 - Age 68, born 1958 (FRA = 66+8mo = 66.67).
+  Age 68 >= FRA 66.67, so HAS attained FRA = not eligible for SSDI.
+  Should apply for retirement benefits instead.
+}
