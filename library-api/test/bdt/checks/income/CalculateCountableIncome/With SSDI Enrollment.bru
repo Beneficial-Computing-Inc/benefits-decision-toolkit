@@ -1,0 +1,57 @@
+meta {
+  name: With SSDI Enrollment
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "person1",
+        "dateOfBirth": "1960-06-01",
+        "isSSIEligible": true,
+        "incomeSources": []
+      }],
+      "enrollments": [{
+        "personId": "person1",
+        "benefit": "SSDI",
+        "status": "RECEIVING",
+        "monthlyAmount": 800
+      }]
+    },
+    "parameters": {
+      "personId": "person1",
+      "FBR": 967
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.incomeCalculation.unearnedFromBenefits: eq 800
+  res.body.incomeCalculation.totalUnearnedIncome: eq 800
+  res.body.incomeCalculation.countableUnearnedIncome: eq 780
+  res.body.incomeCalculation.totalCountableIncome: eq 780
+  res.body.incomeCalculation.meetsIncomeLimit: eq true
+  res.body.incomeCalculation.excludedIncomeFromBenefits: eq 0
+}
+
+docs {
+  POMS SI 00830: SSDI counts as unearned income for SSI.
+
+  Person has SSDI enrollment of $800/month:
+  - Total unearned: $800 (from SSDI enrollment)
+  - After $20 general exclusion: $780 countable
+  - Total countable: $780
+  - FBR: $967
+  - Result: Passes income limit ($780 < $967)
+}

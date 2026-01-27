@@ -1,0 +1,28 @@
+meta {
+  name: SNAP - Excluded
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/checks/income/benefit-is-excluded-from-ssi-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "benefitType": "SNAP"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.exclusionResult.isExcluded: eq true
+  res.body.exclusionResult.exclusionReason: eq "SNAP is not cash income"
+}
+
+docs {
+  SNAP (food assistance) is not cash income and is excluded from SSI income counting.
+}

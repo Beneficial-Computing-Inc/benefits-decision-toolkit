@@ -241,11 +241,13 @@ A person is potentially eligible for SSDI if ALL 4 requirements are met.</dmn:de
       <dmn:requiredDecision href="#_SSDI-DEC-CHECKS"/>
     </dmn:informationRequirement>
     <dmn:context id="_SSDI-ISELIGIBLE-CONTEXT">
-      <!-- Build list of check results -->
+      <!-- Build list of check results using get entries pattern (like homestead-exemption) -->
       <dmn:contextEntry>
         <dmn:variable id="_SSDI-VAR-CHECKSLIST" name="checksAsList" typeRef="BDT.tBooleanList"/>
         <dmn:literalExpression id="_SSDI-EXPR-CHECKSLIST">
-          <dmn:text>[checks.reportsDisablingCondition.checkResult, checks.hasSufficientWorkCredits.checkResult, checks.notAtFullRetirementAge.checkResult, checks.notPerformingSga.checkResult]</dmn:text>
+          <dmn:text>for check in (get entries(checks))
+return
+  check.value</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <!-- Evaluate all checks -->

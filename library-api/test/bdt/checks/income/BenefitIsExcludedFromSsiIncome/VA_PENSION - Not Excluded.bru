@@ -1,0 +1,27 @@
+meta {
+  name: VA_PENSION - Not Excluded
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/checks/income/benefit-is-excluded-from-ssi-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "benefitType": "VA_PENSION"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.exclusionResult.isExcluded: eq false
+}
+
+docs {
+  POMS SI 00830.316: VA pension counts as unearned income for SSI purposes.
+}

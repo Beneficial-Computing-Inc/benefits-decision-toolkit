@@ -1,0 +1,28 @@
+meta {
+  name: Unknown - Defaults To Not Excluded
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/checks/income/benefit-is-excluded-from-ssi-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "benefitType": "UNKNOWN_BENEFIT_TYPE"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.exclusionResult.isExcluded: eq false
+}
+
+docs {
+  Conservative default: unknown benefit types are NOT excluded (they count as income).
+  This ensures we don't accidentally exclude income that should be counted.
+}

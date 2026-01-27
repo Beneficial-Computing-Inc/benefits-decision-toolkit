@@ -4,7 +4,7 @@
 
 Implementing an SSDI (Social Security Disability Insurance) eligibility screener following POMS DI 10105.000 and related policy sections.
 
-**Current Status**: ✅ PHASE 2 COMPLETE - SSDI benefit composed from 4 core checks
+**Current Status**: ✅ PHASE 2 COMPLETE - SSDI benefit composed from 4 core checks (bug fix applied 2026-01-19)
 
 **Data Availability**: POMS DI section pages available with good content quality. RS (insured status) pages not needed - work credits can be simplified to age-based questions for screener purposes.
 
@@ -38,7 +38,7 @@ Unlike SSI (needs-based), SSDI is an **insurance program** requiring both disabi
   - Ages 24-30: Need (age - 21) / 2 years - `age_24_to_30` rule
   - Ages 31+: Need 5 years in last 10 years (20/40 test) - `age_31_plus` rule
 - **Inputs**: `situation` (tSituation), `parameters` (optional personId)
-- **Outputs**: `checkResult` (boolean), `workCreditsCalculation` (detailed breakdown)
+- **Outputs**: `checkResult` (boolean) - calculation details encapsulated within decision context
 - **Tests**: `test/bdt/checks/ssdi/work-credits/HasSufficientWorkCredits/`
   - Pass - Age 35 with 6 years (needs 5, has 6)
   - Fail - Age 35 with 3 years (needs 5, has 3)
@@ -61,7 +61,7 @@ Unlike SSI (needs-based), SSDI is an **insurance program** requiring both disabi
   - Born 1955-1959: FRA = 66 + 2-10 months
   - Born 1960 or later: FRA = 67
 - **Inputs**: `situation` (tSituation), `parameters` (optional personId)
-- **Outputs**: `checkResult` (boolean), `fraCalculation` (age, birthYear, fullRetirementAge, hasAttainedFra)
+- **Outputs**: `checkResult` (boolean) - FRA calculation details encapsulated within decision context
 - **Tests**: `test/bdt/checks/ssdi/age/NotAtFullRetirementAge/`
   - Pass - Age 50 (well under any FRA)
   - Pass - Age 65 born 1960 (FRA = 67, not yet attained)
@@ -80,7 +80,7 @@ Unlike SSI (needs-based), SSDI is an **insurance program** requiring both disabi
   - 2025 thresholds: Non-blind $1,620/month, Blind $2,700/month
   - Returns TRUE if earnings ≤ threshold (not performing SGA = eligible)
 - **Inputs**: `situation` (tSituation), `parameters` (optional personId)
-- **Outputs**: `checkResult` (boolean), `sgaCalculation` (detailed breakdown)
+- **Outputs**: `checkResult` (boolean) - SGA calculation details encapsulated within decision context
 - **Tests**: `test/bdt/checks/sga/NotPerformingSga/`
   - Pass - Below SGA Non-Blind ($1,500)
   - Fail - Above SGA Non-Blind ($2,000)
@@ -101,7 +101,7 @@ Unlike SSI (needs-based), SSDI is an **insurance program** requiring both disabi
   - For screener purposes, this is self-reported disability
   - SSA will make the actual medical determination
 - **Inputs**: `situation` (tSituation), `parameters` (optional personId)
-- **Outputs**: `checkResult` (boolean), `disabilityInfo` (isDisabled, isBlind, hasDisablingCondition)
+- **Outputs**: `checkResult` (boolean) - disability info encapsulated within decision context
 - **Tests**: `test/bdt/checks/ssdi/disability/ReportsDisablingCondition/`
   - Pass - isDisabled true
   - Pass - isBlind true
@@ -263,6 +263,23 @@ library-api/src/main/resources/
 
 ## Change Log
 
+### 2026-01-19: Critical Bug Fix - Decision Service Pattern Restructure
+- 🐛 **Fixed**: All 4 SSDI checks were returning `checkResult: null` and SSDI eligibility returned `isEligible: null`
+- **Root Cause**: SSDI check decision services used multi-decision pattern with `encapsulatedDecision` elements, which didn't match the working single-decision pattern used by other checks
+- **Solution**: Restructured all 4 SSDI check DMN files to follow the `PersonMinAgeService` pattern:
+  - Single `outputDecision` pointing to `checkResult` decision (no `encapsulatedDecision`)
+  - All calculation logic consolidated into a context within the `checkResult` decision itself
+  - Added null-safety checks for when person data is missing
+- **Files Modified**:
+  - `checks/ssdi/disability/reports-disabling-condition.dmn`
+  - `checks/ssdi/work-credits/has-sufficient-work-credits.dmn`
+  - `checks/ssdi/age/not-at-full-retirement-age.dmn`
+  - `checks/sga/not-performing-sga.dmn`
+- **Verification**: All SSDI endpoints now return proper boolean results:
+  - `curl /api/v1/benefits/federal/ssdi-eligibility` → `isEligible: true/false`
+  - Individual checks all return `checkResult: true/false`
+- **Lesson Learned**: DMN decision services with `typeRef="BDT.tCheckResponse"` must have exactly ONE `outputDecision` (the `checkResult` decision) for boolean type coercion to work. Multiple outputs or `encapsulatedDecision` prevent this coercion and return null.
+
 ### 2026-01-15: SSDI Benefit Composition (Phase 2 Complete!)
 - ✅ Implemented `SsdiEligibilityService` in `benefits/federal/ssdi-eligibility.dmn`
 - ✅ Created 7 Bruno tests covering pass/fail scenarios for all 4 checks
@@ -309,6 +326,6 @@ library-api/src/main/resources/
 
 ---
 
-**Last Updated**: 2026-01-15
-**Current Sprint**: Phase 2 COMPLETE - SSDI screener functional
+**Last Updated**: 2026-01-19
+**Current Sprint**: Phase 2 COMPLETE - SSDI screener functional (bug fix applied)
 **Next Steps**: Phase 3 - Enhancements (waiting period, TWP, etc.) or integration

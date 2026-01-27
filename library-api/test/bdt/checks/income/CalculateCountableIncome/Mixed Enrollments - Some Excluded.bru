@@ -1,0 +1,81 @@
+meta {
+  name: Mixed Enrollments - Some Excluded
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "person1",
+        "dateOfBirth": "1960-06-01",
+        "isSSIEligible": true,
+        "incomeSources": []
+      }],
+      "enrollments": [
+        {
+          "personId": "person1",
+          "benefit": "SSDI",
+          "status": "RECEIVING",
+          "monthlyAmount": 600
+        },
+        {
+          "personId": "person1",
+          "benefit": "VA_PENSION",
+          "status": "RECEIVING",
+          "monthlyAmount": 400
+        },
+        {
+          "personId": "person1",
+          "benefit": "SECTION_8",
+          "status": "RECEIVING",
+          "monthlyAmount": 900
+        },
+        {
+          "personId": "person1",
+          "benefit": "SNAP",
+          "status": "RECEIVING"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "person1",
+      "FBR": 967
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.incomeCalculation.unearnedFromBenefits: eq 1000
+  res.body.incomeCalculation.totalUnearnedIncome: eq 1000
+  res.body.incomeCalculation.countableUnearnedIncome: eq 980
+  res.body.incomeCalculation.totalCountableIncome: eq 980
+  res.body.incomeCalculation.meetsIncomeLimit: eq false
+  res.body.incomeCalculation.excludedIncomeFromBenefits: eq 900
+}
+
+docs {
+  Mixed benefits scenario:
+  - SSDI $600: counts as unearned income
+  - VA_PENSION $400: counts as unearned income
+  - SECTION_8 $900: excluded (housing assistance)
+  - SNAP (no amount): excluded (food assistance)
+
+  Calculation:
+  - Counted benefits: $600 + $400 = $1000
+  - Excluded income: $900 (Section 8)
+  - After $20 general exclusion: $980 countable
+  - Total countable: $980
+  - FBR: $967
+  - Result: FAILS income limit ($980 > $967)
+}

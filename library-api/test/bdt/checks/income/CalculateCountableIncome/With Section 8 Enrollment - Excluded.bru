@@ -1,0 +1,57 @@
+meta {
+  name: With Section 8 Enrollment - Excluded
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "person1",
+        "dateOfBirth": "1960-06-01",
+        "isSSIEligible": true,
+        "incomeSources": []
+      }],
+      "enrollments": [{
+        "personId": "person1",
+        "benefit": "SECTION_8",
+        "status": "RECEIVING",
+        "monthlyAmount": 1200
+      }]
+    },
+    "parameters": {
+      "personId": "person1",
+      "FBR": 967
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq null
+  res.body.incomeCalculation.unearnedFromBenefits: eq 0
+  res.body.incomeCalculation.totalUnearnedIncome: eq 0
+  res.body.incomeCalculation.countableUnearnedIncome: eq 0
+  res.body.incomeCalculation.totalCountableIncome: eq 0
+  res.body.incomeCalculation.excludedIncomeFromBenefits: eq 1200
+  res.body.incomeCalculation.meetsIncomeLimit: eq null
+}
+
+docs {
+  POMS SI 00830.630: Section 8 housing assistance is excluded from SSI income.
+
+  Person has Section 8 enrollment of $1200/month:
+  - Section 8 is excluded per POMS
+  - Total unearned from benefits: $0 (excluded)
+  - Excluded income from benefits: $1200
+  - Total countable: $0
+  - checkResult: null (no income data to calculate)
+}

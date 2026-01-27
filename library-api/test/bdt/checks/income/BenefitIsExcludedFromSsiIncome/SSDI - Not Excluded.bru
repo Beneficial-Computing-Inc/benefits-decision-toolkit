@@ -1,0 +1,27 @@
+meta {
+  name: SSDI - Not Excluded
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/checks/income/benefit-is-excluded-from-ssi-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "benefitType": "SSDI"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.exclusionResult.isExcluded: eq false
+}
+
+docs {
+  POMS SI 00830: SSDI counts as unearned income for SSI purposes.
+}

@@ -1,0 +1,29 @@
+meta {
+  name: SECTION_8 - Excluded
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/checks/income/benefit-is-excluded-from-ssi-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "benefitType": "SECTION_8"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.exclusionResult.isExcluded: eq true
+  res.body.exclusionResult.exclusionReason: eq "Federal housing assistance excluded"
+  res.body.exclusionResult.pomsReference: eq "SI 00830.630"
+}
+
+docs {
+  POMS SI 00830.630: Section 8 housing assistance is excluded from SSI income.
+}

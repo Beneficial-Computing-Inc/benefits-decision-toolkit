@@ -193,8 +193,9 @@ library-api/src/main/resources/
 │   │   ├── person-enrolled-in-benefit.dmn          ✅
 │   │   └── person-not-enrolled-in-benefit.dmn      ✅
 │   ├── income/
-│   │   ├── Income.dmn                              # Base module
-│   │   ├── calculate-countable-income.dmn          ✅
+│   │   ├── Income.dmn                              # Base module + derive income from enrollments BKM
+│   │   ├── benefit-is-excluded-from-ssi-income.dmn ✅ (2026-01-26)
+│   │   ├── calculate-countable-income.dmn          ✅ (enrollment income integrated)
 │   │   ├── calculate-seie.dmn                      ✅
 │   │   ├── ssi-income-limit.dmn                    ✅
 │   │   └── deeming/
@@ -505,13 +506,78 @@ Core SSI eligibility is complete! To add enhancements, use these example command
 
 ---
 
-**Last Updated**: 2026-01-15
-**Current Sprint**: ✅ COMPLETED! All 5 core eligibility requirements + Couple Eligibility + SEIE + Income Deeming + LAPR Exception Conditions
-**Next Steps**: HIGH PRIORITY: Sponsor Deeming (SI 00502.200), Resource Deeming (SI 01330), Fleeing Felon check (SI 00530.010)
+**Last Updated**: 2026-01-26
+**Current Sprint**: Income Interactions - Core DMN Complete, Screener Form (INC-6) Next
+**Next Steps**:
+- **NEXT**: INC-6 (Screener form schema for Benefits section) - see `docs/tickets/INCOME-INTERACTIONS-TICKETS.md`
+- **HIGH PRIORITY**: Sponsor Deeming (SI 00502.200), Resource Deeming (SI 01330), Fleeing Felon check (SI 00530.010)
+- **FUTURE SPRINT**: Related Benefits Referrals - see `docs/specs/RELATED-BENEFITS-REFERRALS.md`
 
 ---
 
 ## Recent Accomplishments
+
+### ✅ Income Interactions - Benefits Affecting SSI Income (January 26, 2026)
+
+**Status**: Core DMN Implementation Complete (INC-1 through INC-5)
+
+**Summary**: Implemented the framework for how receipt of other benefits (SSDI, VA pension, Section 8, SNAP, etc.) affects SSI income calculations. This enables accurate income counting when users receive multiple benefits and supports future "related benefits" referral features.
+
+**Problem Being Solved**:
+- Different income sources are treated differently for SSI (some count, some are excluded)
+- Section 8 housing, SNAP, LIHEAP are explicitly excluded from income
+- SSDI, VA benefits count as unearned income
+- The screener needs to ask about benefit receipt separately from income entry
+- Rules need explicit exclusions for explainability (not just silently ignoring excluded income)
+
+**Technical Approach**:
+1. Extend `tEnrollment` with `status`, `monthlyAmount`, `startDate` fields
+2. Create benefit type taxonomy (granular for UX, groupable for calculation)
+3. DMN rules derive income from enrollments (not duplicate data entry)
+4. Explicit exclusion check with POMS citations for explainability
+5. Screener gets a "Benefits" section separate from "Income"
+
+**Key Design Decisions**:
+- Benefits go in `enrollments[]`, not `incomeSources[]` (per BDT team preference)
+- Granular benefit types for UX clarity (SSDI vs SSA_RETIREMENT, VA_PENSION vs VA_DISABILITY_COMP)
+- Exclusions are explicit with reasons (not silently ignored)
+- Self-employment income: ask for NET, clear naming in data model
+
+**Documentation Created**:
+- `docs/specs/INCOME-INTERACTIONS-SPEC.md` - Full specification
+- `docs/tickets/INCOME-INTERACTIONS-TICKETS.md` - 6 implementation tickets
+- `docs/specs/RELATED-BENEFITS-REFERRALS.md` - Stub spec for future categorical linkages
+- `docs/BENEFITS-INTERACTIONS-FRAMEWORK.md` - Research framework and taxonomy
+
+**POMS References**:
+- SI 00830.630 - Federal Housing Assistance (excluded)
+- SI 00830.260 - State Veteran Annuities (excluded in certain states)
+- SI 00830.316 - VA Benefits (counted)
+- SI 00830 - Unearned Income (general)
+
+**Tickets (INC-1 through INC-6)**:
+1. ✅ Extend tEnrollment type definition
+2. ✅ Create benefit-is-excluded-from-ssi-income check
+3. ✅ Create derive-income-from-enrollments BKM
+4. ✅ Update calculate-countable-income to use enrollment-derived income
+5. ✅ Add Bruno tests for income exclusion scenarios
+6. 🚧 Update screener form schema for benefits section (Sprint 2)
+
+**Files Created/Modified**:
+- ✅ `checks/enrollment/Enrollment.dmn` - Extended tEnrollment with status, monthlyAmount, startDate
+- ✅ `checks/income/benefit-is-excluded-from-ssi-income.dmn` - New check with decision table
+- ✅ `checks/income/Income.dmn` - Added "derive income from enrollments" BKM
+- ✅ `checks/income/calculate-countable-income.dmn` - Integrated enrollment income
+- ✅ `test/bdt/checks/income/BenefitIsExcludedFromSsiIncome/` - 5 Bruno tests
+- ✅ `test/bdt/checks/income/CalculateCountableIncome/` - 5 new Bruno tests for enrollment income
+- 🚧 `dmn-audit-tool/src/lib/screener/ssi-form-schema.ts` - Benefits section (Sprint 2)
+
+**New Output Fields in incomeCalculation**:
+- `unearnedFromBenefits: number` - Income derived from enrollments
+- `excludedIncomeFromBenefits: number` - Income that was excluded per POMS
+- `excludedBenefits: list of strings` - Benefit codes that were excluded
+
+---
 
 ### ✅ LAPR Exception Conditions (January 15, 2026)
 

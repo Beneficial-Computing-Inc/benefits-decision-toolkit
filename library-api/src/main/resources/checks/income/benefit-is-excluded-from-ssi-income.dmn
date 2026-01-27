@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_INC2_BENEFIT_EXCLUDED"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 id="_INC2_2026_0126_DEF"
+                 name="BenefitIsExcludedFromSsiIncome"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_INC2_BENEFIT_EXCLUDED">
+
+  <dmn:description>POMS SI 00830: Determines if a benefit type is excluded from SSI income counting.
+
+Excluded benefits (do NOT count as income):
+- SECTION_8: Federal housing assistance per SI 00830.630
+- SNAP: Not cash income (food assistance)
+- LIHEAP: Energy assistance per SI 00830
+- WIC: Not cash income (food assistance)
+- SCHOOL_LUNCH: Not cash income
+- DISASTER_RELIEF: FEMA assistance per SI 00830
+- STATE_VET_ANNUITY: Certain state veteran annuities per SI 00830.260
+
+Counted benefits (DO count as unearned income):
+- SSDI, SSA_RETIREMENT, SSA_SURVIVORS: Social Security per SI 00830
+- VA_PENSION, VA_DISABILITY_COMP: VA benefits per SI 00830.316
+- WORKERS_COMP: Workers' compensation per SI 00830.215
+- RAILROAD_RETIREMENT, BLACK_LUNG: Similar to SSA
+- UNEMPLOYMENT: Unemployment insurance
+- PRIVATE_PENSION: Pension/retirement income
+
+Tracking only (no income effect):
+- MEDICAID, MEDICARE, SSI, CHIP: Healthcare or the benefit being evaluated</dmn:description>
+
+  <dmn:extensionElements/>
+
+  <!-- Result type -->
+  <dmn:itemDefinition id="_INC2_RESULT_TYPE" name="tExclusionResult" isCollection="false">
+    <dmn:itemComponent id="_INC2_RESULT_EXCLUDED" name="isExcluded" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_INC2_RESULT_REASON" name="exclusionReason" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_INC2_RESULT_POMS" name="pomsReference" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: benefitType -->
+  <dmn:inputData id="_INC2_INPUT_BENEFIT" name="benefitType">
+    <dmn:extensionElements/>
+    <dmn:variable id="_INC2_INPUT_BENEFIT_VAR" name="benefitType" typeRef="string"/>
+  </dmn:inputData>
+
+  <!-- Decision: exclusionResult -->
+  <dmn:decision id="_INC2_DECISION_RESULT" name="exclusionResult">
+    <dmn:description>Determines if the benefit type is excluded from SSI income and provides POMS citation.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_INC2_DECISION_RESULT_VAR" name="exclusionResult" typeRef="tExclusionResult"/>
+    <dmn:informationRequirement id="_INC2_REQ_BENEFIT">
+      <dmn:requiredInput href="#_INC2_INPUT_BENEFIT"/>
+    </dmn:informationRequirement>
+    <dmn:decisionTable id="_INC2_DT" hitPolicy="FIRST" preferredOrientation="Rule-as-Row">
+      <dmn:input id="_INC2_DT_INPUT">
+        <dmn:inputExpression id="_INC2_DT_INPUT_EXPR" typeRef="string">
+          <dmn:text>benefitType</dmn:text>
+        </dmn:inputExpression>
+      </dmn:input>
+      <dmn:output id="_INC2_DT_OUT_EXCLUDED" name="isExcluded" typeRef="boolean"/>
+      <dmn:output id="_INC2_DT_OUT_REASON" name="exclusionReason" typeRef="string"/>
+      <dmn:output id="_INC2_DT_OUT_POMS" name="pomsReference" typeRef="string"/>
+      <!-- Excluded benefits -->
+      <dmn:rule id="_INC2_RULE_SECTION8">
+        <dmn:inputEntry id="_INC2_RULE_SECTION8_IN"><dmn:text>"SECTION_8"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SECTION8_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SECTION8_OUT2"><dmn:text>"Federal housing assistance excluded"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SECTION8_OUT3"><dmn:text>"SI 00830.630"</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_SNAP">
+        <dmn:inputEntry id="_INC2_RULE_SNAP_IN"><dmn:text>"SNAP"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SNAP_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SNAP_OUT2"><dmn:text>"SNAP is not cash income"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SNAP_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_LIHEAP">
+        <dmn:inputEntry id="_INC2_RULE_LIHEAP_IN"><dmn:text>"LIHEAP"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_LIHEAP_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_LIHEAP_OUT2"><dmn:text>"Energy assistance excluded"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_LIHEAP_OUT3"><dmn:text>"SI 00830"</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_WIC">
+        <dmn:inputEntry id="_INC2_RULE_WIC_IN"><dmn:text>"WIC"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_WIC_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_WIC_OUT2"><dmn:text>"WIC is not cash income"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_WIC_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_SCHOOL_LUNCH">
+        <dmn:inputEntry id="_INC2_RULE_SCHOOL_LUNCH_IN"><dmn:text>"SCHOOL_LUNCH"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SCHOOL_LUNCH_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SCHOOL_LUNCH_OUT2"><dmn:text>"School lunch assistance is not cash income"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SCHOOL_LUNCH_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_DISASTER">
+        <dmn:inputEntry id="_INC2_RULE_DISASTER_IN"><dmn:text>"DISASTER_RELIEF"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_DISASTER_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_DISASTER_OUT2"><dmn:text>"Disaster relief assistance excluded"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_DISASTER_OUT3"><dmn:text>"SI 00830"</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_STATE_VET">
+        <dmn:inputEntry id="_INC2_RULE_STATE_VET_IN"><dmn:text>"STATE_VET_ANNUITY"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_STATE_VET_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_STATE_VET_OUT2"><dmn:text>"State veteran annuity excluded in certain states"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_STATE_VET_OUT3"><dmn:text>"SI 00830.260"</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <!-- Tracking only (no income effect) -->
+      <dmn:rule id="_INC2_RULE_MEDICAID">
+        <dmn:inputEntry id="_INC2_RULE_MEDICAID_IN"><dmn:text>"MEDICAID"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_MEDICAID_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_MEDICAID_OUT2"><dmn:text>"Healthcare coverage, not income"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_MEDICAID_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_MEDICARE">
+        <dmn:inputEntry id="_INC2_RULE_MEDICARE_IN"><dmn:text>"MEDICARE"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_MEDICARE_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_MEDICARE_OUT2"><dmn:text>"Healthcare coverage, not income"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_MEDICARE_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_SSI">
+        <dmn:inputEntry id="_INC2_RULE_SSI_IN"><dmn:text>"SSI"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SSI_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SSI_OUT2"><dmn:text>"SSI is the benefit being evaluated"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_SSI_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <dmn:rule id="_INC2_RULE_CHIP">
+        <dmn:inputEntry id="_INC2_RULE_CHIP_IN"><dmn:text>"CHIP"</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_CHIP_OUT1"><dmn:text>true</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_CHIP_OUT2"><dmn:text>"Healthcare coverage, not income"</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_CHIP_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+      <!-- Default: not excluded (counts as income) -->
+      <dmn:rule id="_INC2_RULE_DEFAULT">
+        <dmn:inputEntry id="_INC2_RULE_DEFAULT_IN"><dmn:text>-</dmn:text></dmn:inputEntry>
+        <dmn:outputEntry id="_INC2_RULE_DEFAULT_OUT1"><dmn:text>false</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_DEFAULT_OUT2"><dmn:text>null</dmn:text></dmn:outputEntry>
+        <dmn:outputEntry id="_INC2_RULE_DEFAULT_OUT3"><dmn:text>null</dmn:text></dmn:outputEntry>
+      </dmn:rule>
+    </dmn:decisionTable>
+  </dmn:decision>
+
+  <!-- Decision: checkResult (boolean for standard check pattern) -->
+  <dmn:decision id="_INC2_DECISION_CHECK" name="checkResult">
+    <dmn:description>Returns true if the benefit is excluded from SSI income.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_INC2_DECISION_CHECK_VAR" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_INC2_REQ_RESULT">
+      <dmn:requiredDecision href="#_INC2_DECISION_RESULT"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_INC2_CHECK_EXPR">
+      <dmn:text>exclusionResult.isExcluded</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_INC2_SERVICE" name="BenefitIsExcludedFromSsiIncomeService">
+    <dmn:description>Determines if a benefit type is excluded from SSI income counting per POMS SI 00830.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_INC2_SERVICE_VAR" name="BenefitIsExcludedFromSsiIncomeService"/>
+    <dmn:outputDecision href="#_INC2_DECISION_CHECK"/>
+    <dmn:outputDecision href="#_INC2_DECISION_RESULT"/>
+    <dmn:inputData href="#_INC2_INPUT_BENEFIT"/>
+  </dmn:decisionService>
+
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_INC2_DIAGRAM" name="DRG">
+      <di:extension>
+        <kie:ComponentsWidthsExtension/>
+      </di:extension>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</dmn:definitions>

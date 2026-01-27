@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_SGA-NOT-PERFORMING-2026-0115" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:included1="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_SGA-NOT-PERFORMING-DEF" name="NotPerformingSga" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_SGA-NOT-PERFORMING-2026-0115">
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_SGA-NOT-PERFORMING-2026-0115" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_SGA-NOT-PERFORMING-DEF" name="NotPerformingSga" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_SGA-NOT-PERFORMING-2026-0115">
   <dmn:description>POMS DI 10501.015 - Substantial Gainful Activity (SGA) Check for SSDI Eligibility
 
 Determines if a person's current earnings are below the SGA threshold, making them potentially eligible for SSDI disability benefits.
@@ -22,21 +22,14 @@ Returns TRUE if person is NOT performing SGA (eligible), FALSE if performing SGA
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
-  <dmn:itemDefinition id="_SGA-TSGACALCULATION" name="tSgaCalculation" isCollection="false">
-    <dmn:description>Detailed SGA calculation breakdown</dmn:description>
-    <dmn:itemComponent id="_SGA-CALC-EARNINGS" name="monthlyEarnedIncome" isCollection="false">
-      <dmn:typeRef>number</dmn:typeRef>
-    </dmn:itemComponent>
-    <dmn:itemComponent id="_SGA-CALC-THRESHOLD" name="sgaThreshold" isCollection="false">
-      <dmn:typeRef>number</dmn:typeRef>
-    </dmn:itemComponent>
-    <dmn:itemComponent id="_SGA-CALC-ISBLIND" name="isBlind" isCollection="false">
-      <dmn:typeRef>boolean</dmn:typeRef>
-    </dmn:itemComponent>
-    <dmn:itemComponent id="_SGA-CALC-BELOWSGA" name="isBelowSga" isCollection="false">
-      <dmn:typeRef>boolean</dmn:typeRef>
-    </dmn:itemComponent>
-  </dmn:itemDefinition>
+  <dmn:decisionService id="_SGA-SERVICE" name="NotPerformingSgaService">
+    <dmn:description>POMS DI 10501.015 - Checks if person's earnings are below SGA threshold for SSDI eligibility</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SGA-SERVICE-VAR" name="NotPerformingSgaService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_SGA-DECISION-CHECKRESULT"/>
+    <dmn:inputData href="#_SGA-INPUT-SITUATION"/>
+    <dmn:inputData href="#_SGA-INPUT-PARAMETERS"/>
+  </dmn:decisionService>
   <dmn:inputData id="_SGA-INPUT-SITUATION" name="situation">
     <dmn:extensionElements/>
     <dmn:variable id="_SGA-INPUT-SITUATION-VAR" name="situation" typeRef="BDT.tSituation"/>
@@ -45,145 +38,65 @@ Returns TRUE if person is NOT performing SGA (eligible), FALSE if performing SGA
     <dmn:extensionElements/>
     <dmn:variable id="_SGA-INPUT-PARAMETERS-VAR" name="parameters" typeRef="tParameters"/>
   </dmn:inputData>
-  <dmn:decision id="_SGA-DECISION-PERSONID" name="personId">
-    <dmn:description>Resolve person ID from parameters or default to primaryPersonId</dmn:description>
-    <dmn:extensionElements/>
-    <dmn:variable id="_SGA-DECISION-PERSONID-VAR" name="personId" typeRef="string"/>
-    <dmn:informationRequirement id="_SGA-REQ-SIT-PERSONID">
-      <dmn:requiredInput href="#_SGA-INPUT-SITUATION"/>
-    </dmn:informationRequirement>
-    <dmn:informationRequirement id="_SGA-REQ-PARAM-PERSONID">
-      <dmn:requiredInput href="#_SGA-INPUT-PARAMETERS"/>
-    </dmn:informationRequirement>
-    <dmn:literalExpression id="_SGA-EXPR-PERSONID">
-      <dmn:text>if parameters.personId != null then parameters.personId else situation.primaryPersonId</dmn:text>
-    </dmn:literalExpression>
-  </dmn:decision>
-  <dmn:decision id="_SGA-DECISION-PERSON" name="person">
-    <dmn:description>Get the person being evaluated from situation</dmn:description>
-    <dmn:extensionElements/>
-    <dmn:variable id="_SGA-DECISION-PERSON-VAR" name="person" typeRef="BDT.tPerson"/>
-    <dmn:informationRequirement id="_SGA-REQ-SIT-PERSON">
-      <dmn:requiredInput href="#_SGA-INPUT-SITUATION"/>
-    </dmn:informationRequirement>
-    <dmn:informationRequirement id="_SGA-REQ-PERSONID-PERSON">
-      <dmn:requiredDecision href="#_SGA-DECISION-PERSONID"/>
-    </dmn:informationRequirement>
-    <dmn:literalExpression id="_SGA-EXPR-PERSON">
-      <dmn:text>situation.people[item.id = personId][1]</dmn:text>
-    </dmn:literalExpression>
-  </dmn:decision>
-  <dmn:decision id="_SGA-DECISION-EARNINGS" name="monthlyEarnedIncome">
-    <dmn:description>Calculate total monthly earned income from person's income sources</dmn:description>
-    <dmn:extensionElements/>
-    <dmn:variable id="_SGA-DECISION-EARNINGS-VAR" name="monthlyEarnedIncome" typeRef="number"/>
-    <dmn:informationRequirement id="_SGA-REQ-PERSON-EARNINGS">
-      <dmn:requiredDecision href="#_SGA-DECISION-PERSON"/>
-    </dmn:informationRequirement>
-    <dmn:literalExpression id="_SGA-EXPR-EARNINGS">
-      <dmn:text>if person.incomeSources = null then 0 else sum(person.incomeSources[item.type = "earned"].monthlyAmount)</dmn:text>
-    </dmn:literalExpression>
-  </dmn:decision>
-  <dmn:decision id="_SGA-DECISION-THRESHOLD" name="sgaThreshold">
-    <dmn:description>POMS DI 10501.015 - Get applicable SGA threshold based on blind status (2025 values)</dmn:description>
-    <dmn:extensionElements/>
-    <dmn:variable id="_SGA-DECISION-THRESHOLD-VAR" name="sgaThreshold" typeRef="number"/>
-    <dmn:informationRequirement id="_SGA-REQ-PERSON-THRESHOLD">
-      <dmn:requiredDecision href="#_SGA-DECISION-PERSON"/>
-    </dmn:informationRequirement>
-    <dmn:literalExpression id="_SGA-EXPR-THRESHOLD">
-      <dmn:text>if person.isBlind = true then 2700 else 1620</dmn:text>
-    </dmn:literalExpression>
-  </dmn:decision>
-  <dmn:decision id="_SGA-DECISION-CALCULATION" name="sgaCalculation">
-    <dmn:description>Detailed breakdown of SGA calculation</dmn:description>
-    <dmn:extensionElements/>
-    <dmn:variable id="_SGA-DECISION-CALCULATION-VAR" name="sgaCalculation" typeRef="tSgaCalculation"/>
-    <dmn:informationRequirement id="_SGA-REQ-PERSON-CALC">
-      <dmn:requiredDecision href="#_SGA-DECISION-PERSON"/>
-    </dmn:informationRequirement>
-    <dmn:informationRequirement id="_SGA-REQ-EARNINGS-CALC">
-      <dmn:requiredDecision href="#_SGA-DECISION-EARNINGS"/>
-    </dmn:informationRequirement>
-    <dmn:informationRequirement id="_SGA-REQ-THRESHOLD-CALC">
-      <dmn:requiredDecision href="#_SGA-DECISION-THRESHOLD"/>
-    </dmn:informationRequirement>
-    <dmn:context id="_SGA-CONTEXT-CALCULATION">
-      <dmn:contextEntry>
-        <dmn:variable id="_SGA-CALC-ENTRY-EARNINGS" name="monthlyEarnedIncome" typeRef="number"/>
-        <dmn:literalExpression id="_SGA-CALC-EXPR-EARNINGS">
-          <dmn:text>monthlyEarnedIncome</dmn:text>
-        </dmn:literalExpression>
-      </dmn:contextEntry>
-      <dmn:contextEntry>
-        <dmn:variable id="_SGA-CALC-ENTRY-THRESHOLD" name="sgaThreshold" typeRef="number"/>
-        <dmn:literalExpression id="_SGA-CALC-EXPR-THRESHOLD">
-          <dmn:text>sgaThreshold</dmn:text>
-        </dmn:literalExpression>
-      </dmn:contextEntry>
-      <dmn:contextEntry>
-        <dmn:variable id="_SGA-CALC-ENTRY-ISBLIND" name="isBlind" typeRef="boolean"/>
-        <dmn:literalExpression id="_SGA-CALC-EXPR-ISBLIND">
-          <dmn:text>person.isBlind = true</dmn:text>
-        </dmn:literalExpression>
-      </dmn:contextEntry>
-      <dmn:contextEntry>
-        <dmn:variable id="_SGA-CALC-ENTRY-BELOWSGA" name="isBelowSga" typeRef="boolean"/>
-        <dmn:literalExpression id="_SGA-CALC-EXPR-BELOWSGA">
-          <dmn:text>monthlyEarnedIncome &lt;= sgaThreshold</dmn:text>
-        </dmn:literalExpression>
-      </dmn:contextEntry>
-    </dmn:context>
-  </dmn:decision>
   <dmn:decision id="_SGA-DECISION-CHECKRESULT" name="checkResult">
     <dmn:description>TRUE if person is NOT performing SGA (eligible for SSDI consideration), FALSE if performing SGA (ineligible)</dmn:description>
     <dmn:extensionElements/>
     <dmn:variable id="_SGA-DECISION-CHECKRESULT-VAR" name="checkResult" typeRef="boolean"/>
-    <dmn:informationRequirement id="_SGA-REQ-CALC-RESULT">
-      <dmn:requiredDecision href="#_SGA-DECISION-CALCULATION"/>
+    <dmn:informationRequirement id="_SGA-IR-1">
+      <dmn:requiredInput href="#_SGA-INPUT-SITUATION"/>
     </dmn:informationRequirement>
-    <dmn:literalExpression id="_SGA-EXPR-CHECKRESULT">
-      <dmn:text>sgaCalculation.isBelowSga</dmn:text>
-    </dmn:literalExpression>
+    <dmn:informationRequirement id="_SGA-IR-2">
+      <dmn:requiredInput href="#_SGA-INPUT-PARAMETERS"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_SGA-CTX">
+      <dmn:contextEntry id="_SGA-CTX-PERSONID">
+        <dmn:variable id="_SGA-CTX-PERSONID-VAR" name="personId" typeRef="string"/>
+        <dmn:literalExpression id="_SGA-EXPR-PERSONID">
+          <dmn:text>if parameters.personId != null then parameters.personId else situation.primaryPersonId</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_SGA-CTX-PERSON">
+        <dmn:variable id="_SGA-CTX-PERSON-VAR" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_SGA-EXPR-PERSON">
+          <dmn:text>situation.people[id = personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_SGA-CTX-EARNINGS">
+        <dmn:variable id="_SGA-CTX-EARNINGS-VAR" name="monthlyEarnedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_SGA-EXPR-EARNINGS">
+          <dmn:text>if person = null or person.incomeSources = null then 0 else sum(person.incomeSources[type = "earned"].monthlyAmount)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_SGA-CTX-ISBLIND">
+        <dmn:variable id="_SGA-CTX-ISBLIND-VAR" name="isBlind" typeRef="boolean"/>
+        <dmn:literalExpression id="_SGA-EXPR-ISBLIND">
+          <dmn:text>if person = null then false else person.isBlind = true</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_SGA-CTX-THRESHOLD">
+        <dmn:variable id="_SGA-CTX-THRESHOLD-VAR" name="sgaThreshold" typeRef="number"/>
+        <dmn:literalExpression id="_SGA-EXPR-THRESHOLD">
+          <dmn:text>if isBlind then 2700 else 1620</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_SGA-CTX-RESULT">
+        <dmn:variable id="_SGA-CTX-RESULT-VAR" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_SGA-EXPR-RESULT">
+          <dmn:text>monthlyEarnedIncome &lt;= sgaThreshold</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_SGA-EXPR-RETURN">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
   </dmn:decision>
-  <dmn:decisionService id="_SGA-SERVICE" name="NotPerformingSgaService">
-    <dmn:description>POMS DI 10501.015 - Checks if person's earnings are below SGA threshold for SSDI eligibility</dmn:description>
-    <dmn:extensionElements/>
-    <dmn:variable id="_SGA-SERVICE-VAR" name="NotPerformingSgaService" typeRef="BDT.tCheckResponse"/>
-    <dmn:outputDecision href="#_SGA-DECISION-CHECKRESULT"/>
-    <dmn:outputDecision href="#_SGA-DECISION-CALCULATION"/>
-    <dmn:inputData href="#_SGA-INPUT-SITUATION"/>
-    <dmn:inputData href="#_SGA-INPUT-PARAMETERS"/>
-  </dmn:decisionService>
   <dmndi:DMNDI>
     <dmndi:DMNDiagram id="_SGA-DIAGRAM" name="SGA Check">
       <di:extension>
         <kie:ComponentsWidthsExtension/>
       </di:extension>
-      <dmndi:DMNShape id="_SGA-SHAPE-SITUATION" dmnElementRef="_SGA-INPUT-SITUATION" isCollapsed="false">
-        <dc:Bounds x="100" y="400" width="150" height="50"/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="_SGA-SHAPE-PARAMETERS" dmnElementRef="_SGA-INPUT-PARAMETERS" isCollapsed="false">
-        <dc:Bounds x="300" y="400" width="150" height="50"/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="_SGA-SHAPE-PERSONID" dmnElementRef="_SGA-DECISION-PERSONID" isCollapsed="false">
-        <dc:Bounds x="200" y="300" width="150" height="50"/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="_SGA-SHAPE-PERSON" dmnElementRef="_SGA-DECISION-PERSON" isCollapsed="false">
-        <dc:Bounds x="200" y="200" width="150" height="50"/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="_SGA-SHAPE-EARNINGS" dmnElementRef="_SGA-DECISION-EARNINGS" isCollapsed="false">
-        <dc:Bounds x="100" y="100" width="150" height="50"/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="_SGA-SHAPE-THRESHOLD" dmnElementRef="_SGA-DECISION-THRESHOLD" isCollapsed="false">
-        <dc:Bounds x="300" y="100" width="150" height="50"/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="_SGA-SHAPE-CALCULATION" dmnElementRef="_SGA-DECISION-CALCULATION" isCollapsed="false">
-        <dc:Bounds x="200" y="0" width="150" height="50"/>
-      </dmndi:DMNShape>
-      <dmndi:DMNShape id="_SGA-SHAPE-CHECKRESULT" dmnElementRef="_SGA-DECISION-CHECKRESULT" isCollapsed="false">
-        <dc:Bounds x="200" y="-100" width="150" height="50"/>
-      </dmndi:DMNShape>
     </dmndi:DMNDiagram>
   </dmndi:DMNDI>
 </dmn:definitions>

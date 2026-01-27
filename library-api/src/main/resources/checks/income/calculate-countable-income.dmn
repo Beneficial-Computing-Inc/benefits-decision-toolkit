@@ -40,6 +40,13 @@ Per SI 01320.730: "Always treat deemed income as unearned income"
               locationURI="../age/Age.dmn"
               importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
 
+  <!-- Import Income module for derive income from enrollments BKM -->
+  <dmn:import id="_INC4_IMPORT_INCOME"
+              name="Income"
+              namespace="https://kie.apache.org/dmn/_4A5B6C7D-8E9F-0A1B-2C3D-4E5F6A7B8C9D"
+              locationURI="Income.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
   <!-- Parameters type definition -->
   <dmn:itemDefinition id="_8F9A0B1C-2D3E-4F5A-6B7C-8D9E0F1A2B3C" name="tParameters" isCollection="false">
     <dmn:itemComponent id="_9A0B1C2D-3E4F-5A6B-7C8D-9E0F1A2B3C4D" name="personId" isCollection="false">
@@ -91,6 +98,9 @@ Includes SEIE (SI 00820.510) for students under 22.</dmn:description>
     <dmn:knowledgeRequirement id="_SEIE_KR_AGE_2026">
       <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708#_1919D943-09A4-4D5C-98A0-2B8377862E4C"/>
     </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_INC4_KR_DERIVE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_4A5B6C7D-8E9F-0A1B-2C3D-4E5F6A7B8C9D#_INC3_BKM_DERIVE"/>
+    </dmn:knowledgeRequirement>
 
     <dmn:context id="_D9E0F1A2-3B4C-5D6E-7F8A-9B0C1D2E3F4A">
       <!-- Step 1: Extract person and their income sources -->
@@ -108,12 +118,22 @@ Includes SEIE (SI 00820.510) for students under 22.</dmn:description>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
+      <!-- Step 1a: Derive income from enrollments (INC-4) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_INC4_ENROLL_INCOME" name="enrollmentIncome" typeRef="Any"/>
+        <dmn:literalExpression id="_INC4_ENROLL_INCOME_EXPR">
+          <dmn:text>Income.derive income from enrollments(situation.enrollments, parameters.personId)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
       <!-- Step 1b: Check if we have income data (three-valued logic) -->
       <dmn:contextEntry>
         <dmn:variable id="_HAS_INCOME_DATA_VAR" name="hasIncomeData" typeRef="boolean"/>
         <dmn:literalExpression id="_HAS_INCOME_DATA_EXPR">
-          <dmn:text>// Have income data if: incomeSources provided OR deemedIncome parameter provided
-(incomeSources != null and count(incomeSources) > 0) or (parameters.deemedIncome != null and parameters.deemedIncome > 0)</dmn:text>
+          <dmn:text>// Have income data if: incomeSources provided OR deemedIncome provided OR enrollment income exists
+(incomeSources != null and count(incomeSources) > 0) or
+(parameters.deemedIncome != null and parameters.deemedIncome > 0) or
+(enrollmentIncome.countableUnearnedFromBenefits != null and enrollmentIncome.countableUnearnedFromBenefits > 0)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
@@ -121,20 +141,29 @@ Includes SEIE (SI 00820.510) for students under 22.</dmn:description>
       <dmn:contextEntry>
         <dmn:variable id="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F" name="totalEarnedIncome" typeRef="number"/>
         <dmn:literalExpression id="_D5E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A">
-          <dmn:text>if incomeSources = null then
+          <dmn:text>if incomeSources = null or count(incomeSources) = 0 then
   0
 else
   sum(for i in incomeSources return if i.type = "earned" then i.monthlyAmount else 0)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
+      <!-- Unearned income from incomeSources only (before adding enrollment income) -->
       <dmn:contextEntry>
-        <dmn:variable id="_E6F7A8B9-0C1D-2E3F-4A5B-6C7D8E9F0A1B" name="totalUnearnedIncome" typeRef="number"/>
-        <dmn:literalExpression id="_F7A8B9C0-1D2E-3F4A-5B6C-7D8E9F0A1B2C">
-          <dmn:text>if incomeSources = null then
+        <dmn:variable id="_INC4_UNEARNED_FROM_SOURCES" name="unearnedFromSources" typeRef="number"/>
+        <dmn:literalExpression id="_INC4_UNEARNED_FROM_SOURCES_EXPR">
+          <dmn:text>if incomeSources = null or count(incomeSources) = 0 then
   0
 else
   sum(for i in incomeSources return if i.type = "unearned" then i.monthlyAmount else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Total unearned income = incomeSources + enrollment-derived unearned income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_E6F7A8B9-0C1D-2E3F-4A5B-6C7D8E9F0A1B" name="totalUnearnedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_F7A8B9C0-1D2E-3F4A-5B6C-7D8E9F0A1B2C">
+          <dmn:text>unearnedFromSources + (if enrollmentIncome.countableUnearnedFromBenefits = null then 0 else enrollmentIncome.countableUnearnedFromBenefits)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
@@ -314,6 +343,7 @@ else
           <dmn:text>{
   totalEarnedIncome: totalEarnedIncome,
   totalUnearnedIncome: totalUnearnedIncome,
+  unearnedFromBenefits: if enrollmentIncome.countableUnearnedFromBenefits = null then 0 else enrollmentIncome.countableUnearnedFromBenefits,
   deemedIncome: deemedIncomeAmount,
   generalExclusionApplied: generalExclusionToUnearned + unusedGeneralExclusion,
   earnedIncomeExclusionApplied: earnedExclusionApplied,
@@ -322,7 +352,9 @@ else
   totalCountableIncome: totalCountableIncome,
   applicableFBR: applicableFBR,
   meetsIncomeLimit: meetsIncomeLimit,
-  seieExclusionApplied: seieExclusionApplied
+  seieExclusionApplied: seieExclusionApplied,
+  excludedIncomeFromBenefits: if enrollmentIncome.excludedIncomeFromBenefits = null then 0 else enrollmentIncome.excludedIncomeFromBenefits,
+  excludedBenefits: if enrollmentIncome.excludedBenefits = null then [] else enrollmentIncome.excludedBenefits
 }</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>

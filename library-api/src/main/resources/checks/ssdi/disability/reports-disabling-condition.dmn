@@ -41,9 +41,8 @@
 
   <dmn:decisionService id="_DISAB-DS" name="ReportsDisablingConditionService">
     <dmn:description>POMS DI 10105.065 - Returns true if person self-reports having a disabling condition (isDisabled = true OR isBlind = true).</dmn:description>
-    <dmn:variable id="_DISAB-DS-VAR" name="ReportsDisablingConditionService"/>
+    <dmn:variable id="_DISAB-DS-VAR" name="ReportsDisablingConditionService" typeRef="BDT.tCheckResponse"/>
     <dmn:outputDecision href="#_DISAB-DEC-CHECKRESULT"/>
-    <dmn:outputDecision href="#_DISAB-DEC-DISABINFO"/>
     <dmn:inputData href="#_DISAB-INPUT-SITUATION"/>
     <dmn:inputData href="#_DISAB-INPUT-PARAMS"/>
   </dmn:decisionService>
@@ -56,9 +55,9 @@
     <dmn:variable id="_DISAB-INPUT-PARAMS-VAR" name="parameters" typeRef="tParameters"/>
   </dmn:inputData>
 
-  <dmn:decision id="_DISAB-DEC-DISABINFO" name="disabilityInfo">
-    <dmn:description>Extract disability-related information from the person record.</dmn:description>
-    <dmn:variable id="_DISAB-DEC-DISABINFO-VAR" name="disabilityInfo" typeRef="tDisabilityInfo"/>
+  <dmn:decision id="_DISAB-DEC-CHECKRESULT" name="checkResult">
+    <dmn:description>POMS DI 10105.065 - True if person reports having a disabling condition (eligible for SSDI consideration).</dmn:description>
+    <dmn:variable id="_DISAB-DEC-CHECKRESULT-VAR" name="checkResult" typeRef="boolean"/>
     <dmn:informationRequirement id="_DISAB-IR-1">
       <dmn:requiredInput href="#_DISAB-INPUT-SITUATION"/>
     </dmn:informationRequirement>
@@ -81,42 +80,27 @@
       <dmn:contextEntry id="_DISAB-CTX-ISDISABLED">
         <dmn:variable id="_DISAB-CTX-ISDISABLED-VAR" name="isDisabled" typeRef="boolean"/>
         <dmn:literalExpression id="_DISAB-EXPR-ISDISABLED">
-          <dmn:text>if person.isDisabled = null then false else person.isDisabled</dmn:text>
+          <dmn:text>if person = null or person.isDisabled = null then false else person.isDisabled</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry id="_DISAB-CTX-ISBLIND">
         <dmn:variable id="_DISAB-CTX-ISBLIND-VAR" name="isBlind" typeRef="boolean"/>
         <dmn:literalExpression id="_DISAB-EXPR-ISBLIND">
-          <dmn:text>if person.isBlind = null then false else person.isBlind</dmn:text>
-        </dmn:literalExpression>
-      </dmn:contextEntry>
-      <dmn:contextEntry id="_DISAB-CTX-HASCONDITION">
-        <dmn:variable id="_DISAB-CTX-HASCONDITION-VAR" name="hasDisablingCondition" typeRef="boolean"/>
-        <dmn:literalExpression id="_DISAB-EXPR-HASCONDITION">
-          <dmn:text>isDisabled or isBlind</dmn:text>
+          <dmn:text>if person = null or person.isBlind = null then false else person.isBlind</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry id="_DISAB-CTX-RESULT">
+        <dmn:variable id="_DISAB-CTX-RESULT-VAR" name="result" typeRef="boolean"/>
         <dmn:literalExpression id="_DISAB-EXPR-RESULT">
-          <dmn:text>{
-  "isDisabled": isDisabled,
-  "isBlind": isBlind,
-  "hasDisablingCondition": hasDisablingCondition
-}</dmn:text>
+          <dmn:text>isDisabled or isBlind</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_DISAB-EXPR-RETURN">
+          <dmn:text>result</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
     </dmn:context>
-  </dmn:decision>
-
-  <dmn:decision id="_DISAB-DEC-CHECKRESULT" name="checkResult">
-    <dmn:description>POMS DI 10105.065 - True if person reports having a disabling condition (eligible for SSDI consideration).</dmn:description>
-    <dmn:variable id="_DISAB-DEC-CHECKRESULT-VAR" name="checkResult" typeRef="boolean"/>
-    <dmn:informationRequirement id="_DISAB-IR-CALC">
-      <dmn:requiredDecision href="#_DISAB-DEC-DISABINFO"/>
-    </dmn:informationRequirement>
-    <dmn:literalExpression id="_DISAB-EXPR-CHECKRESULT">
-      <dmn:text>disabilityInfo.hasDisablingCondition</dmn:text>
-    </dmn:literalExpression>
   </dmn:decision>
 
 </dmn:definitions>

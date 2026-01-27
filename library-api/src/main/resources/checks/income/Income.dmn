@@ -20,6 +20,13 @@
               locationURI="../../BDT.dmn"
               importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
 
+  <!-- Import Enrollment module for tEnrollmentList type -->
+  <dmn:import id="_INC3_IMPORT_ENROLLMENT"
+              name="Enrollment"
+              namespace="https://kie.apache.org/dmn/_6E9D53A6-E99A-4060-9E3E-1AE12EAB5465"
+              locationURI="../enrollment/Enrollment.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
   <!-- BKM: sum income by type -->
   <dmn:businessKnowledgeModel id="_7D8E9F0A-1B2C-3D4E-5F6A-7B8C9D0E1F2A" name="sum income by type">
     <dmn:description>Calculate total income for a specific type (earned or unearned)</dmn:description>
@@ -66,6 +73,52 @@ else
   generalExclusionToUnearned: if totalUnearnedIncome >= 20 then 20 else totalUnearnedIncome,
   unusedGeneralExclusion: if totalUnearnedIncome &lt; 20 then 20 - totalUnearnedIncome else 0,
   countableUnearnedIncome: if totalUnearnedIncome > 20 then totalUnearnedIncome - 20 else 0
+}</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- BKM: derive income from enrollments -->
+  <dmn:businessKnowledgeModel id="_INC3_BKM_DERIVE" name="derive income from enrollments">
+    <dmn:description>Derives income amounts from benefit enrollments. Separates counted vs. excluded benefits per POMS SI 00830. Returns context with countable unearned income, excluded income, and list of excluded benefit codes.
+
+Excluded benefits (do NOT count as income): SECTION_8, SNAP, LIHEAP, WIC, SCHOOL_LUNCH, DISASTER_RELIEF, STATE_VET_ANNUITY, MEDICAID, MEDICARE, SSI, CHIP</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_INC3_BKM_DERIVE_VAR" name="derive income from enrollments" typeRef="Any"/>
+    <dmn:encapsulatedLogic id="_INC3_BKM_DERIVE_LOGIC" kind="FEEL">
+      <dmn:formalParameter id="_INC3_BKM_DERIVE_PARAM1" name="enrollments" typeRef="Enrollment.tEnrollmentList"/>
+      <dmn:formalParameter id="_INC3_BKM_DERIVE_PARAM2" name="personId" typeRef="string"/>
+      <dmn:literalExpression id="_INC3_BKM_DERIVE_EXPR">
+        <dmn:text>// Filter to this person's active enrollments (RECEIVING or null status)
+// Then classify each as counted or excluded per POMS SI 00830
+{
+  // List of benefit types excluded from SSI income per POMS SI 00830
+  excludedBenefitTypes: ["SECTION_8", "SNAP", "LIHEAP", "WIC", "SCHOOL_LUNCH", "DISASTER_RELIEF", "STATE_VET_ANNUITY", "MEDICAID", "MEDICARE", "SSI", "CHIP"],
+
+  personEnrollments: if enrollments = null then [] else enrollments[item.personId = personId and (item.status = null or item.status = "RECEIVING")],
+
+  // For each enrollment with an amount, check if excluded
+  processed: for e in personEnrollments return
+    if e.monthlyAmount = null or e.monthlyAmount = 0 then
+      { benefit: e.benefit, amount: 0, isExcluded: true }
+    else
+      {
+        benefit: e.benefit,
+        amount: e.monthlyAmount,
+        isExcluded: list contains(excludedBenefitTypes, e.benefit)
+      },
+
+  // Raw sums (may be null for empty lists)
+  rawCountable: sum(for p in processed return if p.isExcluded then 0 else p.amount),
+  rawExcluded: sum(for p in processed return if p.isExcluded and p.amount > 0 then p.amount else 0),
+
+  // Filter to only excluded items with amounts, then extract benefit codes
+  excludedItems: processed[item.isExcluded = true and item.amount > 0],
+
+  // Final outputs with null handling
+  countableUnearnedFromBenefits: if rawCountable = null then 0 else rawCountable,
+  excludedIncomeFromBenefits: if rawExcluded = null then 0 else rawExcluded,
+  excludedBenefits: distinct values(for e in excludedItems return e.benefit)
 }</dmn:text>
       </dmn:literalExpression>
     </dmn:encapsulatedLogic>

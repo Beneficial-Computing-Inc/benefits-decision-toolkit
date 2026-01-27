@@ -1,0 +1,55 @@
+meta {
+  name: No Enrollments - Backwards Compatible
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "person1",
+        "dateOfBirth": "1960-06-01",
+        "isSSIEligible": true,
+        "incomeSources": [
+          {"id": "inc1", "type": "unearned", "monthlyAmount": 300}
+        ]
+      }]
+    },
+    "parameters": {
+      "personId": "person1",
+      "FBR": 967
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.incomeCalculation.unearnedFromBenefits: eq 0
+  res.body.incomeCalculation.totalUnearnedIncome: eq 300
+  res.body.incomeCalculation.countableUnearnedIncome: eq 280
+  res.body.incomeCalculation.totalCountableIncome: eq 280
+  res.body.incomeCalculation.meetsIncomeLimit: eq true
+  res.body.incomeCalculation.excludedIncomeFromBenefits: eq 0
+}
+
+docs {
+  Backward compatibility: situation without enrollments array.
+
+  Person has only incomeSources (no enrollments):
+  - Unearned from incomeSources: $300
+  - Unearned from benefits: $0
+  - Total unearned: $300
+  - After $20 general exclusion: $280 countable
+  - Total countable: $280
+  - FBR: $967
+  - Result: Passes income limit
+}
