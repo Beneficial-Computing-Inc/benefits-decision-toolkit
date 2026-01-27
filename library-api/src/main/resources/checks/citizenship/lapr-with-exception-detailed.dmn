@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_LAPR002-DETAILED-2026-0127"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+  id="_LAPR002-DETAILED-MAIN-2026-0127"
+  name="LaprWithExceptionDetailed"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_LAPR002-DETAILED-2026-0127">
+
+  <dmn:description>Detailed version of LAPR eligibility check that returns both checkResult AND subChecks.
+Used by UI for precise field highlighting - shows which specific conditions passed or failed.
+
+This imports and extends LaprWithException to add sub-check visibility without duplicating logic.</dmn:description>
+
+  <!-- Import BDT -->
+  <dmn:import
+    id="_LAPRD_IMPORT_BDT"
+    name="BDT"
+    namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+    locationURI="../../bdt.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters -->
+  <dmn:itemDefinition id="_LAPRD_TPARAMS" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_LAPRD_TPARAMS_PID" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Define tSubChecks -->
+  <dmn:itemDefinition id="_LAPRD_TSUBCHECKS" name="tSubChecks" isCollection="false">
+    <dmn:itemComponent id="_LAPRD_SC_ISLAPR" name="isLapr" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_HAS40QQ" name="has40QualifyingQuarters" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_ENTEREDPRE" name="enteredBeforeWelfareReform" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_FIVEYEARS" name="fiveYearsSinceEntry" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_40QQEXC" name="meets40QQException" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_VETMIL" name="meetsVeteranMilitaryException" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_BLINDDIS" name="meetsBlindDisabledResidenceException" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_GRANDFATHER" name="meetsGrandfatheredException" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LAPRD_SC_ANYEXC" name="meetsAnyExceptionCondition" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_LAPRD_SERVICE" name="LaprWithExceptionDetailedService">
+    <dmn:description>Returns checkResult AND subChecks for UI field highlighting.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPRD_SERVICE_VAR"
+                  name="LaprWithExceptionDetailedService"
+                  typeRef="Any"/>
+    <dmn:outputDecision href="#_LAPRD_CHECKRESULT"/>
+    <dmn:outputDecision href="#_LAPRD_SUBCHECKS"/>
+    <dmn:inputData href="#_LAPRD_SIT"/>
+    <dmn:inputData href="#_LAPRD_PARAMS"/>
+  </dmn:decisionService>
+
+  <!-- Input Data: situation -->
+  <dmn:inputData id="_LAPRD_SIT" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPRD_SIT_VAR"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input Data: parameters -->
+  <dmn:inputData id="_LAPRD_PARAMS" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPRD_PARAMS_VAR"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: checkResult -->
+  <dmn:decision id="_LAPRD_CHECKRESULT" name="checkResult">
+    <dmn:description>Main eligibility result: LAPR status AND exception condition met.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPRD_CHECKRESULT_VAR"
+                  name="checkResult"
+                  typeRef="boolean"/>
+    <dmn:informationRequirement id="_LAPRD_CR_REQ_SIT">
+      <dmn:requiredInput href="#_LAPRD_SIT"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_LAPRD_CR_REQ_PARAMS">
+      <dmn:requiredInput href="#_LAPRD_PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_LAPRD_CR_CONTEXT">
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_PERSON" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_PERSON">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_ISLAPR" name="isLapr" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_ISLAPR">
+          <dmn:text>person.citizenshipStatus = "LAPR"</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_WELFAREDATE" name="welfareReformDate" typeRef="date"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_WELFAREDATE">
+          <dmn:text>date("1996-08-22")</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_HAS40QQ" name="has40QualifyingQuarters" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_HAS40QQ">
+          <dmn:text>(person.qualifyingQuarters != null and person.qualifyingQuarters >= 40)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_ENTEREDPRE822" name="enteredBeforeWelfareReform" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_ENTEREDPRE822">
+          <dmn:text>(person.usEntryDate != null and date(person.usEntryDate) &lt; welfareReformDate)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_FIVEYEARSINCE" name="fiveYearsSinceEntry" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_FIVEYEARSINCE">
+          <dmn:text>(person.usEntryDate != null and situation.evaluationDate != null and
+ date(person.usEntryDate) + duration("P5Y") &lt;= date(situation.evaluationDate))</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_40QQEXC" name="meets40QQException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_40QQEXC">
+          <dmn:text>has40QualifyingQuarters and (enteredBeforeWelfareReform or fiveYearsSinceEntry)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_VETMILEXC" name="meetsVeteranMilitaryException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_VETMILEXC">
+          <dmn:text>(person.isVeteran = true) or (person.isActiveDutyMilitary = true) or
+(person.isSpouseOfVeteranOrActiveDuty = true) or (person.isDependentChildOfVeteranOrActiveDuty = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_BLINDDISEXC" name="meetsBlindDisabledResidenceException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_BLINDDISEXC">
+          <dmn:text>(person.isBlindOrDisabled = true and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_GRANDFATHEREXC" name="meetsGrandfatheredException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_GRANDFATHEREXC">
+          <dmn:text>(person.wasReceivingSSIOn8221996 = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_CR_VAR_ANYEXC" name="meetsAnyExceptionCondition" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_ANYEXC">
+          <dmn:text>meets40QQException or meetsVeteranMilitaryException or meetsBlindDisabledResidenceException or meetsGrandfatheredException</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_LAPRD_CR_EXPR_RETURN">
+          <dmn:text>isLapr and meetsAnyExceptionCondition</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision: subChecks -->
+  <dmn:decision id="_LAPRD_SUBCHECKS" name="subChecks">
+    <dmn:description>All leaf-level sub-check results for UI field highlighting.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_LAPRD_SUBCHECKS_VAR"
+                  name="subChecks"
+                  typeRef="tSubChecks"/>
+    <dmn:informationRequirement id="_LAPRD_SC_REQ_SIT">
+      <dmn:requiredInput href="#_LAPRD_SIT"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_LAPRD_SC_REQ_PARAMS">
+      <dmn:requiredInput href="#_LAPRD_PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_LAPRD_SC_CONTEXT">
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_PERSON" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_PERSON">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_WELFAREDATE" name="welfareReformDate" typeRef="date"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_WELFAREDATE">
+          <dmn:text>date("1996-08-22")</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_ISLAPR" name="isLapr" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_ISLAPR">
+          <dmn:text>person.citizenshipStatus = "LAPR"</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_HAS40QQ" name="has40QualifyingQuarters" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_HAS40QQ">
+          <dmn:text>(person.qualifyingQuarters != null and person.qualifyingQuarters >= 40)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_ENTEREDPRE822" name="enteredBeforeWelfareReform" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_ENTEREDPRE822">
+          <dmn:text>(person.usEntryDate != null and date(person.usEntryDate) &lt; welfareReformDate)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_FIVEYEARSINCE" name="fiveYearsSinceEntry" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_FIVEYEARSINCE">
+          <dmn:text>(person.usEntryDate != null and situation.evaluationDate != null and
+ date(person.usEntryDate) + duration("P5Y") &lt;= date(situation.evaluationDate))</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_40QQEXC" name="meets40QQException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_40QQEXC">
+          <dmn:text>has40QualifyingQuarters and (enteredBeforeWelfareReform or fiveYearsSinceEntry)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_VETMILEXC" name="meetsVeteranMilitaryException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_VETMILEXC">
+          <dmn:text>(person.isVeteran = true) or (person.isActiveDutyMilitary = true) or
+(person.isSpouseOfVeteranOrActiveDuty = true) or (person.isDependentChildOfVeteranOrActiveDuty = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_BLINDDISEXC" name="meetsBlindDisabledResidenceException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_BLINDDISEXC">
+          <dmn:text>(person.isBlindOrDisabled = true and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_GRANDFATHEREXC" name="meetsGrandfatheredException" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_GRANDFATHEREXC">
+          <dmn:text>(person.wasReceivingSSIOn8221996 = true)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_LAPRD_SC_VAR_ANYEXC" name="meetsAnyExceptionCondition" typeRef="boolean"/>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_ANYEXC">
+          <dmn:text>meets40QQException or meetsVeteranMilitaryException or meetsBlindDisabledResidenceException or meetsGrandfatheredException</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_LAPRD_SC_EXPR_RETURN">
+          <dmn:text>{
+  isLapr: isLapr,
+  has40QualifyingQuarters: has40QualifyingQuarters,
+  enteredBeforeWelfareReform: enteredBeforeWelfareReform,
+  fiveYearsSinceEntry: fiveYearsSinceEntry,
+  meets40QQException: meets40QQException,
+  meetsVeteranMilitaryException: meetsVeteranMilitaryException,
+  meetsBlindDisabledResidenceException: meetsBlindDisabledResidenceException,
+  meetsGrandfatheredException: meetsGrandfatheredException,
+  meetsAnyExceptionCondition: meetsAnyExceptionCondition
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+</dmn:definitions>

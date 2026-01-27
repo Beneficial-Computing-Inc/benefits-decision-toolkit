@@ -20,7 +20,9 @@ Per POMS SI 00502.100, LAPRs must meet BOTH requirements:
    - Blind/Disabled AND lawfully residing in US on 8/22/96 (SI 00502.142)
    - Receiving SSI on 8/22/96 (grandfathered)
 
-This check returns true only if LAPR status AND at least one exception condition are met.</dmn:description>
+This check returns true only if LAPR status AND at least one exception condition are met.
+
+For detailed sub-check results (for UI field highlighting), use lapr-with-exception-detailed.dmn instead.</dmn:description>
 
   <!-- Import BDT -->
   <dmn:import
@@ -195,5 +197,6 @@ has40QualifyingQuarters and (enteredBeforeWelfareReform or fiveYearsSinceEntry)<
       </dmn:contextEntry>
     </dmn:context>
   </dmn:decision>
+
 
 </dmn:definitions>
