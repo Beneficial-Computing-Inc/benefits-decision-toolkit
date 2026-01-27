@@ -1,0 +1,413 @@
+# UX Overrides for Auto-Generated Form Schema
+#
+# This file provides human-friendly labels, help text, enum values,
+# and section groupings for fields extracted from the OpenAPI schema.
+
+# =============================================================================
+# Field Overrides
+# =============================================================================
+fields:
+  # Basic Information
+  dateOfBirth:
+    label: "Date of Birth"
+    description: "Used to determine if person is 65 or older (categorical eligibility)"
+    validate:
+      required: true
+
+  isBlindOrDisabled:
+    label: "Is the person blind or disabled?"
+    description: "SSI categorical requirement: age 65+, blind, OR disabled"
+    validate:
+      required: true
+
+  residenceState:
+    label: "State of Residence"
+    description: "Must reside in 50 states, DC, or Northern Mariana Islands"
+    type: select
+    validate:
+      required: true
+    values:
+      - { label: "Alabama", value: "AL" }
+      - { label: "Alaska", value: "AK" }
+      - { label: "Arizona", value: "AZ" }
+      - { label: "Arkansas", value: "AR" }
+      - { label: "California", value: "CA" }
+      - { label: "Colorado", value: "CO" }
+      - { label: "Connecticut", value: "CT" }
+      - { label: "Delaware", value: "DE" }
+      - { label: "District of Columbia", value: "DC" }
+      - { label: "Florida", value: "FL" }
+      - { label: "Georgia", value: "GA" }
+      - { label: "Hawaii", value: "HI" }
+      - { label: "Idaho", value: "ID" }
+      - { label: "Illinois", value: "IL" }
+      - { label: "Indiana", value: "IN" }
+      - { label: "Iowa", value: "IA" }
+      - { label: "Kansas", value: "KS" }
+      - { label: "Kentucky", value: "KY" }
+      - { label: "Louisiana", value: "LA" }
+      - { label: "Maine", value: "ME" }
+      - { label: "Maryland", value: "MD" }
+      - { label: "Massachusetts", value: "MA" }
+      - { label: "Michigan", value: "MI" }
+      - { label: "Minnesota", value: "MN" }
+      - { label: "Mississippi", value: "MS" }
+      - { label: "Missouri", value: "MO" }
+      - { label: "Montana", value: "MT" }
+      - { label: "Nebraska", value: "NE" }
+      - { label: "Nevada", value: "NV" }
+      - { label: "New Hampshire", value: "NH" }
+      - { label: "New Jersey", value: "NJ" }
+      - { label: "New Mexico", value: "NM" }
+      - { label: "New York", value: "NY" }
+      - { label: "North Carolina", value: "NC" }
+      - { label: "North Dakota", value: "ND" }
+      - { label: "Northern Mariana Islands", value: "MP" }
+      - { label: "Ohio", value: "OH" }
+      - { label: "Oklahoma", value: "OK" }
+      - { label: "Oregon", value: "OR" }
+      - { label: "Pennsylvania", value: "PA" }
+      - { label: "Rhode Island", value: "RI" }
+      - { label: "South Carolina", value: "SC" }
+      - { label: "South Dakota", value: "SD" }
+      - { label: "Tennessee", value: "TN" }
+      - { label: "Texas", value: "TX" }
+      - { label: "Utah", value: "UT" }
+      - { label: "Vermont", value: "VT" }
+      - { label: "Virginia", value: "VA" }
+      - { label: "Washington", value: "WA" }
+      - { label: "West Virginia", value: "WV" }
+      - { label: "Wisconsin", value: "WI" }
+      - { label: "Wyoming", value: "WY" }
+
+  # Citizenship / Immigration
+  citizenshipStatus:
+    label: "Citizenship or Immigration Status"
+    description: "Determines citizenship eligibility per POMS SI 00501.100"
+    type: select
+    validate:
+      required: true
+    values:
+      - { label: "U.S. Citizen", value: "US_CITIZEN" }
+      - { label: "Naturalized Citizen", value: "NATURALIZED_CITIZEN" }
+      - { label: "Lawful Permanent Resident (LPR)", value: "LAPR" }
+      - { label: "Refugee", value: "REFUGEE" }
+      - { label: "Asylee", value: "ASYLEE" }
+      - { label: "Deportation Withheld", value: "WITHHOLDING_DEPORTATION" }
+      - { label: "Cuban/Haitian Entrant", value: "CUBAN_HAITIAN_ENTRANT" }
+      - { label: "Vietnamese Amerasian", value: "VIETNAMESE_AMERASIAN" }
+      - { label: "Paroled for 1+ Year", value: "PAROLED_ONE_YEAR" }
+      - { label: "Other / Not Listed", value: "OTHER" }
+
+  refugeeAdmissionDate:
+    label: "Date Admitted as Refugee"
+    description: "Used to check 7-year time limit for refugee eligibility"
+
+  asylumGrantDate:
+    label: "Date Asylum Granted"
+    description: "Used to check 7-year time limit for asylee eligibility"
+
+  withheldDeportationGrantDate:
+    label: "Date Deportation Withheld"
+    description: "Used for withholding deportation eligibility determination"
+
+  cubanHaitianEntryDate:
+    label: "Date of Entry as Cuban/Haitian Entrant"
+    description: "Date admitted as Cuban/Haitian entrant"
+
+  amerasianAdmissionDate:
+    label: "Date Admitted as Amerasian"
+    description: "Date admitted as Vietnamese Amerasian"
+
+  usEntryDate:
+    label: "Date Entered United States"
+    description: "Used for 5-year bar calculation (POMS SI 00502.135B.1)"
+
+  qualifyingQuarters:
+    label: "Social Security Work Quarters"
+    description: "Total quarters with SS-covered work. Need 40 quarters (POMS SI 00502.135)"
+    validate:
+      min: 0
+      max: 160
+
+  # Veteran/Military
+  isVeteran:
+    label: "Is the person a U.S. Veteran?"
+    description: "Honorably discharged from U.S. Armed Forces"
+
+  isActiveDutyMilitary:
+    label: "Is the person on active duty in U.S. Armed Forces?"
+
+  isSpouseOfVeteranOrActiveDuty:
+    label: "Is the person the spouse of a veteran or active duty member?"
+
+  isDependentChildOfVeteranOrActiveDuty:
+    label: "Is the person a dependent child of a veteran or active duty member?"
+
+  # LPR Exceptions
+  wasLawfullyResidingOn8221996:
+    label: "Was the person lawfully residing in the US on 8/22/1996?"
+    description: "For blind/disabled persons only (POMS SI 00502.142)"
+
+  wasReceivingSSIOn8221996:
+    label: "Was the person receiving SSI on August 22, 1996?"
+    description: "Grandfathered recipients are exempt"
+
+  # Income
+  isStudent:
+    label: "Is the person a student?"
+    description: "Students under 22 may qualify for Student Earned Income Exclusion (SEIE)"
+
+  # Resources (dynamic list fields)
+  type:
+    label: "Type"
+    type: select
+    values:
+      - { label: "Cash / Bank Account", value: "cash" }
+      - { label: "Real Property (Home)", value: "real_property" }
+      - { label: "Vehicle", value: "vehicle" }
+      - { label: "Life Insurance", value: "life_insurance" }
+      - { label: "Burial Fund", value: "burial_fund" }
+      - { label: "ABLE Account", value: "able_account" }
+      - { label: "Household Goods", value: "household_goods" }
+      - { label: "Property for Self-Support", value: "self_support" }
+      - { label: "Stocks/Bonds/Investments", value: "investments" }
+      - { label: "Other", value: "other" }
+
+  value:
+    label: "Value ($)"
+    validate:
+      min: 0
+
+  description:
+    label: "Description"
+
+  isPrimaryResidence:
+    label: "Primary residence (excluded)"
+
+  isPrimaryVehicle:
+    label: "Primary vehicle (excluded)"
+
+  lifeInsuranceFaceValue:
+    label: "Life Insurance Face Value ($)"
+    description: "Only for life insurance resources"
+    validate:
+      min: 0
+
+  isBurialFundDesignated:
+    label: "Designated burial fund (up to $1,500 excluded)"
+
+  isEssentialForSelfSupport:
+    label: "Essential for self-support (PESS exclusion)"
+
+  # Income Sources (dynamic list fields)
+  category:
+    label: "Category"
+    type: select
+    values:
+      - { label: "Wages (W-2)", value: "wages" }
+      - { label: "Self-Employment", value: "self_employment" }
+      - { label: "Sheltered Workshop", value: "sheltered_workshop" }
+      - { label: "Other Earned Income", value: "other_earned" }
+      - { label: "Social Security (RSDI)", value: "SSA" }
+      - { label: "Pension/Retirement", value: "pension" }
+      - { label: "Veterans Benefits", value: "veterans" }
+      - { label: "Unemployment Benefits", value: "unemployment" }
+      - { label: "Rental Income", value: "rental" }
+      - { label: "Interest/Dividends", value: "interest" }
+      - { label: "Gifts/Support", value: "gifts" }
+      - { label: "Other Unearned Income", value: "other_unearned" }
+
+  monthlyAmount:
+    label: "Monthly Amount ($)"
+    validate:
+      min: 0
+
+  isInfrequentOrIrregular:
+    label: "Infrequent or irregular income"
+
+  # Simple Checks (Philadelphia-specific)
+  lateSpouseWasAtLeast65:
+    label: "Was the late spouse at least 65?"
+    description: "For widow(er) exclusion calculations"
+
+  ownerOccupant:
+    label: "Is the person an owner-occupant of their residence?"
+    description: "For property tax exemption considerations (PA)"
+
+  livesInPhiladelphiaPa:
+    label: "Does the person live in Philadelphia, PA?"
+    description: "For Philadelphia-specific property tax exemptions"
+
+  tenYearTaxAbatement:
+    label: "Is there a 10-year tax abatement on the property?"
+    description: "PA resource exclusion consideration"
+
+  # Spouse fields
+  hasSpouse:
+    label: "Does the person have a spouse?"
+    description: "Affects resource limit ($3,000 for couples) and income deeming"
+
+  spouseDateOfBirth:
+    label: "Spouse Date of Birth"
+
+  spouseIsBlindOrDisabled:
+    label: "Is the spouse blind or disabled?"
+
+  spouseCitizenshipStatus:
+    label: "Spouse Citizenship Status"
+
+  spouseIsSSIEligible:
+    label: "Is the spouse SSI eligible?"
+    description: "Affects deeming calculations"
+
+# =============================================================================
+# Section Definitions
+# =============================================================================
+sections:
+  - id: section_basic
+    label: "Basic Information"
+    collapsed: false
+    required: true
+    fields:
+      - dateOfBirth
+      - isBlindOrDisabled
+      - residenceState
+
+  - id: section_citizenship
+    label: "Citizenship / Immigration Status"
+    collapsed: false
+    fields:
+      - citizenshipStatus
+      - refugeeAdmissionDate
+      - asylumGrantDate
+      - withheldDeportationGrantDate
+      - cubanHaitianEntryDate
+      - amerasianAdmissionDate
+      - usEntryDate
+      - qualifyingQuarters
+      - isVeteran
+      - isActiveDutyMilitary
+      - isSpouseOfVeteranOrActiveDuty
+      - isDependentChildOfVeteranOrActiveDuty
+      - wasLawfullyResidingOn8221996
+      - wasReceivingSSIOn8221996
+
+  - id: section_income_simple
+    label: "Income (Quick Entry)"
+    collapsed: false
+    description: "Enter monthly income totals. For detailed breakdown, use the 'Detailed Income Sources' section."
+    fields:
+      - earnedIncome
+      - unearnedIncome
+      - isStudent
+
+  - id: section_income_detailed
+    label: "Detailed Income Sources"
+    collapsed: true
+    description: "Add individual income sources for more accurate calculations."
+    fields:
+      - incomeSources
+
+  - id: section_resources_simple
+    label: "Resources (Quick Entry)"
+    collapsed: false
+    description: "Countable resources must be under $2,000 (individual) or $3,000 (couple)."
+    fields:
+      - countableResources
+
+  - id: section_resources_detailed
+    label: "Detailed Resources with Exclusions"
+    collapsed: true
+    description: "Add individual resources to automatically calculate exclusions."
+    fields:
+      - resources
+
+  - id: section_spouse
+    label: "Spouse Information"
+    collapsed: true
+    description: "For eligible couples, both must meet categorical and citizenship requirements."
+    fields:
+      - hasSpouse
+      - spouseDateOfBirth
+      - spouseIsBlindOrDisabled
+      - spouseCitizenshipStatus
+      - spouseIsSSIEligible
+      - spouseEarnedIncome
+      - spouseUnearnedIncome
+      - spouseCountableResources
+
+  - id: section_special
+    label: "Special Circumstances"
+    collapsed: true
+    description: "Additional factors that may affect eligibility or exclusions."
+    fields:
+      - lateSpouseWasAtLeast65
+      - ownerOccupant
+      - livesInPhiladelphiaPa
+      - tenYearTaxAbatement
+
+# =============================================================================
+# Convenience Fields (form-only, not in API)
+# =============================================================================
+convenienceFields:
+  - id: earnedIncome
+    key: earnedIncome
+    type: number
+    label: "Monthly Earned Income ($)"
+    description: "Wages, self-employment income (before $65 + 50% exclusion)"
+    validate:
+      min: 0
+
+  - id: unearnedIncome
+    key: unearnedIncome
+    type: number
+    label: "Monthly Unearned Income ($)"
+    description: "Social Security, pensions, etc. (before $20 exclusion)"
+    validate:
+      min: 0
+
+  - id: countableResources
+    key: countableResources
+    type: number
+    label: "Total Countable Resources ($)"
+    description: "Cash, bank accounts, stocks, etc. (after exclusions)"
+    validate:
+      required: true
+      min: 0
+
+  - id: spouseEarnedIncome
+    key: spouseEarnedIncome
+    type: number
+    label: "Spouse Monthly Earned Income ($)"
+    description: "For deeming calculations"
+    validate:
+      min: 0
+
+  - id: spouseUnearnedIncome
+    key: spouseUnearnedIncome
+    type: number
+    label: "Spouse Monthly Unearned Income ($)"
+    description: "For deeming calculations"
+    validate:
+      min: 0
+
+  - id: spouseCountableResources
+    key: spouseCountableResources
+    type: number
+    label: "Spouse Countable Resources ($)"
+    description: "Combined with applicant resources for couple limit"
+    validate:
+      min: 0
+
+# =============================================================================
+# Spouse Field Configuration
+# =============================================================================
+spouseFields:
+  enabled: true
+  triggerField: hasSpouse
+  sourceFields:
+    - dateOfBirth
+    - isBlindOrDisabled
+    - citizenshipStatus
+    - isSSIEligible

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_C8D9E0F1-2A3B-4C5D-6E7F-8A9B0C1D2E3F"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  id="_F4E3D2A1-0B9C-8D7E-6F5A-4E3D2C1B0A9F"
+  name="CitizenshipEligibility"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_C8D9E0F1-2A3B-4C5D-6E7F-8A9B0C1D2E3F">
+
+  <dmn:description>Composes all SSI citizenship checks per POMS SI 00501.100. Person is citizenship-eligible if ANY of the qualified alien categories apply.
+
+Updated per POMS SI 00502.100:
+- Uses LaprWithException check for LAPRs, which validates both LAPR status AND exception conditions (40 QQs, veteran/military, blind/disabled+8/22/96 residence, or grandfathered)
+- Uses RefugeeAsyleeWithinSevenYears check which validates the 7-year time limitation for refugees and asylees
+
+Note: Returns null if essential date fields are missing for time-based eligibility requirements.</dmn:description>
+
+  <!-- Import BDT -->
+  <dmn:import id="_import_bdt" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../bdt.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import all citizenship checks -->
+  <dmn:import id="_import_usc" name="PersonUSCitizen" namespace="https://kie.apache.org/dmn/_9A93C7FE-6B0B-4A21-8E68-39B35E4163D7" locationURI="person-us-citizen.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_import_nat" name="NaturalizedCitizen" namespace="https://kie.apache.org/dmn/_C3D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F" locationURI="naturalized-citizen.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_import_lapr" name="LaprWithException" namespace="https://kie.apache.org/dmn/_LAPR001-EXC-2026-0115-LAPRWITHEXCEPTION" locationURI="lapr-with-exception.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_import_ref" name="RefugeeAsyleeWithinSevenYears" namespace="https://kie.apache.org/dmn/_031B91BC-8C1B-4121-A77A-BED402639500" locationURI="refugee-asylee-within-seven-years.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_import_viet" name="VietnameseAmerasian" namespace="https://kie.apache.org/dmn/_D4E5F6A7-8B9C-0D1E-2F3A-4B5C6D7E8F9A" locationURI="vietnamese-amerasian.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_import_cuba" name="CubanHaitianEntrant" namespace="https://kie.apache.org/dmn/_E5F6A7B8-9C0D-1E2F-3A4B-5C6D7E8F9A0B" locationURI="cuban-haitian-entrant.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_import_parol" name="ParoledAlien" namespace="https://kie.apache.org/dmn/_F6A7B8C9-0D1E-2F3A-4B5C-6D7E8F9A0B1C" locationURI="paroled-alien.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_import_with" name="WithheldDeportation" namespace="https://kie.apache.org/dmn/_A7B8C9D0-1E2F-3A4B-5C6D-7E8F9A0B1C2D" locationURI="withheld-deportation.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <dmn:itemDefinition id="_tParams" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_tParams_pid" name="personId"><dmn:typeRef>string</dmn:typeRef></dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:decisionService id="_svc" name="CitizenshipEligibilityService">
+    <dmn:variable id="_svc_var" name="CitizenshipEligibilityService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_decision"/>
+    <dmn:inputData href="#_sit"/>
+    <dmn:inputData href="#_params"/>
+  </dmn:decisionService>
+
+  <dmn:inputData id="_sit" name="situation">
+    <dmn:variable id="_sit_var" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <dmn:inputData id="_params" name="parameters">
+    <dmn:variable id="_params_var" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <dmn:decision id="_decision" name="checkResult">
+    <dmn:description>Person meets citizenship eligibility if ANY of 8 qualified categories apply</dmn:description>
+    <dmn:variable id="_decision_var" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_req1"><dmn:requiredInput href="#_sit"/></dmn:informationRequirement>
+    <dmn:informationRequirement id="_req2"><dmn:requiredInput href="#_params"/></dmn:informationRequirement>
+    <!-- Knowledge requirements for all 8 citizenship checks -->
+    <dmn:knowledgeRequirement id="_kr1">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_9A93C7FE-6B0B-4A21-8E68-39B35E4163D7#_2B5C9AB8-7019-418A-8D93-03707C17D29A"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_kr2">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_C3D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F#_6A7B8C9D-0E1F-2A3B-4C5D-6E7F8A9B0C1D"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_kr3">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_LAPR001-EXC-2026-0115-LAPRWITHEXCEPTION#_LAPR_SERVICE"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_kr4">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_031B91BC-8C1B-4121-A77A-BED402639500#_442ED55C-2280-43BE-A8BB-4E3F58C2BE5E"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_kr5">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_D4E5F6A7-8B9C-0D1E-2F3A-4B5C6D7E8F9A#_B8C9D0E1"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_kr6">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_E5F6A7B8-9C0D-1E2F-3A4B-5C6D7E8F9A0B#_C9D0E1F2"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_kr7">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_F6A7B8C9-0D1E-2F3A-4B5C-6D7E8F9A0B1C#_D0E1F2A3"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_kr8">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_A7B8C9D0-1E2F-3A4B-5C6D-7E8F9A0B1C2D#_E1F2A3B4"/>
+    </dmn:knowledgeRequirement>
+    <dmn:context id="_ctx">
+      <!-- Invoke PersonUSCitizen -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v1" name="usCitizen" typeRef="boolean"/>
+        <dmn:invocation id="_inv1">
+          <dmn:literalExpression id="_le1"><dmn:text>PersonUSCitizen.PersonUSCitizenService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Invoke NaturalizedCitizen -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v2" name="naturalizedCitizen" typeRef="boolean"/>
+        <dmn:invocation id="_inv2">
+          <dmn:literalExpression id="_le2"><dmn:text>NaturalizedCitizen.NaturalizedCitizenService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Invoke LaprWithException (LAPR with exception conditions per POMS SI 00502.100) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v3" name="laprWithException" typeRef="boolean"/>
+        <dmn:invocation id="_inv3">
+          <dmn:literalExpression id="_le3"><dmn:text>LaprWithException.LaprWithExceptionService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Invoke RefugeeAsyleeWithinSevenYears (validates 7-year time limit) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v4" name="refugeeAsylee" typeRef="boolean"/>
+        <dmn:invocation id="_inv4">
+          <dmn:literalExpression id="_le4"><dmn:text>RefugeeAsyleeWithinSevenYears.RefugeeAsyleeWithinSevenYearsService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Invoke VietnameseAmerasian -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v5" name="vietnameseAmerasian" typeRef="boolean"/>
+        <dmn:invocation id="_inv5">
+          <dmn:literalExpression id="_le5"><dmn:text>VietnameseAmerasian.VietnameseAmerasianService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Invoke CubanHaitianEntrant -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v6" name="cubanHaitianEntrant" typeRef="boolean"/>
+        <dmn:invocation id="_inv6">
+          <dmn:literalExpression id="_le6"><dmn:text>CubanHaitianEntrant.CubanHaitianEntrantService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Invoke ParoledAlien -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v7" name="paroledAlien" typeRef="boolean"/>
+        <dmn:invocation id="_inv7">
+          <dmn:literalExpression id="_le7"><dmn:text>ParoledAlien.ParoledAlienService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Invoke WithheldDeportation -->
+      <dmn:contextEntry>
+        <dmn:variable id="_v8" name="withheldDeportation" typeRef="boolean"/>
+        <dmn:invocation id="_inv8">
+          <dmn:literalExpression id="_le8"><dmn:text>WithheldDeportation.WithheldDeportationService</dmn:text></dmn:literalExpression>
+          <dmn:binding><dmn:parameter name="situation"/><dmn:literalExpression><dmn:text>situation</dmn:text></dmn:literalExpression></dmn:binding>
+          <dmn:binding><dmn:parameter name="parameters"/><dmn:literalExpression><dmn:text>parameters</dmn:text></dmn:literalExpression></dmn:binding>
+        </dmn:invocation>
+      </dmn:contextEntry>
+      <!-- Compose result: ANY of the qualified alien categories passes -->
+      <dmn:contextEntry>
+        <dmn:variable id="_result" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_result_expr">
+          <dmn:text>usCitizen or naturalizedCitizen or laprWithException or refugeeAsylee or vietnameseAmerasian or cubanHaitianEntrant or paroledAlien or withheldDeportation</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <!-- Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_return"><dmn:text>result</dmn:text></dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+</dmn:definitions>

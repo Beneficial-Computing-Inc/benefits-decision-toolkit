@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_C3D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+  xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+  xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+  id="_A9B8C7D6-5E4F-3A2B-1C0D-9E8F7A6B5C4D"
+  name="NaturalizedCitizen"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_C3D4E5F6-7A8B-9C0D-1E2F-3A4B5C6D7E8F">
+
+  <dmn:description>Implements SSI citizenship requirements for naturalized citizens from POMS SI 00501.100
+
+Naturalized citizens are US citizens who acquired citizenship through naturalization. For SSI purposes,
+naturalized citizens have identical eligibility as native-born US citizens - full eligibility with no
+restrictions or time limits.</dmn:description>
+
+  <!-- Import BDT (required) -->
+  <dmn:import
+    id="_3D4E5F6A-7B8C-9D0E-1F2A-3B4C5D6E7F8A"
+    name="BDT"
+    namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+    locationURI="../../bdt.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters (check-specific inputs) -->
+  <dmn:itemDefinition id="_4E5F6A7B-8C9D-0E1F-2A3B-4C5D6E7F8A9B" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_5F6A7B8C-9D0E-1F2A-3B4C-5D6E7F8A9B0C" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Decision Service (MUST be {ModelName}Service) -->
+  <dmn:decisionService id="_6A7B8C9D-0E1F-2A3B-4C5D-6E7F8A9B0C1D" name="NaturalizedCitizenService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_7B8C9D0E-1F2A-3B4C-5D6E-7F8A9B0C1D2E"
+                  name="NaturalizedCitizenService"
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_8C9D0E1F-2A3B-4C5D-6E7F-8A9B0C1D2E3F"/>
+    <dmn:inputData href="#_9D0E1F2A-3B4C-5D6E-7F8A-9B0C1D2E3F4A"/>
+    <dmn:inputData href="#_A0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5"/>
+  </dmn:decisionService>
+
+  <!-- Input Data: situation -->
+  <dmn:inputData id="_A0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_B1F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input Data: parameters -->
+  <dmn:inputData id="_9D0E1F2A-3B4C-5D6E-7F8A-9B0C1D2E3F4A" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_C2A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: checkResult -->
+  <dmn:decision id="_8C9D0E1F-2A3B-4C5D-6E7F-8A9B0C1D2E3F" name="checkResult">
+    <dmn:description>POMS SI 00501.100 - Naturalized citizen has full SSI eligibility identical to native-born US citizens</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_D3B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8"
+                  name="checkResult"
+                  typeRef="boolean"/>
+    <dmn:informationRequirement id="_E4C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9">
+      <dmn:requiredInput href="#_A0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_F5D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0">
+      <dmn:requiredInput href="#_9D0E1F2A-3B4C-5D6E-7F8A-9B0C1D2E3F4A"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_A6E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1">
+      <!-- Step 1: Get person from situation -->
+      <dmn:contextEntry>
+        <dmn:variable id="_B7F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B2" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_C8A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C3">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Check naturalized citizen status -->
+      <dmn:contextEntry>
+        <dmn:variable id="_D9B0C1D2-E3F4-A5B6-C7D8-E9F0A1B2C3D4" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_E0C1D2E3-F4A5-B6C7-D8E9-F0A1B2C3D4E5">
+          <dmn:text>person.citizenshipStatus = "NATURALIZED_CITIZEN"</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_F1D2E3F4-A5B6-C7D8-E9F0-A1B2C3D4E5F6">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+</dmn:definitions>

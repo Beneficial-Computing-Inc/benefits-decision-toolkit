@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:included1="https://kie.apache.org/dmn/_6E9D53A6-E99A-4060-9E3E-1AE12EAB5465" xmlns:included2="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708" id="_D3C0FDB9-CD2C-4E25-96F0-631D889B707A" name="BDT" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79">
+  <dmn:extensionElements/>
+  <dmn:import id="_9FD0AC46-28F4-400B-9A14-C929C7B2DCED" name="Enrollment" namespace="https://kie.apache.org/dmn/_6E9D53A6-E99A-4060-9E3E-1AE12EAB5465" locationURI="checks/enrollment/Enrollment.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_A5B42F45-471F-438A-BEA6-9C4E7F0BB7B0" name="Age" namespace="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708" locationURI="checks/age/Age.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:itemDefinition id="_15B57F06-99F9-4AAD-9AC4-199D5DCC526E" name="tSituation" isCollection="false">
+    <dmn:itemComponent id="_1E78ACB2-C44C-498E-8B2E-2429E5FC09EF" name="enrollments" isCollection="false">
+      <dmn:typeRef>Enrollment.tEnrollmentList</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_6590C5B5-8CEC-417C-BAB2-E7648A98560D" name="primaryPersonId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_9330054D-6109-4EF3-B69B-5F73ADBD5657" name="people" isCollection="false">
+      <dmn:typeRef>tPersonList</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_2478F0D4-7BAE-4DC0-B767-E4CC4A81727D" name="relationships" isCollection="false">
+      <dmn:typeRef>tRelationshipList</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_02DAA70A-534A-4529-82DE-DCC9677306C4" name="simpleChecks" isCollection="false">
+      <dmn:typeRef>tSimpleChecks</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_3AB15F41-33E0-461C-9569-0BC522587F41" name="evaluationDate" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_47681CD3-2FA0-4694-B03B-F381DA457BD3" name="tPerson" isCollection="false">
+    <dmn:itemComponent id="_CAC97D8B-FF24-4C38-8F32-C1507705112D" name="dateOfBirth" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_7899544D-D4BF-43E1-BB0C-61E13BBB14B2" name="id" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_1D39B4A8-5079-44C9-BCE1-E58D5C8FB677" name="citizenshipStatus" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_8F23A5C9-6D8E-4B1A-9F7C-3A9B2E5D4F6A" name="isBlindOrDisabled" isCollection="false">
+      <dmn:description>DEPRECATED - Use isBlind and isDisabled separately. Kept for backwards compatibility. True if person meets statutory blindness OR has qualifying disability.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SSDI002-2026-0115-DISAB-ISDISABLED" name="isDisabled" isCollection="false">
+      <dmn:description>POMS DI 10105.065 - Whether person has a medically determinable physical or mental impairment expected to last 12+ months or result in death, and is unable to engage in SGA. Used for SSI categorical eligibility and SSDI disability requirement.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_007C0A99-0361-48A3-A52B-4FAECB30663E" name="refugeeAdmissionDate" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_31B4A7B3-8F80-4935-9937-720279C568AE" name="asylumGrantDate" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_31A04A0E-5DFD-42B1-B8F7-97BA56FCD078" name="withheldDeportationGrantDate" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_2F229E87-6FEA-4FB4-BF12-778F21E898F0" name="cubanHaitianEntryDate" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_B520F043-1947-4E5A-922B-117450F6BAA7" name="amerasianAdmissionDate" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_5E7A9F2C-8B3D-4E1A-9C6F-2D8B4A7E3C5F" name="residenceState" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_9A8B7C6D-5E4F-3A2B-1C9D-8E7F6A5B4C3D" name="resources" isCollection="false">
+      <dmn:typeRef>tResourceList</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_1F2E3D4C-5B6A-7980-1234-567890ABCDEF" name="incomeSources" isCollection="false">
+      <dmn:typeRef>tIncomeSourceList</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE001-2026-0112-STUD-ISREGULARSTUD" name="isStudent" isCollection="false">
+      <dmn:description>POMS SI 00501.020 - Whether person is regularly attending school, college, or job training per student requirements for SEIE</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM001-2026-0112-ELIG-ISSSIELIGIBLE" name="isSSIEligible" isCollection="false">
+      <dmn:description>POMS SI 01320.000 - Whether person meets basic SSI eligibility (age/blind/disabled, citizenship, residence). Used to identify ineligible spouse/parent/child for deeming.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SSDI001-2026-0115-BLIND-ISBLIND" name="isBlind" isCollection="false">
+      <dmn:description>POMS DI 10501.015 - Whether person meets statutory blindness definition. Used for SSDI SGA threshold selection (blind: $2,700/month vs non-blind: $1,620/month in 2025). Note: Blind individuals under Title XVI (SSI) are NOT subject to SGA limitations.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <!-- LPR Exception Condition Fields - POMS SI 00502.100A.3 -->
+    <dmn:itemComponent id="_LPR001-2026-0115-QQ-QUALIFYINGQUARTERS" name="qualifyingQuarters" isCollection="false">
+      <dmn:description>POMS SI 00502.135 - Total qualifying quarters (QQ) of earnings. Includes own QQs, parent's QQs (while under 18), and spouse's QQs (during marriage). 40 QQs required for LAPR exception.</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR002-2026-0115-ENTRY-USENTRYDATE" name="usEntryDate" isCollection="false">
+      <dmn:description>POMS SI 00502.135B.1 - Date of entry into US as a qualified alien. Used for 5-year bar calculation for LAPRs entering on/after 8/22/96.</dmn:description>
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR003-2026-0115-VET-ISVETERAN" name="isVeteran" isCollection="false">
+      <dmn:description>POMS SI 00502.140 - Whether person is a veteran (honorably discharged, 2+ years active duty or equivalent).</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR004-2026-0115-MIL-ISACTIVEDUTYMILITARY" name="isActiveDutyMilitary" isCollection="false">
+      <dmn:description>POMS SI 00502.140A.2 - Whether person is currently on active duty in US Armed Forces.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR005-2026-0115-VETSP-ISSPOUSEOFVETERAN" name="isSpouseOfVeteranOrActiveDuty" isCollection="false">
+      <dmn:description>POMS SI 00502.140A.5 - Whether person is spouse of veteran or active duty service member (includes unremarried surviving spouse).</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR006-2026-0115-VETCH-ISDEPENDENTCHILDOFVETERAN" name="isDependentChildOfVeteranOrActiveDuty" isCollection="false">
+      <dmn:description>POMS SI 00502.140A.6 - Whether person is unmarried dependent child (under 18, or under 22 if student) of veteran or active duty service member.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR007-2026-0115-RES96-WASLAWFULLYRESIDING8221996" name="wasLawfullyResidingOn8221996" isCollection="false">
+      <dmn:description>POMS SI 00502.142B.2 - Whether person was lawfully residing in US on 8/22/96. Required for blind/disabled LAPR exception.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_LPR008-2026-0115-SSI96-WASRECEIVINGSSI8221996" name="wasReceivingSSIOn8221996" isCollection="false">
+      <dmn:description>POMS SI 00502.100A.1 - Whether person was receiving SSI benefits on 8/22/96 (grandfathered eligibility).</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <!-- SSDI Work Credits Fields - POMS DI 10105.060, RS 00301.120 -->
+    <dmn:itemComponent id="_SSDI003-2026-0115-WORK-HASWORKED" name="hasWorkedAndPaidSSTaxes" isCollection="false">
+      <dmn:description>POMS DI 10105.060 - Whether person has ever worked and paid Social Security taxes. Basic requirement for SSDI eligibility.</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SSDI004-2026-0115-WORK-YEARSLAST10" name="yearsWorkedInLast10Years" isCollection="false">
+      <dmn:description>RS 00301.120 - Approximate years worked in the last 10 years. Used for 20/40 test: need ~5 years for ages 31+. Also used for young worker rules.</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_2A3B4C5D-6E7F-8091-2345-6789ABCDEF01" name="tIncomeSource" isCollection="false">
+    <dmn:itemComponent id="_3B4C5D6E-7F80-9123-4567-89ABCDEF0123" name="id" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_4C5D6E7F-8091-2345-6789-ABCDEF012345" name="type" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_5D6E7F80-9123-4567-89AB-CDEF01234567" name="category" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_6E7F8091-2345-6789-ABCD-EF0123456789" name="monthlyAmount" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_7F809123-4567-89AB-CDEF-012345678901" name="description" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_80912345-6789-ABCD-EF01-234567890123" name="isInfrequentOrIrregular" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_91234567-89AB-CDEF-0123-456789ABCDEF" name="tIncomeSourceList" isCollection="true">
+    <dmn:typeRef>tIncomeSource</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_A2345678-9ABC-DEF0-1234-56789ABCDEF0" name="tIncomeCalculation" isCollection="false">
+    <dmn:itemComponent id="_B3456789-ABCD-EF01-2345-6789ABCDEF01" name="totalEarnedIncome" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_C456789A-BCDE-F012-3456-789ABCDEF012" name="totalUnearnedIncome" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_D56789AB-CDEF-0123-4567-89ABCDEF0123" name="generalExclusionApplied" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_E6789ABC-DEF0-1234-5678-9ABCDEF01234" name="earnedIncomeExclusionApplied" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_F789ABCD-EF01-2345-6789-ABCDEF012345" name="countableUnearnedIncome" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_089ABCDE-F012-3456-789A-BCDEF0123456" name="countableEarnedIncome" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_19ABCDEF-0123-4567-89AB-CDEF01234567" name="totalCountableIncome" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_2ABCDEF0-1234-5678-9ABC-DEF012345678" name="applicableFBR" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_3BCDEF01-2345-6789-ABCD-EF0123456789" name="meetsIncomeLimit" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE002-2026-0112-SEIE-EXCLUSIONAPPLIED" name="seieExclusionApplied" isCollection="false">
+      <dmn:description>POMS SI 00820.510 - Student Earned Income Exclusion amount applied this month</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM002-2026-0112-DEEM-DEEMEDINCOME" name="deemedIncome" isCollection="false">
+      <dmn:description>POMS SI 01320.000 - Income deemed from ineligible spouse or parent(s)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_DEEM003-2026-0112-DEEM-DEEMINGCALC" name="tDeemingCalculation" isCollection="false">
+    <dmn:description>POMS SI 01320.000 - Deeming calculation results showing income deemed from ineligible household members</dmn:description>
+    <dmn:itemComponent id="_DEEM004-2026-0112-DEEM-APPLIES" name="deemingApplies" isCollection="false">
+      <dmn:description>Whether deeming applies to this person based on household composition</dmn:description>
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM005-2026-0112-DEEM-TYPE" name="deemingType" isCollection="false">
+      <dmn:description>Type of deeming: "spouse" (SI 01320.400), "parent" (SI 01320.500), or "none"</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM006-2026-0112-DEEM-DEEMORINCOME" name="deemorTotalIncome" isCollection="false">
+      <dmn:description>Total gross income of deemor(s) before exclusions</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM007-2026-0112-DEEM-COUNTABLE" name="deemorCountableIncome" isCollection="false">
+      <dmn:description>Countable income of deemor(s) after applying standard exclusions</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM008-2026-0112-DEEM-LIVINGALLOC" name="livingAllowanceAllocated" isCollection="false">
+      <dmn:description>Amount allocated for deemor(s)' living allowance per SI 01320.400/.500</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM009-2026-0112-DEEM-CHILDALLOC" name="ineligibleChildrenAllocation" isCollection="false">
+      <dmn:description>SI 01320.500 - Amount allocated for ineligible children in household (1/2 FBR each)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM010-2026-0112-DEEM-DEEMED" name="deemedIncome" isCollection="false">
+      <dmn:description>Final income deemed to eligible person after all allocations</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM011-2026-0112-DEEM-NUMCHILDREN" name="numberOfIneligibleChildren" isCollection="false">
+      <dmn:description>Count of ineligible children in household for allocation calculation</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM012-2026-0112-DEEM-NUMPARENTS" name="numberOfParents" isCollection="false">
+      <dmn:description>Count of parents in household (1 or 2) for parent deeming allocation</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_4CDEF012-3456-789A-BCDE-F0123456789A" name="tResource" isCollection="false">
+    <dmn:itemComponent id="_5DEF0123-4567-89AB-CDEF-0123456789AB" name="id" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_6EF01234-5678-9ABC-DEF0-123456789ABC" name="type" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_7F012345-6789-ABCD-EF01-23456789ABCD" name="value" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_8012345D-789A-BCDE-F012-3456789ABCDE" name="description" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_9123456E-89AB-CDEF-0123-456789ABCDEF" name="isPrimaryResidence" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_A23456F0-9ABC-DEF0-1234-56789ABCDEF0" name="isPrimaryVehicle" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_B3456701-ABCD-EF01-2345-6789ABCDEF01" name="lifeInsuranceFaceValue" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_C4567812-BCDE-F012-3456-789ABCDEF012" name="isBurialFundDesignated" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_D5678923-CDEF-0123-4567-89ABCDEF0123" name="isEssentialForSelfSupport" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_E6789A34-DEF0-1234-5678-9ABCDEF01234" name="tResourceList" isCollection="true">
+    <dmn:typeRef>tResource</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_F789AB45-EF01-2345-6789-ABCDEF012345" name="tResourceCalculation" isCollection="false">
+    <dmn:itemComponent id="_089ABC56-F012-3456-789A-BCDEF0123456" name="totalResources" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_19ABCD67-0123-4567-89AB-CDEF01234567" name="excludedResources" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_2ABCDE78-1234-5678-9ABC-DEF012345678" name="countableResources" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_3BCDEF89-2345-6789-ABCD-EF0123456789" name="applicableLimit" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_4CDEF09A-3456-789A-BCDE-F0123456789A" name="meetsResourceLimit" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_63571AF5-6B52-436F-9BED-0A9A14CE87A4" name="tPersonList" isCollection="true">
+    <dmn:typeRef>tPerson</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_785E9153-6BD6-4DFA-83CD-CDF3D5DCB747" name="tAnyList" isCollection="true">
+    <dmn:typeRef>Any</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_42D120B0-A6B3-4085-83ED-E796FD2F9CD2" name="tBooleanList" isCollection="true">
+    <dmn:typeRef>boolean</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_C8E9DA21-4D84-4F2A-AED5-792A9577F5EF" name="tDateList" isCollection="true">
+    <dmn:typeRef>date</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_EFB08DD4-049C-428D-9E07-A2633630C91C" name="tNumberList" isCollection="true">
+    <dmn:typeRef>number</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_A0E4F54C-5046-4B03-90A9-5B744DA1A029" name="tStringList" isCollection="true">
+    <dmn:typeRef>string</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_A34DABF8-3CBB-4AE2-8257-01E65EBCDEB9" name="tPeriod" isCollection="false">
+    <dmn:itemComponent id="_ED2A02C2-609D-4E98-95DF-3B174298EDCE" name="unit" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+      <dmn:allowedValues kie:constraintType="enumeration" id="_0FE69AB3-3446-4F70-B575-D4D343F77C7B">
+        <dmn:text>"YEAR", "MONTH", "DAY"</dmn:text>
+      </dmn:allowedValues>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_215DB6EE-7305-4DCE-B4A2-FB347F9681B2" name="startDate" isCollection="false">
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_4CBF231E-CB44-4483-90DC-9174B5487833" name="quantity" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_0C88835F-7F14-4224-B7EA-C46E87B5511E" name="tRelationship" isCollection="false">
+    <dmn:description>POMS SI 01320.000 - Relationship types for deeming: spouse, parent, child</dmn:description>
+    <dmn:itemComponent id="_052D313F-6BA5-4566-8419-63EA324C5EA4" name="type" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+      <dmn:allowedValues kie:constraintType="enumeration" id="_18C51F80-C535-4FBA-AEAD-DA84EA77A7F2">
+        <dmn:text>"spouse", "parent", "child"</dmn:text>
+      </dmn:allowedValues>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_B6B1CB1E-19E5-451F-8096-1C60665EBFCD" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_747FAC1D-B39C-4DD4-8639-EB90FFE36ACE" name="relatedPersonId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_164304EB-122E-4673-A350-C805FCEA97EE" name="tRelationshipList" isCollection="true">
+    <dmn:typeRef>tRelationship</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_D622E87A-091B-497C-A38A-70BB1CD0FDE1" name="tCheckResponse" isCollection="false">
+    <dmn:itemComponent id="_943F5C69-F958-418A-B67C-71D314BA17BA" name="checkResult" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_1E1DA902-4758-4582-8BD9-483CACB88450" name="tSimpleChecks" isCollection="false">
+    <dmn:itemComponent id="_DA247252-070E-4ABE-B0A4-299BC22F171E" name="lateSpouseWasAtLeast65" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_5E71CF8D-3431-4376-8247-05D159A12B53" name="tenYearTaxAbatement" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_283A3810-5BDF-4D09-9D74-00A8BC2AC25A" name="ownerOccupant" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_9B8E011F-DFED-4C8C-853A-4DDD715C807A" name="livesInPhiladelphiaPa" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:businessKnowledgeModel id="_04036CBE-BE0E-44C8-9A49-01D01F005E6F" name="age as of date">
+    <dmn:extensionElements/>
+    <dmn:variable id="_4CD74BE8-605D-4B2D-B7F6-97ADFA2F0776" name="age as of date" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_5A44B159-2892-4F0B-93E5-589D71B38D36" kind="FEEL">
+      <dmn:formalParameter id="_7FB0B73A-420D-4784-837B-0DBE25368FF9" name="date of birth" typeRef="date"/>
+      <dmn:formalParameter id="_D144AE11-154A-4702-98B6-55374EA03897" name="comparison date" typeRef="date"/>
+      <dmn:literalExpression id="_B00054F9-574C-49CF-9DD6-0F949EA673FF">
+        <dmn:text>Age.as of date(date of birth, comparison date)</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+    <dmn:knowledgeRequirement id="_675B603C-8125-4F08-9606-8396FA4D21D7">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708#_1919D943-09A4-4D5C-98A0-2B8377862E4C"/>
+    </dmn:knowledgeRequirement>
+  </dmn:businessKnowledgeModel>
+  <dmn:businessKnowledgeModel id="_INVOKE-DECISION-SERVICE-BKM" name="invoke decision service">
+    <dmn:extensionElements/>
+    <dmn:variable id="_INVOKE-DECISION-SERVICE-VAR" name="invoke decision service" typeRef="Any"/>
+    <dmn:encapsulatedLogic id="_INVOKE-DECISION-SERVICE-LOGIC" kind="Java">
+      <dmn:formalParameter id="_INVOKE-DS-PARAM-MODEL" name="model name" typeRef="string"/>
+      <dmn:formalParameter id="_INVOKE-DS-PARAM-SERVICE" name="service name" typeRef="string"/>
+      <dmn:formalParameter id="_INVOKE-DS-PARAM-SITUATION" name="situation" typeRef="tSituation"/>
+      <dmn:formalParameter id="_INVOKE-DS-PARAM-PARAMETERS" name="parameters" typeRef="Any"/>
+      <dmn:context id="_F12A7114-6215-4A32-A25C-B99F4D7BD49D">
+        <dmn:contextEntry>
+          <dmn:variable id="_E6BD953F-968B-4B81-9C52-FCE0AC7F78EC" name="class" typeRef="string"/>
+          <dmn:literalExpression id="_EFA52AF3-5C0F-4DAB-9A08-86788CF578C7">
+            <dmn:text>"org.codeforphilly.bdt.functions.DecisionServiceInvoker"</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:variable id="_199D37DA-8FC6-4438-A413-8CA2E885EB4F" name="method signature" typeRef="string"/>
+          <dmn:literalExpression id="_228DA497-4D1D-47C6-A391-C351770E2DF7">
+            <dmn:text>"invoke(java.lang.String, java.lang.String, java.util.Map, java.util.Map)"</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+  <dmn:businessKnowledgeModel id="_14EAB512-0E33-419C-9630-BA0265476B6E" name="spouse id">
+    <dmn:extensionElements/>
+    <dmn:variable id="_6ABB0ADE-65E8-4781-BAAC-1F2D12E9FBF1" name="spouse id" typeRef="string"/>
+    <dmn:encapsulatedLogic id="_B17F52FC-DF57-4B5D-A886-F5A036FAE734" kind="FEEL">
+      <dmn:formalParameter id="_60B65F2B-E1E6-4447-BC5D-101604B53F5D" name="relationships" typeRef="tRelationshipList"/>
+      <dmn:formalParameter id="_6D93B24C-CA8A-4321-B8DB-28AC877986D4" name="personId" typeRef="string"/>
+      <dmn:context id="_99AACC40-610C-4630-8867-1850B8B31DD4">
+        <dmn:contextEntry>
+          <dmn:variable id="_57CFAD94-AB2F-4A84-AC8D-4E21E16E0E0E" name="persons spouse relationship" typeRef="tRelationship"/>
+          <dmn:literalExpression id="_ABB16747-F8DF-4834-934C-BDA6DD5D3C8F">
+            <dmn:text>relationships[item.personId = personId and item.type = "spouse"][1]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:variable id="_436AB065-453F-469B-9D4E-BF067E88A83E" name="result" typeRef="string"/>
+          <dmn:literalExpression id="_8115DEB8-9910-4739-8165-2EE3C1186631">
+            <dmn:text>persons spouse relationship.relatedPersonId</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_2719CFB0-EB0E-4062-A446-961A35E84635">
+            <dmn:text>result</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+  <dmn:businessKnowledgeModel id="_A1B2C3D4-E5F6-4789-ABCD-EF0123456789" name="has eligible spouse">
+    <dmn:extensionElements/>
+    <dmn:variable id="_B2C3D4E5-F6A7-4890-BCDE-F01234567890" name="has eligible spouse" typeRef="boolean"/>
+    <dmn:encapsulatedLogic id="_C3D4E5F6-A7B8-4901-CDEF-012345678901" kind="FEEL">
+      <dmn:formalParameter id="_D4E5F6A7-B8C9-4012-DEF0-123456789012" name="situation" typeRef="tSituation"/>
+      <dmn:formalParameter id="_E5F6A7B8-C9D0-4123-EF01-234567890123" name="personId" typeRef="string"/>
+      <dmn:context id="_F6A7B8C9-D0E1-4234-F012-345678901234">
+        <dmn:contextEntry>
+          <dmn:variable id="_A7B8C9D0-E1F2-4345-0123-456789012345" name="spouseId" typeRef="string"/>
+          <dmn:literalExpression id="_B8C9D0E1-F2A3-4456-1234-567890123456">
+            <dmn:text>spouseId(situation.relationships, personId)</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_C9D0E1F2-A3B4-4567-2345-678901234567">
+            <dmn:text>spouseId != null</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+  <dmn:textAnnotation id="_1586DF76-6FC5-4E6E-B37B-53D30D67E005" textFormat="text/plain">
+    <dmn:text>BKMs, data types, and/or Decision Services that will be included in every eligibility check model</dmn:text>
+  </dmn:textAnnotation>
+  <dmn:textAnnotation id="_CA4CB11D-7F1D-4F0D-A043-463CE48B660F" textFormat="text/plain">
+    <dmn:text>Did this just as an example... I was wondering about having certain functions available in the BDT context for the purposes of FEEL in parameters</dmn:text>
+  </dmn:textAnnotation>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_103AE0FA-3F48-4614-A9A8-1200ABA96285" name="DRG">
+      <di:extension>
+        <kie:ComponentsWidthsExtension>
+          <kie:ComponentWidths dmnElementRef="_B00054F9-574C-49CF-9DD6-0F949EA673FF">
+            <kie:width>464</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_5A44B159-2892-4F0B-93E5-589D71B38D36">
+            <kie:width>50</kie:width>
+            <kie:width>464</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_F12A7114-6215-4A32-A25C-B99F4D7BD49D">
+            <kie:width>50</kie:width>
+            <kie:width>100</kie:width>
+            <kie:width>480</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_EFA52AF3-5C0F-4DAB-9A08-86788CF578C7">
+            <kie:width>480</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_228DA497-4D1D-47C6-A391-C351770E2DF7">
+            <kie:width>480</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_INVOKE-DECISION-SERVICE-LOGIC">
+            <kie:width>50</kie:width>
+            <kie:width>650</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_99AACC40-610C-4630-8867-1850B8B31DD4">
+            <kie:width>50</kie:width>
+            <kie:width>305</kie:width>
+            <kie:width>423</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_ABB16747-F8DF-4834-934C-BDA6DD5D3C8F">
+            <kie:width>423</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_8115DEB8-9910-4739-8165-2EE3C1186631">
+            <kie:width>423</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_2719CFB0-EB0E-4062-A446-961A35E84635">
+            <kie:width>423</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_B17F52FC-DF57-4B5D-A886-F5A036FAE734">
+            <kie:width>50</kie:width>
+            <kie:width>798</kie:width>
+          </kie:ComponentWidths>
+        </kie:ComponentsWidthsExtension>
+      </di:extension>
+      <dmndi:DMNShape id="dmnshape-drg-_1586DF76-6FC5-4E6E-B37B-53D30D67E005" dmnElementRef="_1586DF76-6FC5-4E6E-B37B-53D30D67E005" isCollapsed="false">
+        <dmndi:DMNStyle fontSize="15">
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="124" y="49" width="600" height="200"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_04036CBE-BE0E-44C8-9A49-01D01F005E6F" dmnElementRef="_04036CBE-BE0E-44C8-9A49-01D01F005E6F" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="101" y="422" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_INVOKE-DECISION-SERVICE-BKM" dmnElementRef="_INVOKE-DECISION-SERVICE-BKM" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="101" y="578" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_1919D943-09A4-4D5C-98A0-2B8377862E4C" dmnElementRef="included2:_1919D943-09A4-4D5C-98A0-2B8377862E4C" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="227" y="311" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_CA4CB11D-7F1D-4F0D-A043-463CE48B660F" dmnElementRef="_CA4CB11D-7F1D-4F0D-A043-463CE48B660F" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="413" y="399" width="322" height="74"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_14EAB512-0E33-419C-9630-BA0265476B6E" dmnElementRef="_14EAB512-0E33-419C-9630-BA0265476B6E" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="534" y="254" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="dmnedge-drg-_675B603C-8125-4F08-9606-8396FA4D21D7-AUTO-TARGET" dmnElementRef="_675B603C-8125-4F08-9606-8396FA4D21D7">
+        <di:waypoint x="277" y="336"/>
+        <di:waypoint x="151" y="422"/>
+      </dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</dmn:definitions>

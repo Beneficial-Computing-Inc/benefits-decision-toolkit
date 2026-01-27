@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_4A367E3D-8A9F-45B2-9012-91ED17CFBA5F"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+  id="_FFB7EEEA-0DC5-4467-BC89-E0B74718CFC0"
+  name="Citizenship"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_4A367E3D-8A9F-45B2-9012-91ED17CFBA5F">
+
+  <dmn:description>Citizenship category base module with shared types</dmn:description>
+
+  <!-- Define citizenship-related types if needed -->
+  <dmn:itemDefinition id="_4F3BE7FF-3926-4BB0-8D74-D5D78387961A" name="tCitizenshipStatus" isCollection="false">
+    <dmn:typeRef>string</dmn:typeRef>
+    <!-- Could add allowed values enumeration here -->
+  </dmn:itemDefinition>
+
+</dmn:definitions>

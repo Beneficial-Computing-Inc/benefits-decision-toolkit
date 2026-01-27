@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_2D383E7C-325E-4B54-B157-E8769A79A397" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:included1="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_FDB6FF88-1C2D-4838-9EE5-40F230F48448" name="BlindOrDisabled" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_2D383E7C-325E-4B54-B157-E8769A79A397">
+  <dmn:description>POMS SI 00501.001.B.1 - SSI categorical eligibility: Blind or disabled (medical determination input)</dmn:description>
+  <dmn:extensionElements/>
+  <dmn:import id="_A098C298-3FEA-4A50-AFAE-70831CECFF02" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../bdt.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:itemDefinition id="_3AC1E444-DE67-49C8-B1D3-D73816FD12B1" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_EAD03A08-80C5-41A4-9329-2892A5FB9950" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_E330810A-A243-44F4-A9E7-6E5FE565A590" name="tSituation" isCollection="false">
+    <dmn:itemComponent id="_1310AFE8-2D75-42E9-AAE0-763C63AFEE8E" name="people" isCollection="false">
+      <dmn:typeRef>tPersonList</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_DE751E32-15D9-4F5D-97E1-B7A8412360EA" name="tPerson" isCollection="false">
+    <dmn:itemComponent id="_91A83290-5D64-4A70-9BF3-36C5E5EF11F6" name="id" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_3C34025E-EDB1-4B36-92EA-D248BF236D9B" name="isBlindOrDisabled" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_2E5D7848-C1ED-4E02-9DE7-36DC1D2C9D55" name="tPersonList" isCollection="true">
+    <dmn:typeRef>tPerson</dmn:typeRef>
+  </dmn:itemDefinition>
+  <dmn:decisionService id="_B0A39991-1BBD-4774-8717-5EE57CF8B42C" name="BlindOrDisabledService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_6BF06A2E-55E7-433D-80ED-B86852267973" name="BlindOrDisabledService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#checkResult"/>
+    <dmn:inputData href="#situation"/>
+    <dmn:inputData href="#parameters"/>
+  </dmn:decisionService>
+  <dmn:decision id="checkResult" name="checkResult">
+    <dmn:description>POMS SI 00501.001.B.1 - Individual must be blind or disabled for SSI categorical eligibility. Medical determination is an input to this check.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_BB91C500-3501-4A0B-8DA4-56CBD08DD019" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_B59502B3-46BF-48BA-8CEE-A5690C51D5D6">
+      <dmn:requiredInput href="#situation"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_0A1B2C3D-4E5F-6789-ABCD-EF0123456789">
+      <dmn:requiredInput href="#parameters"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_1A2B3C4D-5E6F-7890-ABCD-EF0123456789">
+      <dmn:contextEntry>
+        <dmn:variable id="_2B3C4D5E-6F78-9ABC-DEF0-123456789ABC" name="isBlindOrDisabled" typeRef="boolean"/>
+        <dmn:literalExpression id="_3C4D5E6F-7890-ABCD-EF01-23456789ABCD">
+          <dmn:text>situation.people[id = parameters.personId].isBlindOrDisabled[1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_4D5E6F78-90AB-CDEF-0123-456789ABCDEF" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_5E6F7890-ABCD-EF01-2345-6789ABCDEF01">
+          <dmn:text>if isBlindOrDisabled = null then false else isBlindOrDisabled</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_6F789ABC-DEF0-1234-5678-9ABCDEF01234">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+  <dmn:inputData id="situation" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_789ABCDE-F012-3456-789A-BCDEF0123456" name="situation" typeRef="tSituation"/>
+  </dmn:inputData>
+  <dmn:inputData id="parameters" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_89ABCDEF-0123-4567-89AB-CDEF01234567" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_9ABCDEF0-1234-5678-9ABC-DEF012345678" name="DRG">
+      <di:extension>
+        <kie:ComponentsWidthsExtension>
+          <kie:ComponentWidths dmnElementRef="_1A2B3C4D-5E6F-7890-ABCD-EF0123456789">
+            <kie:width>50</kie:width>
+            <kie:width>120</kie:width>
+            <kie:width>453</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_3C4D5E6F-7890-ABCD-EF01-23456789ABCD">
+            <kie:width>453</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_5E6F7890-ABCD-EF01-2345-6789ABCDEF01">
+            <kie:width>453</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_6F789ABC-DEF0-1234-5678-9ABCDEF01234">
+            <kie:width>453</kie:width>
+          </kie:ComponentWidths>
+        </kie:ComponentsWidthsExtension>
+      </di:extension>
+      <dmndi:DMNShape id="dmnshape-drg-_B0A39991-1BBD-4774-8717-5EE57CF8B42C" dmnElementRef="_B0A39991-1BBD-4774-8717-5EE57CF8B42C" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="168" y="91" width="378" height="199"/>
+        <dmndi:DMNLabel/>
+        <dmndi:DMNDecisionServiceDividerLine>
+          <di:waypoint x="168" y="191"/>
+          <di:waypoint x="546" y="191"/>
+        </dmndi:DMNDecisionServiceDividerLine>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-checkResult" dmnElementRef="checkResult" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="283" y="129" width="160" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-situation" dmnElementRef="situation" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="226" y="318" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-parameters" dmnElementRef="parameters" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="415" y="318" width="98" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="dmnedge-drg-_B59502B3-46BF-48BA-8CEE-A5690C51D5D6" dmnElementRef="_B59502B3-46BF-48BA-8CEE-A5690C51D5D6">
+        <di:waypoint x="276" y="343"/>
+        <di:waypoint x="363" y="179"/>
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="dmnedge-drg-_0A1B2C3D-4E5F-6789-ABCD-EF0123456789" dmnElementRef="_0A1B2C3D-4E5F-6789-ABCD-EF0123456789">
+        <di:waypoint x="464" y="343"/>
+        <di:waypoint x="363" y="179"/>
+      </dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</dmn:definitions>

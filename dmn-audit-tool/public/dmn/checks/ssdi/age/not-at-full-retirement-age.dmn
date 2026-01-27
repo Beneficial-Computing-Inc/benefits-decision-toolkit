@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_SSDI-FRA-2026-0115"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+                 xmlns:Age="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708"
+                 id="_SSDI-FRA-2026-0115-MAIN"
+                 name="NotAtFullRetirementAge"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_SSDI-FRA-2026-0115">
+
+  <dmn:description>POMS DI 10105.060, DI 10105.080 - SSDI Age Requirement: Person must not have attained Full Retirement Age (FRA). FRA varies by birth year from 65 to 67.</dmn:description>
+
+  <dmn:import id="_FRA-IMPORT-BDT"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"
+              locationURI="../../../BDT.dmn"/>
+
+  <dmn:import id="_FRA-IMPORT-AGE"
+              name="Age"
+              namespace="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"
+              locationURI="../../age/Age.dmn"/>
+
+  <dmn:itemDefinition id="_FRA-TYPEDEF-PARAMS" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_FRA-PARAM-PERSONID" name="personId" isCollection="false">
+      <dmn:description>ID of person to check. If not provided, uses primaryPersonId.</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:itemDefinition id="_FRA-TYPEDEF-FRACALC" name="tFraCalculation" isCollection="false">
+    <dmn:itemComponent id="_FRA-CALC-AGE" name="age" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_FRA-CALC-BIRTHYEAR" name="birthYear" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_FRA-CALC-FRA" name="fullRetirementAge" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_FRA-CALC-HASATTAINED" name="hasAttainedFra" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:decisionService id="_FRA-DS" name="NotAtFullRetirementAgeService">
+    <dmn:description>POMS DI 10105.080 - Returns true if person has NOT attained FRA (eligible for SSDI consideration).</dmn:description>
+    <dmn:variable id="_FRA-DS-VAR" name="NotAtFullRetirementAgeService"/>
+    <dmn:outputDecision href="#_FRA-DEC-CHECKRESULT"/>
+    <dmn:outputDecision href="#_FRA-DEC-FRACALC"/>
+    <dmn:inputData href="#_FRA-INPUT-SITUATION"/>
+    <dmn:inputData href="#_FRA-INPUT-PARAMS"/>
+  </dmn:decisionService>
+
+  <dmn:inputData id="_FRA-INPUT-SITUATION" name="situation">
+    <dmn:variable id="_FRA-INPUT-SITUATION-VAR" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <dmn:inputData id="_FRA-INPUT-PARAMS" name="parameters">
+    <dmn:variable id="_FRA-INPUT-PARAMS-VAR" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <dmn:decision id="_FRA-DEC-FRACALC" name="fraCalculation">
+    <dmn:description>POMS DI 10105.080, RS 00207.001 - Calculate FRA based on birth year and determine if attained.</dmn:description>
+    <dmn:variable id="_FRA-DEC-FRACALC-VAR" name="fraCalculation" typeRef="tFraCalculation"/>
+    <dmn:informationRequirement id="_FRA-IR-1">
+      <dmn:requiredInput href="#_FRA-INPUT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_FRA-IR-2">
+      <dmn:requiredInput href="#_FRA-INPUT-PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_FRA-KR-1">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708#_1919D943-09A4-4D5C-98A0-2B8377862E4C"/>
+    </dmn:knowledgeRequirement>
+    <dmn:context id="_FRA-FRACALC-CTX">
+      <dmn:contextEntry id="_FRA-CTX-PERSONID">
+        <dmn:variable id="_FRA-CTX-PERSONID-VAR" name="personId" typeRef="string"/>
+        <dmn:literalExpression id="_FRA-EXPR-PERSONID">
+          <dmn:text>if parameters.personId != null then parameters.personId else situation.primaryPersonId</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-PERSON">
+        <dmn:variable id="_FRA-CTX-PERSON-VAR" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_FRA-EXPR-PERSON">
+          <dmn:text>situation.people[id = personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-EVALDATE">
+        <dmn:variable id="_FRA-CTX-EVALDATE-VAR" name="evaluationDate" typeRef="date"/>
+        <dmn:literalExpression id="_FRA-EXPR-EVALDATE">
+          <dmn:text>if situation.evaluationDate != null then situation.evaluationDate else today()</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-DOB">
+        <dmn:variable id="_FRA-CTX-DOB-VAR" name="dateOfBirth" typeRef="date"/>
+        <dmn:literalExpression id="_FRA-EXPR-DOB">
+          <dmn:text>person.dateOfBirth</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-BIRTHYEAR">
+        <dmn:variable id="_FRA-CTX-BIRTHYEAR-VAR" name="birthYear" typeRef="number"/>
+        <dmn:literalExpression id="_FRA-EXPR-BIRTHYEAR">
+          <dmn:text>if dateOfBirth = null then null else date(dateOfBirth).year</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-AGE">
+        <dmn:variable id="_FRA-CTX-AGE-VAR" name="age" typeRef="number"/>
+        <dmn:literalExpression id="_FRA-EXPR-AGE">
+          <dmn:text>Age.as of date(dateOfBirth, evaluationDate)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-FRA">
+        <dmn:variable id="_FRA-CTX-FRA-VAR" name="fullRetirementAge" typeRef="number"/>
+        <dmn:literalExpression id="_FRA-EXPR-FRA">
+          <dmn:text>if birthYear = null then null
+else if birthYear &lt;= 1937 then 65
+else if birthYear = 1938 then 65 + 2/12
+else if birthYear = 1939 then 65 + 4/12
+else if birthYear = 1940 then 65 + 6/12
+else if birthYear = 1941 then 65 + 8/12
+else if birthYear = 1942 then 65 + 10/12
+else if birthYear &gt;= 1943 and birthYear &lt;= 1954 then 66
+else if birthYear = 1955 then 66 + 2/12
+else if birthYear = 1956 then 66 + 4/12
+else if birthYear = 1957 then 66 + 6/12
+else if birthYear = 1958 then 66 + 8/12
+else if birthYear = 1959 then 66 + 10/12
+else 67</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-HASATTAINED">
+        <dmn:variable id="_FRA-CTX-HASATTAINED-VAR" name="hasAttainedFra" typeRef="boolean"/>
+        <dmn:literalExpression id="_FRA-EXPR-HASATTAINED">
+          <dmn:text>if age = null or age = -1 or fullRetirementAge = null then null else age &gt;= fullRetirementAge</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-RESULT">
+        <dmn:literalExpression id="_FRA-EXPR-RESULT">
+          <dmn:text>{
+  "age": age,
+  "birthYear": birthYear,
+  "fullRetirementAge": fullRetirementAge,
+  "hasAttainedFra": hasAttainedFra
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <dmn:decision id="_FRA-DEC-CHECKRESULT" name="checkResult">
+    <dmn:description>POMS DI 10105.060 - True if person has NOT attained FRA (eligible for SSDI), false if at FRA.</dmn:description>
+    <dmn:variable id="_FRA-DEC-CHECKRESULT-VAR" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_FRA-IR-CALC">
+      <dmn:requiredDecision href="#_FRA-DEC-FRACALC"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_FRA-EXPR-CHECKRESULT">
+      <dmn:text>if fraCalculation.hasAttainedFra = null then false else not(fraCalculation.hasAttainedFra)</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+</dmn:definitions>

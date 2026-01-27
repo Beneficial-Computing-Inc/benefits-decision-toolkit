@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_B2C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+  xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+  xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+  id="_9A8B7C6D-5E4F-3A2B-1C0D-9E8F7A6B5C4D"
+  name="RefugeeAsyleeStatus"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_B2C3D4E5-6F7A-8B9C-0D1E-2F3A4B5C6D7E">
+
+  <dmn:description>Implements SSI refugee/asylee citizenship requirements from POMS SI 00502.100
+
+NOTE: This is a simplified implementation that checks refugee or asylee status only. Per POMS SI 00502.100,
+refugees and asylees are qualified aliens BUT are subject to a 7-year SSI eligibility limit:
+  - Refugees (INA §207) - AR Code: "F" - 7 years from date of admission
+  - Asylees (INA §208) - AR Code: "L" - 7 years from date of asylum grant
+
+Extensions available per "SSI Extension for Elderly and Disabled Refugees Act"
+
+Future enhancement: Implement 7-year time limit check.</dmn:description>
+
+  <!-- Import BDT (required) -->
+  <dmn:import
+    id="_2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E"
+    name="BDT"
+    namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+    locationURI="../../bdt.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters (check-specific inputs) -->
+  <dmn:itemDefinition id="_3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Decision Service (MUST be {ModelName}Service) -->
+  <dmn:decisionService id="_5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B" name="RefugeeAsyleeStatusService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_6F7A8B9C-0D1E-2F3A-4B5C-6D7E8F9A0B1C"
+                  name="RefugeeAsyleeStatusService"
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_7A8B9C0D-1E2F-3A4B-5C6D-7E8F9A0B1C2D"/>
+    <dmn:inputData href="#_8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E"/>
+    <dmn:inputData href="#_9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F"/>
+  </dmn:decisionService>
+
+  <!-- Input Data: situation -->
+  <dmn:inputData id="_9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_A0B1C2D3-E4F5-A6B7-C8D9-E0F1A2B3C4D5"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input Data: parameters -->
+  <dmn:inputData id="_8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_B1C2D3E4-F5A6-B7C8-D9E0-F1A2B3C4D5E6"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: checkResult -->
+  <dmn:decision id="_7A8B9C0D-1E2F-3A4B-5C6D-7E8F9A0B1C2D" name="checkResult">
+    <dmn:description>POMS SI 00502.100A.2.a - Individual must be refugee (INA §207) or asylee (INA §208) for SSI qualified alien status.
+
+This check verifies refugee or asylee status only. Full SSI eligibility requires 7-year time limit check.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_C2D3E4F5-A6B7-C8D9-E0F1-A2B3C4D5E6F7"
+                  name="checkResult"
+                  typeRef="boolean"/>
+    <dmn:informationRequirement id="_D3E4F5A6-B7C8-D9E0-F1A2-B3C4D5E6F7A8">
+      <dmn:requiredInput href="#_9C0D1E2F-3A4B-5C6D-7E8F-9A0B1C2D3E4F"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_E4F5A6B7-C8D9-E0F1-A2B3-C4D5E6F7A8B9">
+      <dmn:requiredInput href="#_8B9C0D1E-2F3A-4B5C-6D7E-8F9A0B1C2D3E"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_F5A6B7C8-D9E0-F1A2-B3C4-D5E6F7A8B9C0">
+      <!-- Step 1: Get person from situation -->
+      <dmn:contextEntry>
+        <dmn:variable id="_A6B7C8D9-E0F1-A2B3-C4D5-E6F7A8B9C0D1" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_B7C8D9E0-F1A2-B3C4-D5E6-F7A8B9C0D1E2">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Check refugee or asylee status -->
+      <dmn:contextEntry>
+        <dmn:variable id="_C8D9E0F1-A2B3-C4D5-E6F7-A8B9C0D1E2F3" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_D9E0F1A2-B3C4-D5E6-F7A8-B9C0D1E2F3A4">
+          <dmn:text>person.citizenshipStatus = "REFUGEE" or person.citizenshipStatus = "ASYLEE"</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_E0F1A2B3-C4D5-E6F7-A8B9-C0D1E2F3A4B5">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+</dmn:definitions>

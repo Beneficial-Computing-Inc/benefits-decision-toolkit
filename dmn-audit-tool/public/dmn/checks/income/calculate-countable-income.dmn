@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_5C6D7E8F-9A0B-1C2D-3E4F-5A6B7C8D9E0F"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 id="_6D7E8F9A-0B1C-2D3E-4F5A-6B7C8D9E0F1A"
+                 name="CalculateCountableIncome"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_5C6D7E8F-9A0B-1C2D-3E4F-5A6B7C8D9E0F">
+
+  <dmn:description>POMS SI 00810.000 - SI 00830.000: Calculate countable income by applying earned/unearned exclusions in correct order.
+
+Calculation order per SI 00820.500 and SI 01320.730:
+1. Add deemed income (from spouse/parent) to unearned income - SI 01320.001
+2. Apply SEIE (Student Earned Income Exclusion) if student under 22 - SI 00820.510
+3. Apply $20 general exclusion to unearned income (including deemed) first
+4. Spillover unused general exclusion to earned income
+5. Apply $65 earned income exclusion
+6. Exclude 50% of remaining earned income
+7. Sum countable unearned + countable earned
+8. Compare to Federal Benefit Rate (FBR)
+
+Per SI 01320.001: "deemed income... is considered to be the eligible individual's own unearned income"
+Per SI 01320.730: "Always treat deemed income as unearned income"
+
+2025 SEIE Limits: $2,350/month, $9,460/year</dmn:description>
+
+  <!-- Import BDT base module -->
+  <dmn:import id="_7E8F9A0B-1C2D-3E4F-5A6B-7C8D9E0F1A2B"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import Age module for age calculation -->
+  <dmn:import id="_SEIE_AGE_IMPORT_2026"
+              name="Age"
+              namespace="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708"
+              locationURI="../age/Age.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Parameters type definition -->
+  <dmn:itemDefinition id="_8F9A0B1C-2D3E-4F5A-6B7C-8D9E0F1A2B3C" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_9A0B1C2D-3E4F-5A6B-7C8D-9E0F1A2B3C4D" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_A0B1C2D3-4E5F-6A7B-8C9D-0E1F2A3B4C5D" name="FBR" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE_PARAM_YTD_2026" name="seieUsedYTD" isCollection="false">
+      <dmn:description>SEIE already applied in prior months this calendar year (default 0)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM_PARAM_DEEMED_2026" name="deemedIncome" isCollection="false">
+      <dmn:description>POMS SI 01320.001 - Income deemed from ineligible spouse or parent(s). Treated as unearned income.</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation -->
+  <dmn:inputData id="_B1C2D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_C2D3E4F5-6A7B-8C9D-0E1F-2A3B4C5D6E7F"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters -->
+  <dmn:inputData id="_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_E4F5A6B7-8C9D-0E1F-2A3B-4C5D6E7F8A9B"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: incomeCalculation -->
+  <dmn:decision id="_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C" name="incomeCalculation">
+    <dmn:description>POMS SI 00810.310, SI 00820.500: Calculate countable income by applying exclusions in correct order.
+Includes SEIE (SI 00820.510) for students under 22.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_A6B7C8D9-0E1F-2A3B-4C5D-6E7F8A9B0C1D"
+                  name="incomeCalculation"
+                  typeRef="BDT.tIncomeCalculation"/>
+    <dmn:informationRequirement id="_B7C8D9E0-1F2A-3B4C-5D6E-7F8A9B0C1D2E">
+      <dmn:requiredInput href="#_B1C2D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_C8D9E0F1-2A3B-4C5D-6E7F-8A9B0C1D2E3F">
+      <dmn:requiredInput href="#_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_SEIE_KR_AGE_2026">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708#_1919D943-09A4-4D5C-98A0-2B8377862E4C"/>
+    </dmn:knowledgeRequirement>
+
+    <dmn:context id="_D9E0F1A2-3B4C-5D6E-7F8A-9B0C1D2E3F4A">
+      <!-- Step 1: Extract person and their income sources -->
+      <dmn:contextEntry>
+        <dmn:variable id="_E0F1A2B3-4C5D-6E7F-8A9B-0C1D2E3F4A5B" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_F1A2B3C4-5D6E-7F8A-9B0C-1D2E3F4A5B6C">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_A2B3C4D5-6E7F-8A9B-0C1D-2E3F4A5B6C7D" name="incomeSources" typeRef="BDT.tIncomeSourceList"/>
+        <dmn:literalExpression id="_B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E">
+          <dmn:text>person.incomeSources</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 1b: Check if we have income data (three-valued logic) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_HAS_INCOME_DATA_VAR" name="hasIncomeData" typeRef="boolean"/>
+        <dmn:literalExpression id="_HAS_INCOME_DATA_EXPR">
+          <dmn:text>// Have income data if: incomeSources provided OR deemedIncome parameter provided
+(incomeSources != null and count(incomeSources) > 0) or (parameters.deemedIncome != null and parameters.deemedIncome > 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Calculate total earned and unearned income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F" name="totalEarnedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_D5E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A">
+          <dmn:text>if incomeSources = null then
+  0
+else
+  sum(for i in incomeSources return if i.type = "earned" then i.monthlyAmount else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_E6F7A8B9-0C1D-2E3F-4A5B-6C7D8E9F0A1B" name="totalUnearnedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_F7A8B9C0-1D2E-3F4A-5B6C-7D8E9F0A1B2C">
+          <dmn:text>if incomeSources = null then
+  0
+else
+  sum(for i in incomeSources return if i.type = "unearned" then i.monthlyAmount else 0)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2.5: Add deemed income to unearned (SI 01320.001, SI 01320.730) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_DEEM_VAR_DEEMED_2026" name="deemedIncomeAmount" typeRef="number"/>
+        <dmn:literalExpression id="_DEEM_EXPR_DEEMED_2026">
+          <dmn:text>if parameters.deemedIncome != null then parameters.deemedIncome else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_DEEM_VAR_COMBINED_2026" name="unearnedPlusDeemedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_DEEM_EXPR_COMBINED_2026">
+          <dmn:text>totalUnearnedIncome + deemedIncomeAmount</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2a: SEIE - Get evaluation date -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_EVAL_DATE_2026" name="evaluationDate" typeRef="date"/>
+        <dmn:literalExpression id="_SEIE_EVAL_DATE_EXPR_2026">
+          <dmn:text>if situation.evaluationDate != null then situation.evaluationDate else today()</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2b: SEIE - Calculate age -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_AGE_2026" name="age" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE_AGE_EXPR_2026">
+          <dmn:text>Age.as of date(person.dateOfBirth, evaluationDate)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2c: SEIE - Check if qualifies (under 22 AND student) per SI 00501.020, SI 00820.510 -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_QUALIFIES_2026" name="qualifiesForSeie" typeRef="boolean"/>
+        <dmn:literalExpression id="_SEIE_QUALIFIES_EXPR_2026">
+          <dmn:text>if age = null or age &lt; 0 then
+  false
+else if age >= 22 then
+  false
+else if person.isStudent = null then
+  false
+else
+  person.isStudent</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2d: SEIE - Determine limits based on evaluation year -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_MONTHLY_LIMIT_2026" name="seieMonthlyLimit" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE_MONTHLY_LIMIT_EXPR_2026">
+          <dmn:text>if evaluationDate.year &lt;= 2024 then 2290 else 2350</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_YEARLY_LIMIT_2026" name="seieYearlyLimit" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE_YEARLY_LIMIT_EXPR_2026">
+          <dmn:text>if evaluationDate.year &lt;= 2024 then 9230 else 9460</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2e: SEIE - Calculate remaining yearly limit -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_REMAINING_2026" name="seieRemainingYearly" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE_REMAINING_EXPR_2026">
+          <dmn:text>if parameters.seieUsedYTD = null then
+  seieYearlyLimit
+else if seieYearlyLimit - parameters.seieUsedYTD &lt; 0 then
+  0
+else
+  seieYearlyLimit - parameters.seieUsedYTD</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2f: SEIE - Calculate exclusion amount -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_EXCLUSION_2026" name="seieExclusionApplied" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE_EXCLUSION_EXPR_2026">
+          <dmn:text>if not(qualifiesForSeie) then
+  0
+else
+  min([totalEarnedIncome, seieMonthlyLimit, seieRemainingYearly])</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2g: Earned income after SEIE -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE_AFTER_2026" name="earnedAfterSeie" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE_AFTER_EXPR_2026">
+          <dmn:text>if totalEarnedIncome > seieExclusionApplied then totalEarnedIncome - seieExclusionApplied else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Apply $20 general exclusion to unearned+deemed income first (SI 01320.730) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_A8B9C0D1-2E3F-4A5B-6C7D-8E9F0A1B2C3D" name="generalExclusionToUnearned" typeRef="number"/>
+        <dmn:literalExpression id="_B9C0D1E2-3F4A-5B6C-7D8E-9F0A1B2C3D4E">
+          <dmn:text>if unearnedPlusDeemedIncome >= 20 then 20 else unearnedPlusDeemedIncome</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_C0D1E2F3-4A5B-6C7D-8E9F-0A1B2C3D4E5F" name="unusedGeneralExclusion" typeRef="number"/>
+        <dmn:literalExpression id="_D1E2F3A4-5B6C-7D8E-9F0A-1B2C3D4E5F6A">
+          <dmn:text>if unearnedPlusDeemedIncome &lt; 20 then 20 - unearnedPlusDeemedIncome else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Calculate countable unearned income (includes deemed) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_E2F3A4B5-6C7D-8E9F-0A1B-2C3D4E5F6A7B" name="countableUnearnedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_F3A4B5C6-7D8E-9F0A-1B2C-3D4E5F6A7B8C">
+          <dmn:text>if unearnedPlusDeemedIncome > 20 then unearnedPlusDeemedIncome - 20 else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Apply exclusions to earned income (after SEIE) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_A4B5C6D7-8E9F-0A1B-2C3D-4E5F6A7B8C9D" name="earnedAfterGeneralExclusion" typeRef="number"/>
+        <dmn:literalExpression id="_B5C6D7E8-9F0A-1B2C-3D4E-5F6A7B8C9D0E">
+          <dmn:text>if earnedAfterSeie > unusedGeneralExclusion then earnedAfterSeie - unusedGeneralExclusion else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_C6D7E8F9-0A1B-2C3D-4E5F-6A7B8C9D0E1F" name="earnedAfter65Exclusion" typeRef="number"/>
+        <dmn:literalExpression id="_D7E8F9A0-1B2C-3D4E-5F6A-7B8C9D0E1F2A">
+          <dmn:text>if earnedAfterGeneralExclusion > 65 then earnedAfterGeneralExclusion - 65 else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_E8F9A0B1-2C3D-4E5F-6A7B-8C9D0E1F2A3B" name="countableEarnedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_F9A0B1C2-3D4E-5F6A-7B8C-9D0E1F2A3B4C">
+          <dmn:text>earnedAfter65Exclusion / 2</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Track total exclusions applied to earned income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_A0B1C2D3-4E5F-6A7B-8C9D-0E1F2A3B4C5X" name="earnedExclusionApplied" typeRef="number"/>
+        <dmn:literalExpression id="_b5a245c2-af28-4784-83f4-b895bad43f1b">
+          <dmn:text>totalEarnedIncome - countableEarnedIncome</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 7: Calculate total countable income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_705c486e-a8c3-4b4e-8db2-8e3b3d2b3beb" name="totalCountableIncome" typeRef="number"/>
+        <dmn:literalExpression id="_5de0c19f-8704-4a48-bdc8-44c638492d5e">
+          <dmn:text>countableUnearnedIncome + countableEarnedIncome</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 8: Determine applicable FBR -->
+      <dmn:contextEntry>
+        <dmn:variable id="_0fc3dc2e-edb4-420a-814c-d88ad6ac1cdb" name="applicableFBR" typeRef="number"/>
+        <dmn:literalExpression id="_66c0828c-1638-45f1-8cf7-9b4953f1e6f6">
+          <dmn:text>if parameters.FBR != null then parameters.FBR else 967</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 9: Check if meets income limit (null if no income data per three-valued logic) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_19e0a3c5-0e1d-4548-b9a7-734519aed41c" name="meetsIncomeLimit" typeRef="boolean"/>
+        <dmn:literalExpression id="_3d1af80d-8a80-4405-bb8b-948a89386f1e">
+          <dmn:text>if not(hasIncomeData) then null else totalCountableIncome &lt; applicableFBR</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 10: Return full calculation result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_8cacb9b9-8493-4ad0-bf0f-1859cbfa6475">
+          <dmn:text>{
+  totalEarnedIncome: totalEarnedIncome,
+  totalUnearnedIncome: totalUnearnedIncome,
+  deemedIncome: deemedIncomeAmount,
+  generalExclusionApplied: generalExclusionToUnearned + unusedGeneralExclusion,
+  earnedIncomeExclusionApplied: earnedExclusionApplied,
+  countableUnearnedIncome: countableUnearnedIncome,
+  countableEarnedIncome: countableEarnedIncome,
+  totalCountableIncome: totalCountableIncome,
+  applicableFBR: applicableFBR,
+  meetsIncomeLimit: meetsIncomeLimit,
+  seieExclusionApplied: seieExclusionApplied
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision: checkResult - boolean output for check pattern -->
+  <dmn:decision id="_checkResult_decision" name="checkResult">
+    <dmn:description>Returns true if income is below Federal Benefit Rate limit</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_checkResult_var" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_checkResult_req">
+      <dmn:requiredDecision href="#_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_checkResult_expr">
+      <dmn:text>incomeCalculation.meetsIncomeLimit</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_c35d738f-86ae-4567-9553-6a1dff9606d9" name="CalculateCountableIncomeService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_78081f56-07ba-443e-b988-d624b18083f4"
+                  name="CalculateCountableIncomeService"
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_checkResult_decision"/>
+    <dmn:outputDecision href="#_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C"/>
+    <dmn:inputData href="#_B1C2D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E"/>
+    <dmn:inputData href="#_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A"/>
+  </dmn:decisionService>
+
+</dmn:definitions>

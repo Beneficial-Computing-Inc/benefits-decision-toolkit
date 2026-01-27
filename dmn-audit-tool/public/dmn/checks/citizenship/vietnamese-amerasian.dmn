@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_D4E5F6A7-8B9C-0D1E-2F3A-4B5C6D7E8F9A"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  id="_B0A9C8D7-6E5F-4A3B-2C1D-0E9F8A7B6C5D"
+  name="VietnameseAmerasian"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_D4E5F6A7-8B9C-0D1E-2F3A-4B5C6D7E8F9A">
+
+  <dmn:description>Vietnamese Amerasian immigrant per Section 584 of PL 100-202. Qualified alien with 7-year SSI limit.</dmn:description>
+
+  <dmn:import id="_E5F6A7B8" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../bdt.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <dmn:itemDefinition id="_F6A7B8C9" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_A7B8C9D0" name="personId"><dmn:typeRef>string</dmn:typeRef></dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:decisionService id="_B8C9D0E1" name="VietnameseAmerasianService">
+    <dmn:variable id="_C9D0E1F2" name="VietnameseAmerasianService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_D0E1F2A3"/>
+    <dmn:inputData href="#_E1F2A3B4"/>
+    <dmn:inputData href="#_F2A3B4C5"/>
+  </dmn:decisionService>
+
+  <dmn:inputData id="_F2A3B4C5" name="situation">
+    <dmn:variable id="_A3B4C5D6" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <dmn:inputData id="_E1F2A3B4" name="parameters">
+    <dmn:variable id="_B4C5D6E7" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <dmn:decision id="_D0E1F2A3" name="checkResult">
+    <dmn:variable id="_C5D6E7F8" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_D6E7F8A9"><dmn:requiredInput href="#_F2A3B4C5"/></dmn:informationRequirement>
+    <dmn:informationRequirement id="_E7F8A9B0"><dmn:requiredInput href="#_E1F2A3B4"/></dmn:informationRequirement>
+    <dmn:context id="_F8A9B0C1">
+      <dmn:contextEntry>
+        <dmn:variable id="_A9B0C1D2" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_B0C1D2E3"><dmn:text>situation.people[id = parameters.personId][1]</dmn:text></dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_C1D2E3F4" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_D2E3F4A5"><dmn:text>person.citizenshipStatus = "VIETNAMESE_AMERASIAN"</dmn:text></dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_E3F4A5B6"><dmn:text>result</dmn:text></dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+</dmn:definitions>

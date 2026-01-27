@@ -1,0 +1,265 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-01-15T20:42:28.983Z",
+  "totalAnnotations": 3,
+  "checks": {
+    "CategoricalEligibility": {
+      "checkId": "CategoricalEligibility",
+      "modelAnnotation": {
+        "id": "CategoricalEligibility.model",
+        "explanation": "Determines if a person meets SSI categorical eligibility requirements by being age 65 or older, blind, or disabled. This is one of the five core SSI eligibility requirements per POMS SI 00501.001.",
+        "pomsReferences": [
+          "SI 00501.001",
+          "SI 00501.100"
+        ],
+        "plainLanguageSummary": "To get SSI, you must be at least 65 years old, OR have a qualifying disability, OR be blind. This check verifies you meet one of these requirements.",
+        "source": "manual",
+        "updatedAt": "2025-01-15T12:00:00.000Z"
+      },
+      "decisionAnnotations": {
+        "checkResult": {
+          "id": "CategoricalEligibility.checkResult",
+          "explanation": "Returns true if the person is age 65+ as of the evaluation date, or has isBlindOrDisabled flag set to true. Uses BDT age calculation for accurate age-as-of-date computation.",
+          "pomsReferences": [
+            "SI 00501.100"
+          ],
+          "plainLanguageSummary": "This checks if you're 65 or older on the application date, or if you have a qualifying disability or blindness.",
+          "source": "manual",
+          "updatedAt": "2025-01-15T12:00:00.000Z"
+        }
+      },
+      "contextEntryAnnotations": {
+        "checkResult.result": {
+          "id": "CategoricalEligibility.checkResult.result",
+          "explanation": "Final boolean result combining age check (age >= 65) OR disability/blindness flag. Uses logical OR because meeting ANY categorical requirement qualifies.",
+          "pomsReferences": [
+            "SI 00501.100"
+          ],
+          "plainLanguageSummary": "You qualify if you're 65+ OR disabled OR blind - you only need to meet ONE of these.",
+          "source": "manual",
+          "updatedAt": "2025-01-15T12:00:00.000Z"
+        }
+      }
+    },
+    "BDT": {
+      "checkId": "BDT",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Benefits": {
+      "checkId": "Benefits",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "SsiEligibility": {
+      "checkId": "SsiEligibility",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PhlHomesteadExemption": {
+      "checkId": "PhlHomesteadExemption",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PhlSeniorCitizenTaxFreeze": {
+      "checkId": "PhlSeniorCitizenTaxFreeze",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Age": {
+      "checkId": "Age",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PersonMaxAge": {
+      "checkId": "PersonMaxAge",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PersonMinAge": {
+      "checkId": "PersonMinAge",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "SomeoneMinAge": {
+      "checkId": "SomeoneMinAge",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Categorical": {
+      "checkId": "Categorical",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "BlindOrDisabled": {
+      "checkId": "BlindOrDisabled",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PersonAge65OrOlder": {
+      "checkId": "PersonAge65OrOlder",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Citizenship": {
+      "checkId": "Citizenship",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "CitizenshipEligibility": {
+      "checkId": "CitizenshipEligibility",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "CubanHaitianEntrant": {
+      "checkId": "CubanHaitianEntrant",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "NaturalizedCitizen": {
+      "checkId": "NaturalizedCitizen",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "ParoledAlien": {
+      "checkId": "ParoledAlien",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PermanentResidentQualified": {
+      "checkId": "PermanentResidentQualified",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PersonUSCitizen": {
+      "checkId": "PersonUSCitizen",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "RefugeeAsyleeStatus": {
+      "checkId": "RefugeeAsyleeStatus",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "RefugeeAsyleeWithinSevenYears": {
+      "checkId": "RefugeeAsyleeWithinSevenYears",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "VietnameseAmerasian": {
+      "checkId": "VietnameseAmerasian",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "WithheldDeportation": {
+      "checkId": "WithheldDeportation",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Enrollment": {
+      "checkId": "Enrollment",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PersonEnrolledInBenefit": {
+      "checkId": "PersonEnrolledInBenefit",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "PersonNotEnrolledInBenefit": {
+      "checkId": "PersonNotEnrolledInBenefit",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Income": {
+      "checkId": "Income",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "CalculateCountableIncome": {
+      "checkId": "CalculateCountableIncome",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "CalculateSeie": {
+      "checkId": "CalculateSeie",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Deeming": {
+      "checkId": "Deeming",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "ParentToChildDeeming": {
+      "checkId": "ParentToChildDeeming",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "SpouseDeeming": {
+      "checkId": "SpouseDeeming",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "SsiIncomeLimit": {
+      "checkId": "SsiIncomeLimit",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "SsiResidenceRequirement": {
+      "checkId": "SsiResidenceRequirement",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "Resources": {
+      "checkId": "Resources",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "AbleAccountExclusion": {
+      "checkId": "AbleAccountExclusion",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "BurialFundExclusion": {
+      "checkId": "BurialFundExclusion",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "CalculateCountableResources": {
+      "checkId": "CalculateCountableResources",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "HomeExclusion": {
+      "checkId": "HomeExclusion",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "HouseholdGoodsExclusion": {
+      "checkId": "HouseholdGoodsExclusion",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "LifeInsuranceExclusion": {
+      "checkId": "LifeInsuranceExclusion",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "SelfSupportPropertyExclusion": {
+      "checkId": "SelfSupportPropertyExclusion",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "SsiResourceLimit": {
+      "checkId": "SsiResourceLimit",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    },
+    "VehicleExclusion": {
+      "checkId": "VehicleExclusion",
+      "decisionAnnotations": {},
+      "contextEntryAnnotations": {}
+    }
+  }
+}

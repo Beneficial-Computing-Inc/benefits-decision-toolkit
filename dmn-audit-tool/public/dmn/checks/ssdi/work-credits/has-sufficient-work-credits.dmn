@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_SSDI-WORK-CREDITS-2026-0115" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:included1="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" xmlns:included2="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708" id="_SSDI-WORK-CREDITS-DEF" name="HasSufficientWorkCredits" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_SSDI-WORK-CREDITS-2026-0115">
+  <dmn:description>POMS DI 10105.060, RS 00301.120 - Work Credits (Insured Status) Check for SSDI Eligibility
+
+Determines if a person has sufficient work history to qualify for SSDI benefits.
+This is a simplified screener check based on age-specific work history questions.
+
+Rules (from RS 00301.120 and RS 00301.140):
+- Blind individuals: Only need "fully insured" status (ever worked and paid SS taxes)
+- Under age 24: Need ~1.5 years of work in last 3 years (6 QCs in 12 quarters)
+- Ages 24-30: Need work in about half the quarters since age 21
+- Ages 31+: Need ~5 years of work in last 10 years (20/40 test)
+
+Returns TRUE if person has sufficient work credits for SSDI consideration.</dmn:description>
+  <dmn:extensionElements/>
+  <dmn:import id="_WC-IMPORT-BDT" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../../BDT.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:import id="_WC-IMPORT-AGE" name="Age" namespace="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708" locationURI="../../age/Age.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+  <dmn:itemDefinition id="_WC-TPARAMETERS" name="tParameters" isCollection="false">
+    <dmn:description>Parameters for work credits check</dmn:description>
+    <dmn:itemComponent id="_WC-PARAM-PERSONID" name="personId" isCollection="false">
+      <dmn:description>ID of person to evaluate (defaults to primaryPersonId if not provided)</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:itemDefinition id="_WC-TCALCULATION" name="tWorkCreditsCalculation" isCollection="false">
+    <dmn:description>Detailed work credits calculation breakdown</dmn:description>
+    <dmn:itemComponent id="_WC-CALC-AGE" name="age" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_WC-CALC-ISBLIND" name="isBlind" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_WC-CALC-HASWORKED" name="hasWorkedAndPaidSSTaxes" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_WC-CALC-YEARSWORKED" name="yearsWorkedInLast10Years" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_WC-CALC-REQYEARS" name="requiredYearsOfWork" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_WC-CALC-AGERULE" name="ageRuleApplied" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_WC-CALC-MEETSREQ" name="meetsWorkRequirement" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+  <dmn:inputData id="_WC-INPUT-SITUATION" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-INPUT-SITUATION-VAR" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+  <dmn:inputData id="_WC-INPUT-PARAMETERS" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-INPUT-PARAMETERS-VAR" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+  <dmn:decision id="_WC-DECISION-PERSONID" name="personId">
+    <dmn:description>Resolve person ID from parameters or default to primaryPersonId</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-PERSONID-VAR" name="personId" typeRef="string"/>
+    <dmn:informationRequirement id="_WC-REQ-SIT-PERSONID">
+      <dmn:requiredInput href="#_WC-INPUT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-PARAM-PERSONID">
+      <dmn:requiredInput href="#_WC-INPUT-PARAMETERS"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_WC-EXPR-PERSONID">
+      <dmn:text>if parameters.personId != null then parameters.personId else situation.primaryPersonId</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+  <dmn:decision id="_WC-DECISION-PERSON" name="person">
+    <dmn:description>Get the person being evaluated from situation</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-PERSON-VAR" name="person" typeRef="BDT.tPerson"/>
+    <dmn:informationRequirement id="_WC-REQ-SIT-PERSON">
+      <dmn:requiredInput href="#_WC-INPUT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-PERSONID-PERSON">
+      <dmn:requiredDecision href="#_WC-DECISION-PERSONID"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_WC-EXPR-PERSON">
+      <dmn:text>situation.people[item.id = personId][1]</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+  <dmn:decision id="_WC-DECISION-AGE" name="age">
+    <dmn:description>Calculate person's current age</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-AGE-VAR" name="age" typeRef="number"/>
+    <dmn:informationRequirement id="_WC-REQ-PERSON-AGE">
+      <dmn:requiredDecision href="#_WC-DECISION-PERSON"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-SIT-AGE">
+      <dmn:requiredInput href="#_WC-INPUT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_WC-KR-AGE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708#_1919D943-09A4-4D5C-98A0-2B8377862E4C"/>
+    </dmn:knowledgeRequirement>
+    <dmn:literalExpression id="_WC-EXPR-AGE">
+      <dmn:text>Age.as of date(person.dateOfBirth, if situation.evaluationDate != null then situation.evaluationDate else today())</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+  <dmn:decision id="_WC-DECISION-AGERULE" name="ageRuleApplied">
+    <dmn:description>Determine which age-based work credits rule applies</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-AGERULE-VAR" name="ageRuleApplied" typeRef="string"/>
+    <dmn:informationRequirement id="_WC-REQ-PERSON-AGERULE">
+      <dmn:requiredDecision href="#_WC-DECISION-PERSON"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-AGE-AGERULE">
+      <dmn:requiredDecision href="#_WC-DECISION-AGE"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_WC-EXPR-AGERULE">
+      <dmn:text>if person.isBlind = true then "blind_fully_insured"
+else if age &lt; 24 then "under_24"
+else if age &lt; 31 then "age_24_to_30"
+else "age_31_plus"</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+  <dmn:decision id="_WC-DECISION-REQYEARS" name="requiredYearsOfWork">
+    <dmn:description>RS 00301.120/140 - Calculate required years of work based on age rule</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-REQYEARS-VAR" name="requiredYearsOfWork" typeRef="number"/>
+    <dmn:informationRequirement id="_WC-REQ-AGERULE-REQYEARS">
+      <dmn:requiredDecision href="#_WC-DECISION-AGERULE"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-AGE-REQYEARS">
+      <dmn:requiredDecision href="#_WC-DECISION-AGE"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_WC-EXPR-REQYEARS">
+      <dmn:text>if ageRuleApplied = "blind_fully_insured" then 0
+else if ageRuleApplied = "under_24" then 1.5
+else if ageRuleApplied = "age_24_to_30" then (age - 21) / 2
+else 5</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+  <dmn:decision id="_WC-DECISION-MEETSREQ" name="meetsWorkRequirement">
+    <dmn:description>Check if person meets the work requirement for their age group</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-MEETSREQ-VAR" name="meetsWorkRequirement" typeRef="boolean"/>
+    <dmn:informationRequirement id="_WC-REQ-PERSON-MEETSREQ">
+      <dmn:requiredDecision href="#_WC-DECISION-PERSON"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-AGERULE-MEETSREQ">
+      <dmn:requiredDecision href="#_WC-DECISION-AGERULE"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-REQYEARS-MEETSREQ">
+      <dmn:requiredDecision href="#_WC-DECISION-REQYEARS"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_WC-EXPR-MEETSREQ">
+      <dmn:text>if ageRuleApplied = "blind_fully_insured" then person.hasWorkedAndPaidSSTaxes = true
+else if person.yearsWorkedInLast10Years = null then false
+else person.yearsWorkedInLast10Years >= requiredYearsOfWork</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+  <dmn:decision id="_WC-DECISION-CALCULATION" name="workCreditsCalculation">
+    <dmn:description>Detailed breakdown of work credits calculation</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-CALCULATION-VAR" name="workCreditsCalculation" typeRef="tWorkCreditsCalculation"/>
+    <dmn:informationRequirement id="_WC-REQ-PERSON-CALC">
+      <dmn:requiredDecision href="#_WC-DECISION-PERSON"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-AGE-CALC">
+      <dmn:requiredDecision href="#_WC-DECISION-AGE"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-AGERULE-CALC">
+      <dmn:requiredDecision href="#_WC-DECISION-AGERULE"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-REQYEARS-CALC">
+      <dmn:requiredDecision href="#_WC-DECISION-REQYEARS"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_WC-REQ-MEETSREQ-CALC">
+      <dmn:requiredDecision href="#_WC-DECISION-MEETSREQ"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_WC-CONTEXT-CALCULATION">
+      <dmn:contextEntry>
+        <dmn:variable id="_WC-CALC-ENTRY-AGE" name="age" typeRef="number"/>
+        <dmn:literalExpression id="_WC-CALC-EXPR-AGE">
+          <dmn:text>age</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_WC-CALC-ENTRY-ISBLIND" name="isBlind" typeRef="boolean"/>
+        <dmn:literalExpression id="_WC-CALC-EXPR-ISBLIND">
+          <dmn:text>person.isBlind = true</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_WC-CALC-ENTRY-HASWORKED" name="hasWorkedAndPaidSSTaxes" typeRef="boolean"/>
+        <dmn:literalExpression id="_WC-CALC-EXPR-HASWORKED">
+          <dmn:text>person.hasWorkedAndPaidSSTaxes = true</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_WC-CALC-ENTRY-YEARSWORKED" name="yearsWorkedInLast10Years" typeRef="number"/>
+        <dmn:literalExpression id="_WC-CALC-EXPR-YEARSWORKED">
+          <dmn:text>if person.yearsWorkedInLast10Years = null then 0 else person.yearsWorkedInLast10Years</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_WC-CALC-ENTRY-REQYEARS" name="requiredYearsOfWork" typeRef="number"/>
+        <dmn:literalExpression id="_WC-CALC-EXPR-REQYEARS">
+          <dmn:text>requiredYearsOfWork</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_WC-CALC-ENTRY-AGERULE" name="ageRuleApplied" typeRef="string"/>
+        <dmn:literalExpression id="_WC-CALC-EXPR-AGERULE">
+          <dmn:text>ageRuleApplied</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_WC-CALC-ENTRY-MEETSREQ" name="meetsWorkRequirement" typeRef="boolean"/>
+        <dmn:literalExpression id="_WC-CALC-EXPR-MEETSREQ">
+          <dmn:text>meetsWorkRequirement</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+  <dmn:decision id="_WC-DECISION-CHECKRESULT" name="checkResult">
+    <dmn:description>TRUE if person has sufficient work credits for SSDI, FALSE otherwise</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-DECISION-CHECKRESULT-VAR" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_WC-REQ-MEETSREQ-RESULT">
+      <dmn:requiredDecision href="#_WC-DECISION-MEETSREQ"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_WC-EXPR-CHECKRESULT">
+      <dmn:text>meetsWorkRequirement</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+  <dmn:decisionService id="_WC-SERVICE" name="HasSufficientWorkCreditsService">
+    <dmn:description>POMS DI 10105.060 - Checks if person has sufficient work credits for SSDI eligibility</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_WC-SERVICE-VAR" name="HasSufficientWorkCreditsService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_WC-DECISION-CHECKRESULT"/>
+    <dmn:outputDecision href="#_WC-DECISION-CALCULATION"/>
+    <dmn:inputData href="#_WC-INPUT-SITUATION"/>
+    <dmn:inputData href="#_WC-INPUT-PARAMETERS"/>
+  </dmn:decisionService>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_WC-DIAGRAM" name="Work Credits Check">
+      <di:extension>
+        <kie:ComponentsWidthsExtension/>
+      </di:extension>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</dmn:definitions>

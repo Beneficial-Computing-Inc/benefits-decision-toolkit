@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_SEIE001-2026-0112-CALC-STUDENTEARNED"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 id="_SEIE002-2026-0112-MAIN-DEFINITIONSID"
+                 name="CalculateSeie"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_SEIE001-2026-0112-CALC-STUDENTEARNED">
+
+  <dmn:description>POMS SI 00820.510 - Student Earned Income Exclusion (SEIE) Calculation
+
+Calculates the SEIE exclusion amount for a student under age 22 who is regularly attending school.
+
+2025 Limits:
+- Monthly: $2,350
+- Yearly: $9,460
+
+Per SI 00820.500.A.3.c, SEIE is applied to earned income BEFORE the $20 general exclusion
+and $65 earned income exclusion.
+
+This check determines:
+1. If person qualifies for SEIE (under 22 + student)
+2. The exclusion amount to apply (capped at monthly limit and remaining yearly limit)</dmn:description>
+
+  <!-- Import BDT base module -->
+  <dmn:import id="_SEIE003-2026-0112-IMPT-BDTBASEMOD"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import Age module for age calculation -->
+  <dmn:import id="_SEIE004-2026-0112-IMPT-AGEMODULE"
+              name="Age"
+              namespace="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708"
+              locationURI="../age/Age.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Parameters type definition -->
+  <dmn:itemDefinition id="_SEIE005-2026-0112-TYPE-TPARAMETERS" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_SEIE006-2026-0112-COMP-PERSONID" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE007-2026-0112-COMP-GROSSEARNED" name="grossEarnedIncome" isCollection="false">
+      <dmn:description>Monthly gross earned income before any exclusions</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE008-2026-0112-COMP-SEIEUSEDYTD" name="seieUsedYTD" isCollection="false">
+      <dmn:description>SEIE already applied in prior months this calendar year (default 0)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- SEIE Result type definition -->
+  <dmn:itemDefinition id="_SEIE009-2026-0112-TYPE-TSEIERESULT" name="tSeieResult" isCollection="false">
+    <dmn:itemComponent id="_SEIE010-2026-0112-COMP-QUALIFIES" name="qualifiesForSeie" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE011-2026-0112-COMP-EXCLUSIONAMOUNT" name="seieExclusionAmount" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE012-2026-0112-COMP-REMAININGYEARLY" name="remainingYearlyLimit" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE013-2026-0112-COMP-MONTHLYLIMIT" name="monthlyLimit" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SEIE014-2026-0112-COMP-YEARLYLIMIT" name="yearlyLimit" isCollection="false">
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation -->
+  <dmn:inputData id="_SEIE015-2026-0112-INPT-SITUATION" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_SEIE016-2026-0112-VAR-SITUATION"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters -->
+  <dmn:inputData id="_SEIE017-2026-0112-INPT-PARAMETERS" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_SEIE018-2026-0112-VAR-PARAMETERS"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: seieCalculation -->
+  <dmn:decision id="_SEIE019-2026-0112-DCSN-SEIECALC" name="seieCalculation">
+    <dmn:description>POMS SI 00820.510 - Calculate SEIE exclusion amount for students under 22</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SEIE020-2026-0112-VAR-SEIECALC"
+                  name="seieCalculation"
+                  typeRef="tSeieResult"/>
+    <dmn:informationRequirement id="_SEIE021-2026-0112-IREQ-SITUATION">
+      <dmn:requiredInput href="#_SEIE015-2026-0112-INPT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_SEIE022-2026-0112-IREQ-PARAMETERS">
+      <dmn:requiredInput href="#_SEIE017-2026-0112-INPT-PARAMETERS"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_SEIE_KR_AGE_2026_SEIE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708#_1919D943-09A4-4D5C-98A0-2B8377862E4C"/>
+    </dmn:knowledgeRequirement>
+
+    <dmn:context id="_SEIE023-2026-0112-CTX-MAIN">
+      <!-- Step 1: Get person from situation -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE024-2026-0112-VAR-PERSON" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_SEIE025-2026-0112-EXPR-PERSON">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Get evaluation date (default to today if not provided) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE026-2026-0112-VAR-EVALDATE" name="evaluationDate" typeRef="date"/>
+        <dmn:literalExpression id="_SEIE027-2026-0112-EXPR-EVALDATE">
+          <dmn:text>if situation.evaluationDate != null then situation.evaluationDate else today()</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Calculate age as of evaluation date -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE028-2026-0112-VAR-AGE" name="age" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE029-2026-0112-EXPR-AGE">
+          <dmn:text>Age.as of date(person.dateOfBirth, evaluationDate)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Check if under 22 -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE030-2026-0112-VAR-UNDER22" name="isUnder22" typeRef="boolean"/>
+        <dmn:literalExpression id="_SEIE031-2026-0112-EXPR-UNDER22">
+          <dmn:text>if age = null or age &lt; 0 then false else age &lt; 22</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Check if student (regularly attending school per SI 00501.020) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE032-2026-0112-VAR-ISSTUDENT" name="isStudent" typeRef="boolean"/>
+        <dmn:literalExpression id="_SEIE033-2026-0112-EXPR-ISSTUDENT">
+          <dmn:text>if person.isStudent = null then false else person.isStudent</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Determine if qualifies for SEIE (under 22 AND student) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE034-2026-0112-VAR-QUALIFIES" name="qualifiesForSeie" typeRef="boolean"/>
+        <dmn:literalExpression id="_SEIE035-2026-0112-EXPR-QUALIFIES">
+          <dmn:text>isUnder22 and isStudent</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 7: Determine year for limits lookup -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE036-2026-0112-VAR-YEAR" name="evaluationYear" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE037-2026-0112-EXPR-YEAR">
+          <dmn:text>evaluationDate.year</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 8: Get monthly limit for year (2025 = $2,350, default to 2025 for future) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE038-2026-0112-VAR-MONTHLYLIMIT" name="monthlyLimit" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE039-2026-0112-EXPR-MONTHLYLIMIT">
+          <dmn:text>if evaluationYear &lt;= 2024 then 2290
+else if evaluationYear = 2025 then 2350
+else 2350</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 9: Get yearly limit for year (2025 = $9,460) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE040-2026-0112-VAR-YEARLYLIMIT" name="yearlyLimit" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE041-2026-0112-EXPR-YEARLYLIMIT">
+          <dmn:text>if evaluationYear &lt;= 2024 then 9230
+else if evaluationYear = 2025 then 9460
+else 9460</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 10: Calculate remaining yearly limit -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE042-2026-0112-VAR-REMAINING" name="remainingYearlyLimit" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE043-2026-0112-EXPR-REMAINING">
+          <dmn:text>if parameters.seieUsedYTD = null then yearlyLimit
+else if yearlyLimit - parameters.seieUsedYTD &lt; 0 then 0
+else yearlyLimit - parameters.seieUsedYTD</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 11: Get gross earned income (default to 0 if null) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE044-2026-0112-VAR-GROSS" name="grossEarnedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE045-2026-0112-EXPR-GROSS">
+          <dmn:text>if parameters.grossEarnedIncome = null then 0 else parameters.grossEarnedIncome</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 12: Calculate SEIE exclusion amount (if qualifies) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SEIE046-2026-0112-VAR-EXCLUSION" name="seieExclusionAmount" typeRef="number"/>
+        <dmn:literalExpression id="_SEIE047-2026-0112-EXPR-EXCLUSION">
+          <dmn:text>if not(qualifiesForSeie) then 0
+else min([grossEarnedIncome, monthlyLimit, remainingYearlyLimit])</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 13: Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_SEIE048-2026-0112-EXPR-RESULT">
+          <dmn:text>{
+  qualifiesForSeie: qualifiesForSeie,
+  seieExclusionAmount: seieExclusionAmount,
+  remainingYearlyLimit: remainingYearlyLimit - seieExclusionAmount,
+  monthlyLimit: monthlyLimit,
+  yearlyLimit: yearlyLimit
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision: checkResult - boolean output for check pattern -->
+  <dmn:decision id="_SEIE049-2026-0112-DCSN-CHECKRESULT" name="checkResult">
+    <dmn:description>Returns true if person qualifies for SEIE (under 22 and student)</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SEIE050-2026-0112-VAR-CHECKRESULT" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_SEIE051-2026-0112-IREQ-SEIECALC">
+      <dmn:requiredDecision href="#_SEIE019-2026-0112-DCSN-SEIECALC"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_SEIE052-2026-0112-EXPR-CHECKRESULT">
+      <dmn:text>seieCalculation.qualifiesForSeie</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_SEIE053-2026-0112-DSVC-CALCSEIESERVICE" name="CalculateSeieService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_SEIE054-2026-0112-VAR-SERVICE"
+                  name="CalculateSeieService"
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_SEIE049-2026-0112-DCSN-CHECKRESULT"/>
+    <dmn:encapsulatedDecision href="#_SEIE019-2026-0112-DCSN-SEIECALC"/>
+    <dmn:inputData href="#_SEIE015-2026-0112-INPT-SITUATION"/>
+    <dmn:inputData href="#_SEIE017-2026-0112-INPT-PARAMETERS"/>
+  </dmn:decisionService>
+
+</dmn:definitions>

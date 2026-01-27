@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_031B91BC-8C1B-4121-A77A-BED402639500"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+  xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+  xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+  id="_2E934AF4-DBEE-40D2-BB59-D9C0E07FEA86"
+  name="RefugeeAsyleeWithinSevenYears"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_031B91BC-8C1B-4121-A77A-BED402639500">
+
+  <dmn:description>Implements SSI 7-year time limitation for refugees and asylees from POMS SI 00502.106
+
+Per POMS SI 00502.106A, refugees (INA §207) and asylees (INA §208) are eligible for SSI for a maximum
+of 7 years from the date status was acquired, provided:
+- The alien filed for SSI within 7 years of acquiring the status
+- The alien does not meet an exception condition that permits unlimited eligibility
+
+Start Dates:
+- Refugees: 7 years from date of admission to U.S. (refugeeAdmissionDate)
+- Asylees: 7 years from date asylum was granted (asylumGrantDate)
+
+The 7-year period begins on the date the status was acquired, NOT the SSI filing date.
+Eligibility ends the month after the 7th anniversary.
+
+This check verifies the person is within the 7-year eligibility window based on the evaluationDate.
+It does NOT check for exception conditions (veteran status, 40 QQ, blind/disabled on 8/22/96) which
+permit unlimited eligibility - those are separate eligibility paths.
+
+IMPORTANT: If the alien has both refugee and asylee dates, use the EARLIER date per POMS SI 00502.106A.2
+(the 7-year period is based on the earliest qualifying status acquisition date).</dmn:description>
+
+  <!-- Import BDT (required) -->
+  <dmn:import
+    id="_E927665F-9DF2-4668-914E-36638FF967B6"
+    name="BDT"
+    namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+    locationURI="../../bdt.dmn"
+    importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters (check-specific inputs) -->
+  <dmn:itemDefinition id="_79D93FF0-3518-4EBB-9718-7A17DC2484C9" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_B87CBF9A-AF8A-4D2D-A325-D164FFE6ACEA" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Decision Service (MUST be {ModelName}Service) -->
+  <dmn:decisionService id="_442ED55C-2280-43BE-A8BB-4E3F58C2BE5E" name="RefugeeAsyleeWithinSevenYearsService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_878E71AD-949B-424A-8E90-704FCC73655D"
+                  name="RefugeeAsyleeWithinSevenYearsService"
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_98A3C4C3-7CDB-47D3-AC23-AF9F26B663F6"/>
+    <dmn:inputData href="#_F15E4991-8939-4AE6-B0A5-43A61243CE9A"/>
+    <dmn:inputData href="#_A605F4D4-CD31-4EEE-B09B-88AB1CDE98FE"/>
+  </dmn:decisionService>
+
+  <!-- Input Data: situation -->
+  <dmn:inputData id="_F15E4991-8939-4AE6-B0A5-43A61243CE9A" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_1E1EC612-F9C4-408D-9807-5A4E2A395CA8"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input Data: parameters -->
+  <dmn:inputData id="_A605F4D4-CD31-4EEE-B09B-88AB1CDE98FE" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_2AB6B4FE-77A2-4306-B54A-8DE2341063E2"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: checkResult -->
+  <dmn:decision id="_98A3C4C3-7CDB-47D3-AC23-AF9F26B663F6" name="checkResult">
+    <dmn:description>POMS SI 00502.106A - Seven-Year Eligibility Limitation for Refugees and Asylees
+
+Refugees (INA §207) and asylees (INA §208) are eligible for SSI for a maximum of 7 years from
+the date status was acquired. The 7-year period begins on the date the relevant status was acquired
+(admission date for refugees, grant date for asylees).
+
+If an alien has both refugee and asylee dates, the EARLIER date is used as the start of the 7-year period.
+
+This decision returns true if the person is within the 7-year eligibility window based on the evaluation date.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_9D235D59-A291-49B4-80C7-A1943CB13588"
+                  name="checkResult"
+                  typeRef="boolean"/>
+    <dmn:informationRequirement id="_B9CA7EA4-3D05-4C8C-B799-A74C0312BBA0">
+      <dmn:requiredInput href="#_F15E4991-8939-4AE6-B0A5-43A61243CE9A"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_044CAE41-4434-4BDE-9FEB-CD7ADE5369F0">
+      <dmn:requiredInput href="#_A605F4D4-CD31-4EEE-B09B-88AB1CDE98FE"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_CONTEXT_ROOT">
+      <!-- Step 1: Get person from situation -->
+      <dmn:contextEntry>
+        <dmn:variable id="_VAR_PERSON" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_EXPR_PERSON">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Get refugee admission date (null if not refugee or no date) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_VAR_REFUGEE_DATE" name="refugeeDate" typeRef="date"/>
+        <dmn:literalExpression id="_EXPR_REFUGEE_DATE">
+          <dmn:text>if person != null and person.citizenshipStatus = "REFUGEE" then
+  person.refugeeAdmissionDate
+else
+  null</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Get asylee grant date (null if not asylee or no date) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_VAR_ASYLEE_DATE" name="asyleeDate" typeRef="date"/>
+        <dmn:literalExpression id="_EXPR_ASYLEE_DATE">
+          <dmn:text>if person != null and person.citizenshipStatus = "ASYLEE" then
+  person.asylumGrantDate
+else
+  null</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Determine the earliest status acquisition date (if person has both, use earlier) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_VAR_ACQUISITION_DATE" name="statusAcquisitionDate" typeRef="date"/>
+        <dmn:literalExpression id="_EXPR_ACQUISITION_DATE">
+          <dmn:text>if refugeeDate != null and asyleeDate != null then
+  if refugeeDate &lt; asyleeDate then refugeeDate else asyleeDate
+else if refugeeDate != null then
+  refugeeDate
+else if asyleeDate != null then
+  asyleeDate
+else
+  null</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Calculate years since status acquisition -->
+      <dmn:contextEntry>
+        <dmn:variable id="_VAR_YEARS_SINCE" name="yearsSinceAcquisition" typeRef="number"/>
+        <dmn:literalExpression id="_EXPR_YEARS_SINCE">
+          <dmn:text>if statusAcquisitionDate != null and situation.evaluationDate != null then
+  years and months duration(date(statusAcquisitionDate), date(situation.evaluationDate)).years
+else
+  null</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Check if within 7-year window (false if not a refugee/asylee or past 7 years) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_VAR_WITHIN_WINDOW" name="withinSevenYears" typeRef="boolean"/>
+        <dmn:literalExpression id="_EXPR_WITHIN_WINDOW">
+          <dmn:text>if yearsSinceAcquisition != null then
+  yearsSinceAcquisition &lt; 7
+else
+  false</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 7: Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_EXPR_RETURN">
+          <dmn:text>withinSevenYears</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+</dmn:definitions>

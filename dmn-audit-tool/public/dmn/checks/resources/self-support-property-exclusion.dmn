@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_F1A2B3C4-D5E6-7F8A-9B0C-1D2E3F4A5B6C" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" id="_A2B3C4D5-E6F7-8A9B-0C1D-2E3F4A5B6C7D" name="SelfSupportPropertyExclusion" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_F1A2B3C4-D5E6-7F8A-9B0C-1D2E3F4A5B6C">
+  <dmn:extensionElements/>
+  <dmn:import id="_B3C4D5E6-F7A8-9B0C-1D2E-3F4A5B6C7D8E" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../BDT.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Define tParameters for this check -->
+  <dmn:itemDefinition id="_ssp_tParameters" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_ssp_tParameters_resources" name="resources" isCollection="false">
+      <dmn:typeRef>BDT.tResourceList</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation (standard check pattern) -->
+  <dmn:inputData id="_ssp_situation_input" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_ssp_situation_var" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters with resources list -->
+  <dmn:inputData id="_ssp_parameters_input" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_ssp_parameters_var" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: extract resources from parameters -->
+  <dmn:decision id="_ssp_resources_decision" name="resources">
+    <dmn:extensionElements/>
+    <dmn:variable id="_ssp_resources_var" name="resources" typeRef="BDT.tResourceList"/>
+    <dmn:informationRequirement id="_ssp_resources_req1">
+      <dmn:requiredInput href="#_ssp_situation_input"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_ssp_resources_req2">
+      <dmn:requiredInput href="#_ssp_parameters_input"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_ssp_resources_expr">
+      <dmn:text>if parameters.resources != null then parameters.resources else []</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <dmn:decision id="_C4D5E6F7-A8B9-0C1D-2E3F-4A5B6C7D8E9F" name="selfSupportTotal">
+    <dmn:extensionElements/>
+    <dmn:variable id="_D5E6F7A8-B9C0-1D2E-3F4A-5B6C7D8E9F0A" name="selfSupportTotal" typeRef="number"/>
+    <dmn:informationRequirement id="_E6F7A8B9-C0D1-2E3F-4A5B-6C7D8E9F0A1B">
+      <dmn:requiredDecision href="#_ssp_resources_decision"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_A8B9C0D1-E2F3-4A5B-6C7D-8E9F0A1B2C3D">
+      <dmn:text>if resources = null then 0 else sum(for r in resources return if r.isEssentialForSelfSupport = true then r.value else 0)</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <dmn:decision id="_B9C0D1E2-F3A4-5B6C-7D8E-9F0A1B2C3D4E" name="excludedAmount">
+    <dmn:extensionElements/>
+    <dmn:variable id="_C0D1E2F3-A4B5-6C7D-8E9F-0A1B2C3D4E5F" name="excludedAmount" typeRef="number"/>
+    <dmn:informationRequirement id="_D1E2F3A4-B5C6-7D8E-9F0A-1B2C3D4E5F6A">
+      <dmn:requiredDecision href="#_C4D5E6F7-A8B9-0C1D-2E3F-4A5B6C7D8E9F"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_E2F3A4B5-C6D7-8E9F-0A1B-2C3D4E5F6A7B">
+      <dmn:text>if selfSupportTotal &gt; 6000 then 6000 else selfSupportTotal</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <dmn:decision id="_ssp_checkResult_decision" name="checkResult">
+    <dmn:description>Returns true if any self-support property qualifies for exclusion</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_ssp_checkResult_var" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_ssp_checkResult_req">
+      <dmn:requiredDecision href="#_B9C0D1E2-F3A4-5B6C-7D8E-9F0A1B2C3D4E"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_ssp_checkResult_expr">
+      <dmn:text>excludedAmount > 0</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <dmn:decisionService id="_A4B5C6D7-E8F9-0A1B-2C3D-4E5F6A7B8C9D" name="SelfSupportPropertyExclusionService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_B5C6D7E8-F9A0-1B2C-3D4E-5F6A7B8C9D0E" name="SelfSupportPropertyExclusionService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_ssp_checkResult_decision"/>
+    <dmn:encapsulatedDecision href="#_B9C0D1E2-F3A4-5B6C-7D8E-9F0A1B2C3D4E"/>
+    <dmn:encapsulatedDecision href="#_C4D5E6F7-A8B9-0C1D-2E3F-4A5B6C7D8E9F"/>
+    <dmn:encapsulatedDecision href="#_ssp_resources_decision"/>
+    <dmn:inputData href="#_ssp_situation_input"/>
+    <dmn:inputData href="#_ssp_parameters_input"/>
+  </dmn:decisionService>
+
+  <dmn:textAnnotation id="_C6D7E8F9-A0B1-2C3D-4E5F-6A7B8C9D0E1F" textFormat="text/plain">
+    <dmn:text>SSI Self-Support Property Exclusion (POMS SI 01130.400)
+Property essential for self-support excluded up to $6,000</dmn:text>
+  </dmn:textAnnotation>
+
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_D7E8F9A0-B1C2-3D4E-5F6A-7B8C9D0E1F2A" name="DRG">
+      <di:extension>
+        <kie:ComponentsWidthsExtension>
+          <kie:ComponentWidths dmnElementRef="_A8B9C0D1-E2F3-4A5B-6C7D-8E9F0A1B2C3D">
+            <kie:width>800</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_E2F3A4B5-C6D7-8E9F-0A1B-2C3D4E5F6A7B">
+            <kie:width>800</kie:width>
+          </kie:ComponentWidths>
+        </kie:ComponentsWidthsExtension>
+      </di:extension>
+      <dmndi:DMNShape id="dmnshape-drg-_ssp_situation_input" dmnElementRef="_ssp_situation_input" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="150" y="400" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_ssp_parameters_input" dmnElementRef="_ssp_parameters_input" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="350" y="400" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_C4D5E6F7-A8B9-0C1D-2E3F-4A5B6C7D8E9F" dmnElementRef="_C4D5E6F7-A8B9-0C1D-2E3F-4A5B6C7D8E9F" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="250" y="230" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_B9C0D1E2-F3A4-5B6C-7D8E-9F0A1B2C3D4E" dmnElementRef="_B9C0D1E2-F3A4-5B6C-7D8E-9F0A1B2C3D4E" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="250" y="150" width="100" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_A4B5C6D7-E8F9-0A1B-2C3D-4E5F6A7B8C9D" dmnElementRef="_A4B5C6D7-E8F9-0A1B-2C3D-4E5F6A7B8C9D" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="200" y="80" width="200" height="60"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_C6D7E8F9-A0B1-2C3D-4E5F-6A7B8C9D0E1F" dmnElementRef="_C6D7E8F9-A0B1-2C3D-4E5F-6A7B8C9D0E1F" isCollapsed="false">
+        <dmndi:DMNStyle fontSize="14">
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="450" y="150" width="300" height="80"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</dmn:definitions>

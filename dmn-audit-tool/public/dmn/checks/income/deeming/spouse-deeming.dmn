@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_SPOUSE_DEEMING_2026_0112"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 id="_SPOUSE_DEEMING_MODULE_2026"
+                 name="SpouseDeeming"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_SPOUSE_DEEMING_2026_0112">
+
+  <dmn:description>POMS SI 01320.400 - Deeming of Income from Ineligible Spouse
+
+This decision service calculates deemed income from an ineligible spouse to an eligible individual.
+
+Deeming applies when:
+- Eligible individual has a spouse living in the same household
+- Spouse is NOT eligible for SSI (ineligible spouse)
+
+Computation per SI 01320.400:
+1. Calculate ineligible spouse's countable income (applying standard exclusions)
+2. Allocate for spouse's living needs (couple FBR - individual FBR = $483 in 2025)
+3. Remaining income after allocation is deemed to eligible individual
+
+2025 Values:
+- Individual FBR: $967
+- Couple FBR: $1,450
+- Spouse living allowance: $483 ($1,450 - $967)
+</dmn:description>
+
+  <!-- Import BDT base module -->
+  <dmn:import id="_SPOUSE_BDT_IMPORT_2026"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Import Deeming base module -->
+  <dmn:import id="_SPOUSE_DEEMING_IMPORT_2026"
+              name="Deeming"
+              namespace="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112"
+              locationURI="Deeming.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Parameters type definition -->
+  <dmn:itemDefinition id="_SPOUSE_PARAMS_TYPE_2026" name="tSpouseDeemingParameters" isCollection="false">
+    <dmn:itemComponent id="_SPOUSE_PARAM_PERSONID" name="personId" isCollection="false">
+      <dmn:description>ID of the eligible individual for whom deeming is being calculated</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SPOUSE_PARAM_IND_FBR" name="individualFBR" isCollection="false">
+      <dmn:description>2025 Individual Federal Benefit Rate: $967 (default if not provided)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SPOUSE_PARAM_COUPLE_FBR" name="coupleFBR" isCollection="false">
+      <dmn:description>2025 Couple Federal Benefit Rate: $1,450 (default if not provided)</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation -->
+  <dmn:inputData id="_SPOUSE_INPUT_SITUATION" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_SPOUSE_VAR_SITUATION" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters -->
+  <dmn:inputData id="_SPOUSE_INPUT_PARAMS" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_SPOUSE_VAR_PARAMS" name="parameters" typeRef="tSpouseDeemingParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: deemingCalculation -->
+  <dmn:decision id="_SPOUSE_DEEMING_CALC" name="deemingCalculation">
+    <dmn:description>POMS SI 01320.400 - Calculate deemed income from ineligible spouse</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SPOUSE_VAR_DEEMING_CALC" name="deemingCalculation" typeRef="BDT.tDeemingCalculation"/>
+    <dmn:informationRequirement id="_SPOUSE_REQ_SITUATION">
+      <dmn:requiredInput href="#_SPOUSE_INPUT_SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_SPOUSE_REQ_PARAMS">
+      <dmn:requiredInput href="#_SPOUSE_INPUT_PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:knowledgeRequirement id="_SPOUSE_KR_GET_INCOME">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_GET_DEEMOR_INCOME"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_SPOUSE_KR_CALC_COUNTABLE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_CALC_DEEMOR_COUNTABLE"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_SPOUSE_KR_SPOUSE_ALLOWANCE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_SPOUSE_ALLOWANCE"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_SPOUSE_KR_CALC_DEEMED">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_CALC_DEEMED"/>
+    </dmn:knowledgeRequirement>
+    <dmn:knowledgeRequirement id="_SPOUSE_KR_FIND_SPOUSE">
+      <dmn:requiredKnowledge href="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112#_BKM_FIND_SPOUSE"/>
+    </dmn:knowledgeRequirement>
+
+    <dmn:context id="_SPOUSE_CTX_DEEMING">
+      <!-- Step 1: Get FBR values (use defaults if not provided) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_IND_FBR" name="individualFBR" typeRef="number"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_IND_FBR">
+          <dmn:text>if parameters.individualFBR != null then parameters.individualFBR else 967</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_COUPLE_FBR" name="coupleFBR" typeRef="number"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_COUPLE_FBR">
+          <dmn:text>if parameters.coupleFBR != null then parameters.coupleFBR else 1450</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Find the eligible individual -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_PERSON" name="eligiblePerson" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_PERSON">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Find spouse ID -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_SPOUSE_ID" name="spouseId" typeRef="string"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_SPOUSE_ID">
+          <dmn:text>Deeming.find spouse(situation.relationships, parameters.personId)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Get spouse person -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_SPOUSE" name="spouse" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_SPOUSE">
+          <dmn:text>if spouseId != null then situation.people[id = spouseId][1] else null</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 5: Check if spouse is ineligible (deeming applies) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_APPLIES" name="deemingApplies" typeRef="boolean"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_APPLIES">
+          <dmn:text>spouse != null and (spouse.isSSIEligible = null or spouse.isSSIEligible = false)</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 6: Get spouse's income (if deeming applies) -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_INCOME" name="spouseIncome" typeRef="Any"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_INCOME">
+          <dmn:text>if deemingApplies then Deeming.get deemor income(spouse) else null</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 7: Calculate spouse's countable income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_COUNTABLE" name="spouseCountableIncome" typeRef="number"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_COUNTABLE">
+          <dmn:text>if deemingApplies and spouseIncome != null then
+  Deeming.calculate deemor countable income(spouseIncome.totalEarnedIncome, spouseIncome.totalUnearnedIncome)
+else
+  0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 8: Get spouse living allowance -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_ALLOWANCE" name="livingAllowance" typeRef="number"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_ALLOWANCE">
+          <dmn:text>if deemingApplies then Deeming.get spouse living allowance(individualFBR, coupleFBR) else 0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 9: Calculate deemed income -->
+      <dmn:contextEntry>
+        <dmn:variable id="_SPOUSE_VAR_DEEMED" name="deemedIncome" typeRef="number"/>
+        <dmn:literalExpression id="_SPOUSE_EXPR_DEEMED">
+          <dmn:text>if deemingApplies then
+  Deeming.calculate deemed income(spouseCountableIncome, livingAllowance, 0)
+else
+  0</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 10: Return full deeming calculation result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_SPOUSE_EXPR_RESULT">
+          <dmn:text>{
+  deemingApplies: deemingApplies,
+  deemingType: if deemingApplies then "spouse" else "none",
+  deemorTotalIncome: if deemingApplies and spouseIncome != null then spouseIncome.totalGrossIncome else 0,
+  deemorCountableIncome: spouseCountableIncome,
+  livingAllowanceAllocated: livingAllowance,
+  ineligibleChildrenAllocation: 0,
+  deemedIncome: deemedIncome,
+  numberOfIneligibleChildren: 0,
+  numberOfParents: 0
+}</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision: checkResult - boolean output for check pattern -->
+  <dmn:decision id="_SPOUSE_CHECK_RESULT" name="checkResult">
+    <dmn:description>Returns true if deeming applies (has ineligible spouse)</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SPOUSE_VAR_CHECK_RESULT" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_SPOUSE_REQ_CALC">
+      <dmn:requiredDecision href="#_SPOUSE_DEEMING_CALC"/>
+    </dmn:informationRequirement>
+    <dmn:literalExpression id="_SPOUSE_EXPR_CHECK_RESULT">
+      <dmn:text>deemingCalculation.deemingApplies</dmn:text>
+    </dmn:literalExpression>
+  </dmn:decision>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_SPOUSE_DEEMING_SERVICE" name="SpouseDeemingService">
+    <dmn:description>POMS SI 01320.400 - Calculate deemed income from ineligible spouse</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_SPOUSE_VAR_SERVICE" name="SpouseDeemingService" typeRef="Any"/>
+    <dmn:outputDecision href="#_SPOUSE_CHECK_RESULT"/>
+    <dmn:outputDecision href="#_SPOUSE_DEEMING_CALC"/>
+    <dmn:inputData href="#_SPOUSE_INPUT_SITUATION"/>
+    <dmn:inputData href="#_SPOUSE_INPUT_PARAMS"/>
+  </dmn:decisionService>
+
+</dmn:definitions>

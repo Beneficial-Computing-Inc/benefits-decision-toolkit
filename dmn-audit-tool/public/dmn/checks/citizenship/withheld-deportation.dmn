@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions
+  xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+  xmlns="https://kie.apache.org/dmn/_A7B8C9D0-1E2F-3A4B-5C6D-7E8F9A0B1C2D"
+  xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+  id="_E3D2C1F0-9A8B-7C6E-5D4F-3E2A1B0C9D8E"
+  name="WithheldDeportation"
+  typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+  namespace="https://kie.apache.org/dmn/_A7B8C9D0-1E2F-3A4B-5C6D-7E8F9A0B1C2D">
+
+  <dmn:description>Deportation withheld per INA Section 243(h) (pre-4/1/97) or removal withheld per Section 241(b)(3). Qualified alien with 7-year limit.</dmn:description>
+
+  <dmn:import id="_B8C9D0E1" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../bdt.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <dmn:itemDefinition id="_C9D0E1F2" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_D0E1F2A3" name="personId"><dmn:typeRef>string</dmn:typeRef></dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:decisionService id="_E1F2A3B4" name="WithheldDeportationService">
+    <dmn:variable id="_F2A3B4C5" name="WithheldDeportationService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_A3B4C5D6"/>
+    <dmn:inputData href="#_B4C5D6E7"/>
+    <dmn:inputData href="#_C5D6E7F8"/>
+  </dmn:decisionService>
+
+  <dmn:inputData id="_C5D6E7F8" name="situation">
+    <dmn:variable id="_D6E7F8A9" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <dmn:inputData id="_B4C5D6E7" name="parameters">
+    <dmn:variable id="_E7F8A9B0" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <dmn:decision id="_A3B4C5D6" name="checkResult">
+    <dmn:variable id="_F8A9B0C1" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_A9B0C1D2"><dmn:requiredInput href="#_C5D6E7F8"/></dmn:informationRequirement>
+    <dmn:informationRequirement id="_B0C1D2E3"><dmn:requiredInput href="#_B4C5D6E7"/></dmn:informationRequirement>
+    <dmn:context id="_C1D2E3F4">
+      <dmn:contextEntry>
+        <dmn:variable id="_D2E3F4A5" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_E3F4A5B6"><dmn:text>situation.people[id = parameters.personId][1]</dmn:text></dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_F4A5B6C7" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_A5B6C7D8"><dmn:text>person.citizenshipStatus = "WITHHELD_DEPORTATION"</dmn:text></dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_B6C7D8E9"><dmn:text>result</dmn:text></dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+</dmn:definitions>

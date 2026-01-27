@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_4A5B6C7D-8E9F-0A1B-2C3D-4E5F6A7B8C9D"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 id="_5B6C7D8E-9F0A-1B2C-3D4E-5F6A7B8C9D0E"
+                 name="Income"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_4A5B6C7D-8E9F-0A1B-2C3D-4E5F6A7B8C9D">
+
+  <dmn:description>Base module for income-related BKMs and utilities. Provides reusable functions for SSI income calculations following POMS SI 00810.000 - SI 00830.000.</dmn:description>
+
+  <!-- Import BDT base module for types -->
+  <dmn:import id="_6C7D8E9F-0A1B-2C3D-4E5F-6A7B8C9D0E1F"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- BKM: sum income by type -->
+  <dmn:businessKnowledgeModel id="_7D8E9F0A-1B2C-3D4E-5F6A-7B8C9D0E1F2A" name="sum income by type">
+    <dmn:description>Calculate total income for a specific type (earned or unearned)</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_8E9F0A1B-2C3D-4E5F-6A7B-8C9D0E1F2A3B" name="sum income by type" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_9F0A1B2C-3D4E-5F6A-7B8C-9D0E1F2A3B4C" kind="FEEL">
+      <dmn:formalParameter id="_A0B1C2D3-4E5F-6A7B-8C9D-0E1F2A3B4CYY" name="incomeSources" typeRef="BDT.tIncomeSourceList"/>
+      <dmn:formalParameter id="_B1C2D3E4-5F6A-7B8C-9D0E-1F2A3B4C5D6E" name="incomeType" typeRef="string"/>
+      <dmn:literalExpression id="_C2D3E4F5-6A7B-8C9D-0E1F-2A3B4C5D6E7F">
+        <dmn:text>if incomeSources = null then
+  0
+else
+  sum(for i in incomeSources return if i.type = incomeType then i.monthlyAmount else 0)</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- BKM: filter income by category -->
+  <dmn:businessKnowledgeModel id="_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A" name="filter income by category">
+    <dmn:description>Filter income sources by category (e.g., wages, social_security, etc.)</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_E4F5A6B7-8C9D-0E1F-2A3B-4C5D6E7F8A9B" name="filter income by category" typeRef="BDT.tIncomeSourceList"/>
+    <dmn:encapsulatedLogic id="_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C" kind="FEEL">
+      <dmn:formalParameter id="_A6B7C8D9-0E1F-2A3B-4C5D-6E7F8A9B0C1D" name="incomeSources" typeRef="BDT.tIncomeSourceList"/>
+      <dmn:formalParameter id="_B7C8D9E0-1F2A-3B4C-5D6E-7F8A9B0C1D2E" name="category" typeRef="string"/>
+      <dmn:literalExpression id="_C8D9E0F1-2A3B-4C5D-6E7F-8A9B0C1D2E3F">
+        <dmn:text>if incomeSources = null then
+  []
+else
+  incomeSources[item.category = category]</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- BKM: apply general exclusion -->
+  <dmn:businessKnowledgeModel id="_D9E0F1A2-3B4C-5D6E-7F8A-9B0C1D2E3F4A" name="apply general exclusion">
+    <dmn:description>Apply $20 general income exclusion to unearned income first, with spillover tracking. Returns context with exclusion applied and remainder.</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_E0F1A2B3-4C5D-6E7F-8A9B-0C1D2E3F4A5B" name="apply general exclusion" typeRef="Any"/>
+    <dmn:encapsulatedLogic id="_F1A2B3C4-5D6E-7F8A-9B0C-1D2E3F4A5B6C" kind="FEEL">
+      <dmn:formalParameter id="_A2B3C4D5-6E7F-8A9B-0C1D-2E3F4A5B6C7D" name="totalUnearnedIncome" typeRef="number"/>
+      <dmn:literalExpression id="_B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E">
+        <dmn:text>{
+  generalExclusionToUnearned: if totalUnearnedIncome >= 20 then 20 else totalUnearnedIncome,
+  unusedGeneralExclusion: if totalUnearnedIncome &lt; 20 then 20 - totalUnearnedIncome else 0,
+  countableUnearnedIncome: if totalUnearnedIncome > 20 then totalUnearnedIncome - 20 else 0
+}</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <dmn:textAnnotation id="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F" textFormat="text/plain">
+    <dmn:text>BKMs and utilities for SSI income calculations. These functions implement POMS-compliant income processing logic for earned and unearned income types.</dmn:text>
+  </dmn:textAnnotation>
+
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="_D5E6F7A8-9B0C-1D2E-3F4A-5B6C7D8E9F0A" name="DRG">
+      <di:extension>
+        <kie:ComponentsWidthsExtension>
+          <kie:ComponentWidths dmnElementRef="_C2D3E4F5-6A7B-8C9D-0E1F-2A3B4C5D6E7F">
+            <kie:width>696</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_9F0A1B2C-3D4E-5F6A-7B8C-9D0E1F2A3B4C">
+            <kie:width>50</kie:width>
+            <kie:width>696</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_C8D9E0F1-2A3B-4C5D-6E7F-8A9B0C1D2E3F">
+            <kie:width>696</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_F5A6B7C8-9D0E-1F2A-3B4C-5D6E7F8A9B0C">
+            <kie:width>50</kie:width>
+            <kie:width>696</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E">
+            <kie:width>696</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_F1A2B3C4-5D6E-7F8A-9B0C-1D2E3F4A5B6C">
+            <kie:width>50</kie:width>
+            <kie:width>696</kie:width>
+          </kie:ComponentWidths>
+        </kie:ComponentsWidthsExtension>
+      </di:extension>
+      <dmndi:DMNShape id="dmnshape-drg-_7D8E9F0A-1B2C-3D4E-5F6A-7B8C9D0E1F2A" dmnElementRef="_7D8E9F0A-1B2C-3D4E-5F6A-7B8C9D0E1F2A" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="109" y="277" width="130" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A" dmnElementRef="_D3E4F5A6-7B8C-9D0E-1F2A-3B4C5D6E7F8A" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="279" y="277" width="150" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_D9E0F1A2-3B4C-5D6E-7F8A-9B0C1D2E3F4A" dmnElementRef="_D9E0F1A2-3B4C-5D6E-7F8A-9B0C1D2E3F4A" isCollapsed="false">
+        <dmndi:DMNStyle>
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="469" y="277" width="160" height="50"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="dmnshape-drg-_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F" dmnElementRef="_C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F" isCollapsed="false">
+        <dmndi:DMNStyle fontSize="16">
+          <dmndi:FillColor red="255" green="255" blue="255"/>
+          <dmndi:StrokeColor red="0" green="0" blue="0"/>
+          <dmndi:FontColor red="0" green="0" blue="0"/>
+        </dmndi:DMNStyle>
+        <dc:Bounds x="109" y="8" width="600" height="136"/>
+        <dmndi:DMNLabel/>
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</dmn:definitions>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_4B57D2AF-7009-41FA-92D0-DA8E8A4B6B61"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 id="_4B06CC5D-0024-4B09-A10F-5DA5971DA39C"
+                 name="SsiResidenceRequirement"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_4B57D2AF-7009-41FA-92D0-DA8E8A4B6B61">
+
+  <dmn:description>POMS SI 00501.410 - SSI residence requirement: must reside in the 50 states, District of Columbia, or Northern Mariana Islands</dmn:description>
+
+  <!-- Import BDT base module -->
+  <dmn:import id="_A84E0D06-B7CA-4297-8D97-6DDB8583B14C"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- Parameters type definition -->
+  <dmn:itemDefinition id="_A6252498-B6DA-4011-9C0F-1A45D18DFAC3" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_E6E5B081-1550-4DD6-B94E-F2462DDD4F78" name="personId" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation -->
+  <dmn:inputData id="_7E4E0F8D-FA5D-49EF-8A65-0FEB4B7C0951" name="situation">
+    <dmn:extensionElements/>
+    <dmn:variable id="_9EA245F9-EA24-4E5D-AA6F-02662B21B792"
+                  name="situation"
+                  typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters -->
+  <dmn:inputData id="_F4F5DB0A-F298-4519-9554-44344C6179FE" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_908E9DB1-2894-4743-950C-19A78CA16473"
+                  name="parameters"
+                  typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <!-- Decision: checkResult -->
+  <dmn:decision id="_ACEED577-3BAE-4C6D-9F43-297A3A832E81" name="checkResult">
+    <dmn:description>POMS SI 00501.410.A.3 - United States includes only the 50 states, District of Columbia, and Northern Mariana Islands for SSI purposes</dmn:description>
+    <dmn:extensionElements/>
+    <dmn:variable id="_49F4EE32-6F14-4571-8738-6FCD7E506E1B"
+                  name="checkResult"
+                  typeRef="boolean"/>
+    <dmn:informationRequirement id="_C3219D7A-ABD5-4FCC-B63F-0511B93B9BAE">
+      <dmn:requiredInput href="#_7E4E0F8D-FA5D-49EF-8A65-0FEB4B7C0951"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_D4320E8B-BCE6-5GDD-C74G-1622CA4CC0BF">
+      <dmn:requiredInput href="#_F4F5DB0A-F298-4519-9554-44344C6179FE"/>
+    </dmn:informationRequirement>
+
+    <dmn:context id="_B499A169-67C3-4405-95A2-F5405AF19DC9">
+      <!-- Step 1: Extract primary person -->
+      <dmn:contextEntry>
+        <dmn:variable id="_B49B8F85-5828-4851-B590-50F227A76944" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_4C11ABE5-B19B-4C63-B46B-755FF3A6FACC">
+          <dmn:text>situation.people[id = parameters.personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 2: Extract residence state -->
+      <dmn:contextEntry>
+        <dmn:variable id="_7AB98FB9-B5F2-41C9-8C46-B3B627AD3A25" name="residenceState" typeRef="string"/>
+        <dmn:literalExpression id="_0E389038-35B8-42FF-8FAD-4E26290F0B80">
+          <dmn:text>person.residenceState</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 3: Check if state is valid for SSI -->
+      <dmn:contextEntry>
+        <dmn:variable id="_B368ED41-4240-44F1-97CE-8A885502D49C" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_0E389038-35B8-42FF-8FAD-4E26290F0B81">
+          <dmn:text>if residenceState = null then
+  null
+else
+  residenceState in ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+                      "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+                      "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+                      "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+                      "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+                      "DC", "MP"]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+
+      <!-- Step 4: Return result -->
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_7EA7F2D2-C943-48B3-BAFF-F748D93256F3">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+  <!-- Decision Service -->
+  <dmn:decisionService id="_6E428234-5215-4D38-AB4E-9083E80882D4" name="SsiResidenceRequirementService">
+    <dmn:extensionElements/>
+    <dmn:variable id="_DAF63FA4-85ED-405B-859E-7AFF792F499E"
+                  name="SsiResidenceRequirementService"
+                  typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_ACEED577-3BAE-4C6D-9F43-297A3A832E81"/>
+    <dmn:inputData href="#_7E4E0F8D-FA5D-49EF-8A65-0FEB4B7C0951"/>
+    <dmn:inputData href="#_F4F5DB0A-F298-4519-9554-44344C6179FE"/>
+  </dmn:decisionService>
+
+</dmn:definitions>

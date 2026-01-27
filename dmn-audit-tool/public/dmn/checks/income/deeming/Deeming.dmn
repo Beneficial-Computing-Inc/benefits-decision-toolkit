@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 id="_DEEMING_BASE_MODULE_2026"
+                 name="Deeming"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_DEEMING_BASE_2026_0112">
+
+  <dmn:description>POMS SI 01320.000 - Base module for deeming calculations.
+
+Provides shared Business Knowledge Models (BKMs) for:
+- Calculating countable income for deemors (spouse/parents)
+- Determining living allowance allocations
+- Calculating ineligible children allocations
+
+Key 2025 Values:
+- Individual FBR: $967
+- Couple FBR: $1,450
+- Ineligible spouse allocation: $483 (couple FBR - individual FBR)
+- Ineligible child allocation: $483.50 (1/2 individual FBR)
+</dmn:description>
+
+  <!-- Import BDT base module -->
+  <dmn:import id="_DEEMING_BDT_IMPORT_2026"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
+  <!-- =========================================
+       SHARED PARAMETERS TYPE
+       ========================================= -->
+  <dmn:itemDefinition id="_DEEM_PARAMS_TYPE_2026" name="tDeemingParameters" isCollection="false">
+    <dmn:description>Parameters for deeming calculations</dmn:description>
+    <dmn:itemComponent id="_DEEM_PARAM_FBR_IND" name="individualFBR" isCollection="false">
+      <dmn:description>2025 Individual Federal Benefit Rate: $967</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM_PARAM_FBR_COUPLE" name="coupleFBR" isCollection="false">
+      <dmn:description>2025 Couple Federal Benefit Rate: $1,450</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_DEEM_PARAM_PERSONID" name="personId" isCollection="false">
+      <dmn:description>ID of the person for whom deeming is being calculated</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- =========================================
+       BKM: get deemor income
+       Calculates total income for a person (deemor)
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_GET_DEEMOR_INCOME" name="get deemor income">
+    <dmn:description>POMS SI 01320.100 - Get total earned and unearned income for a person (deemor)</dmn:description>
+    <dmn:variable id="_VAR_GET_DEEMOR_INCOME" name="get deemor income" typeRef="Any"/>
+    <dmn:encapsulatedLogic id="_LOGIC_GET_DEEMOR_INCOME" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_PERSON" name="person" typeRef="BDT.tPerson"/>
+      <dmn:context id="_CTX_GET_DEEMOR_INCOME">
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_INCOME_SOURCES" name="incomeSources" typeRef="BDT.tIncomeSourceList"/>
+          <dmn:literalExpression id="_EXPR_INCOME_SOURCES">
+            <dmn:text>if person.incomeSources = null then [] else person.incomeSources</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_TOTAL_EARNED" name="totalEarnedIncome" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_TOTAL_EARNED">
+            <dmn:text>sum(for i in incomeSources return if i.type = "earned" then i.monthlyAmount else 0)</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_TOTAL_UNEARNED" name="totalUnearnedIncome" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_TOTAL_UNEARNED">
+            <dmn:text>sum(for i in incomeSources return if i.type = "unearned" then i.monthlyAmount else 0)</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_EXPR_RESULT_DEEMOR_INCOME">
+            <dmn:text>{
+  totalEarnedIncome: totalEarnedIncome,
+  totalUnearnedIncome: totalUnearnedIncome,
+  totalGrossIncome: totalEarnedIncome + totalUnearnedIncome
+}</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: calculate deemor countable income
+       Applies standard exclusions to deemor's income
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_CALC_DEEMOR_COUNTABLE" name="calculate deemor countable income">
+    <dmn:description>POMS SI 01320.100-200 - Calculate countable income for deemor by applying exclusions.
+Order: $20 general exclusion from unearned, spillover to earned, $65 earned exclusion, 50% of remaining earned.</dmn:description>
+    <dmn:variable id="_VAR_CALC_DEEMOR_COUNTABLE" name="calculate deemor countable income" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_LOGIC_CALC_DEEMOR_COUNTABLE" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_EARNED" name="earnedIncome" typeRef="number"/>
+      <dmn:formalParameter id="_PARAM_UNEARNED" name="unearnedIncome" typeRef="number"/>
+      <dmn:context id="_CTX_CALC_DEEMOR_COUNTABLE">
+        <!-- Step 1: Apply $20 general exclusion to unearned first -->
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_GEN_TO_UNEARNED" name="generalExclusionToUnearned" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_GEN_TO_UNEARNED">
+            <dmn:text>if unearnedIncome >= 20 then 20 else unearnedIncome</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_UNUSED_GEN" name="unusedGeneralExclusion" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_UNUSED_GEN">
+            <dmn:text>if unearnedIncome &lt; 20 then 20 - unearnedIncome else 0</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <!-- Step 2: Countable unearned income -->
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_COUNT_UNEARNED" name="countableUnearned" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_COUNT_UNEARNED">
+            <dmn:text>if unearnedIncome > 20 then unearnedIncome - 20 else 0</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <!-- Step 3: Apply spillover general exclusion to earned -->
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_EARNED_AFTER_GEN" name="earnedAfterGeneral" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_EARNED_AFTER_GEN">
+            <dmn:text>if earnedIncome > unusedGeneralExclusion then earnedIncome - unusedGeneralExclusion else 0</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <!-- Step 4: Apply $65 earned income exclusion -->
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_EARNED_AFTER_65" name="earnedAfter65" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_EARNED_AFTER_65">
+            <dmn:text>if earnedAfterGeneral > 65 then earnedAfterGeneral - 65 else 0</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <!-- Step 5: Exclude 50% of remaining earned -->
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_COUNT_EARNED" name="countableEarned" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_COUNT_EARNED">
+            <dmn:text>earnedAfter65 / 2</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <!-- Step 6: Total countable income -->
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_EXPR_TOTAL_COUNTABLE">
+            <dmn:text>countableUnearned + countableEarned</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: get spouse living allowance
+       SI 01320.400 - Allocation for ineligible spouse
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_SPOUSE_ALLOWANCE" name="get spouse living allowance">
+    <dmn:description>POMS SI 01320.400 - Get living allowance for ineligible spouse.
+Equals difference between couple FBR and individual FBR.
+2025: $1,450 - $967 = $483</dmn:description>
+    <dmn:variable id="_VAR_SPOUSE_ALLOWANCE" name="get spouse living allowance" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_LOGIC_SPOUSE_ALLOWANCE" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_IND_FBR" name="individualFBR" typeRef="number"/>
+      <dmn:formalParameter id="_PARAM_COUPLE_FBR" name="coupleFBR" typeRef="number"/>
+      <dmn:literalExpression id="_EXPR_SPOUSE_ALLOWANCE">
+        <dmn:text>coupleFBR - individualFBR</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: get parent living allowance
+       SI 01320.500 - Allocation for ineligible parent(s)
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_PARENT_ALLOWANCE" name="get parent living allowance">
+    <dmn:description>POMS SI 01320.500 - Get living allowance for ineligible parent(s).
+1 parent: Individual FBR ($967 in 2025)
+2 parents: Couple FBR ($1,450 in 2025)</dmn:description>
+    <dmn:variable id="_VAR_PARENT_ALLOWANCE" name="get parent living allowance" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_LOGIC_PARENT_ALLOWANCE" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_NUM_PARENTS" name="numberOfParents" typeRef="number"/>
+      <dmn:formalParameter id="_PARAM_IND_FBR_P" name="individualFBR" typeRef="number"/>
+      <dmn:formalParameter id="_PARAM_COUPLE_FBR_P" name="coupleFBR" typeRef="number"/>
+      <dmn:literalExpression id="_EXPR_PARENT_ALLOWANCE">
+        <dmn:text>if numberOfParents >= 2 then coupleFBR else individualFBR</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: get ineligible children allocation
+       SI 01320.500 - Allocation for ineligible children
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_CHILD_ALLOCATION" name="get ineligible children allocation">
+    <dmn:description>POMS SI 01320.500 - Get allocation for ineligible children.
+Each ineligible child gets 1/2 of individual FBR.
+2025: $967 / 2 = $483.50 per child</dmn:description>
+    <dmn:variable id="_VAR_CHILD_ALLOCATION" name="get ineligible children allocation" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_LOGIC_CHILD_ALLOCATION" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_NUM_CHILDREN" name="numberOfIneligibleChildren" typeRef="number"/>
+      <dmn:formalParameter id="_PARAM_IND_FBR_C" name="individualFBR" typeRef="number"/>
+      <dmn:literalExpression id="_EXPR_CHILD_ALLOCATION">
+        <dmn:text>numberOfIneligibleChildren * (individualFBR / 2)</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: calculate deemed income
+       Final deemed income after allocations
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_CALC_DEEMED" name="calculate deemed income">
+    <dmn:description>POMS SI 01320.400/.500 - Calculate final deemed income.
+Deemed income = Deemor countable income - living allowance - ineligible children allocation
+If result is negative, deemed income is 0.</dmn:description>
+    <dmn:variable id="_VAR_CALC_DEEMED" name="calculate deemed income" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_LOGIC_CALC_DEEMED" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_COUNTABLE" name="deemorCountableIncome" typeRef="number"/>
+      <dmn:formalParameter id="_PARAM_LIVING" name="livingAllowance" typeRef="number"/>
+      <dmn:formalParameter id="_PARAM_CHILDREN_ALLOC" name="childrenAllocation" typeRef="number"/>
+      <dmn:context id="_CTX_CALC_DEEMED">
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_RAW_DEEMED" name="rawDeemedIncome" typeRef="number"/>
+          <dmn:literalExpression id="_EXPR_RAW_DEEMED">
+            <dmn:text>deemorCountableIncome - livingAllowance - childrenAllocation</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_EXPR_FINAL_DEEMED">
+            <dmn:text>if rawDeemedIncome > 0 then rawDeemedIncome else 0</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: find spouse
+       Get spouse ID for a person from relationships
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_FIND_SPOUSE" name="find spouse">
+    <dmn:description>Find the spouse ID for a person based on relationships list</dmn:description>
+    <dmn:variable id="_VAR_FIND_SPOUSE" name="find spouse" typeRef="string"/>
+    <dmn:encapsulatedLogic id="_LOGIC_FIND_SPOUSE" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_RELS" name="relationships" typeRef="BDT.tRelationshipList"/>
+      <dmn:formalParameter id="_PARAM_PID" name="personId" typeRef="string"/>
+      <dmn:context id="_CTX_FIND_SPOUSE">
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_SPOUSE_REL" name="spouseRelationship" typeRef="BDT.tRelationship"/>
+          <dmn:literalExpression id="_EXPR_SPOUSE_REL">
+            <dmn:text>relationships[item.personId = personId and item.type = "spouse"][1]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_EXPR_SPOUSE_ID">
+            <dmn:text>spouseRelationship.relatedPersonId</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: find parents
+       Get parent IDs for a person from relationships
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_FIND_PARENTS" name="find parents">
+    <dmn:description>Find parent IDs for a person based on relationships list (where person is the child)</dmn:description>
+    <dmn:variable id="_VAR_FIND_PARENTS" name="find parents" typeRef="BDT.tStringList"/>
+    <dmn:encapsulatedLogic id="_LOGIC_FIND_PARENTS" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_RELS_P" name="relationships" typeRef="BDT.tRelationshipList"/>
+      <dmn:formalParameter id="_PARAM_CHILD_ID" name="childId" typeRef="string"/>
+      <dmn:literalExpression id="_EXPR_FIND_PARENTS">
+        <dmn:text>for r in relationships[item.relatedPersonId = childId and item.type = "parent"] return r.personId</dmn:text>
+      </dmn:literalExpression>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+  <!-- =========================================
+       BKM: count ineligible children
+       Count ineligible children of parent(s)
+       ========================================= -->
+  <dmn:businessKnowledgeModel id="_BKM_COUNT_INELIG_CHILDREN" name="count ineligible children">
+    <dmn:description>POMS SI 01320.500 - Count ineligible children in household (excluding the eligible child)</dmn:description>
+    <dmn:variable id="_VAR_COUNT_INELIG_CHILDREN" name="count ineligible children" typeRef="number"/>
+    <dmn:encapsulatedLogic id="_LOGIC_COUNT_INELIG_CHILDREN" kind="FEEL">
+      <dmn:formalParameter id="_PARAM_PEOPLE" name="people" typeRef="BDT.tPersonList"/>
+      <dmn:formalParameter id="_PARAM_PARENT_IDS" name="parentIds" typeRef="BDT.tStringList"/>
+      <dmn:formalParameter id="_PARAM_RELS_C" name="relationships" typeRef="BDT.tRelationshipList"/>
+      <dmn:formalParameter id="_PARAM_ELIGIBLE_CHILD_ID" name="eligibleChildId" typeRef="string"/>
+      <dmn:context id="_CTX_COUNT_INELIG_CHILDREN">
+        <!-- Find all children of the parent(s) -->
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_ALL_CHILD_RELS" name="allChildRelationships" typeRef="BDT.tRelationshipList"/>
+          <dmn:literalExpression id="_EXPR_ALL_CHILD_RELS">
+            <dmn:text>relationships[list contains(parentIds, item.personId) and item.type = "parent"]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_ALL_CHILD_IDS" name="allChildIds" typeRef="BDT.tStringList"/>
+          <dmn:literalExpression id="_EXPR_ALL_CHILD_IDS">
+            <dmn:text>distinct values(for r in allChildRelationships return r.relatedPersonId)</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <!-- Count children who are NOT SSI eligible and NOT the eligible child -->
+        <dmn:contextEntry>
+          <dmn:variable id="_VAR_INELIG_CHILDREN" name="ineligibleChildren" typeRef="BDT.tPersonList"/>
+          <dmn:literalExpression id="_EXPR_INELIG_CHILDREN">
+            <dmn:text>people[list contains(allChildIds, item.id) and item.id != eligibleChildId and (item.isSSIEligible = null or item.isSSIEligible = false)]</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+        <dmn:contextEntry>
+          <dmn:literalExpression id="_EXPR_COUNT_RESULT">
+            <dmn:text>count(ineligibleChildren)</dmn:text>
+          </dmn:literalExpression>
+        </dmn:contextEntry>
+      </dmn:context>
+    </dmn:encapsulatedLogic>
+  </dmn:businessKnowledgeModel>
+
+</dmn:definitions>
