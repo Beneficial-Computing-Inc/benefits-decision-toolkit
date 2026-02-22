@@ -262,29 +262,31 @@ Purpose: Validate DMN logic and API behavior
 
 ## Deployment
 
-### Creating a Release
+> **Fork note (Beneficial Computing):** Our fork deploys to **Railway** using `Dockerfile.railway` and `railway.toml`. The upstream Code for Philly repo uses Google Cloud Run via GitHub Actions. If you're working on this fork, use `railway up` from `library-api/` to deploy.
+
+### Railway Deployment (this fork)
 
 ```bash
-# Update version in pom.xml and create git tag atomically
 cd library-api
-./bin/tag-release 0.4.0
-
-# Review changes
-git show
-
-# Push to trigger deployment
-git push origin your-branch
-git push origin library-api-v0.4.0
+railway up        # Deploy using Dockerfile.railway
 ```
 
-Pushing the tag triggers GitHub Actions → Docker build → Google Cloud Run deployment.
+- **Config**: `railway.toml` (builder=dockerfile, health check at `/q/health`)
+- **Dockerfile**: `Dockerfile.railway` (multi-stage Maven build → Java 17 runtime)
+
+### Upstream Deployment (Code for Philly)
+
+The upstream repo uses semantic versioning + GitHub Actions → Cloud Run:
+
+```bash
+./bin/tag-release 0.4.0
+git push origin library-api-v0.4.0   # Triggers GH Actions → Cloud Run
+```
 
 **Semantic versioning**:
 - MAJOR: Breaking changes (removing endpoints, changing response format)
 - MINOR: New features (new benefits/checks)
 - PATCH: Bug fixes
-
-**Production**: Google Cloud Run, `us-central1`, public API
 
 ---
 

@@ -705,78 +705,33 @@ These are strictly enforced and violations will cause runtime errors:
 
 ## Deployment Details
 
-### Semantic Versioning
+> **Fork note (Beneficial Computing):** This fork deploys to **Railway**, not Google Cloud Run. The upstream Code for Philly repo uses Cloud Run via GitHub Actions. See below for both workflows.
+
+### Railway Deployment (this fork)
+
+**Deploy**: `railway up` from `library-api/`
+
+**Config files**:
+- `railway.toml` — Builder config (dockerfile, health check at `/q/health`)
+- `Dockerfile.railway` — Multi-stage build (Maven 3.9 + Java 17 runtime)
+
+**Runtime**:
+- Port: `$PORT` (Railway-assigned, passed via `JAVA_OPTS_APPEND`)
+- Health check: `/q/health` (100s timeout)
+- Restart policy: on_failure
+
+### Upstream Deployment (Code for Philly — Cloud Run)
+
+The upstream repo uses semantic versioning + GitHub Actions:
 
 **Source of truth**: `pom.xml` version field
 
-**Synchronized across**:
-- Git tags: `library-api-v{version}` (e.g., `library-api-v0.3.0`)
-- Docker tags: `:v{version}` and `:latest`
-- Cloud Run revisions: `library-api-v{version-with-dashes}` (e.g., `library-api-v0-3-0`)
+**Release workflow**:
+1. `./bin/tag-release 0.4.0` (updates pom.xml + creates git tag)
+2. `git push origin library-api-v0.4.0` (triggers GitHub Actions)
+3. GH Actions: Maven build → Docker → Google Artifact Registry → Cloud Run
 
-**Version guidelines**:
-- **MAJOR** (x.0.0): Breaking API changes
-  - Removing endpoints
-  - Changing response format
-  - Renaming models
-- **MINOR** (0.x.0): New features (backwards compatible)
-  - New benefits/checks
-  - New endpoints
-  - New fields in tSituation
-- **PATCH** (0.0.x): Bug fixes (backwards compatible)
-  - Fix DMN logic bugs
-  - Documentation updates
-  - Dependency updates
-
-### Release Workflow
-
-1. **Update version**: `./bin/tag-release 0.4.0`
-   - Updates `pom.xml` using Maven
-   - Commits change
-   - Creates annotated git tag
-
-2. **Review**: `git show`
-
-3. **Push**:
-   ```bash
-   git push origin your-branch
-   git push origin library-api-v0.4.0
-   ```
-
-4. **Automated deployment**:
-   - GitHub Actions triggered by tag push
-   - Maven builds application
-   - Docker image built and pushed
-   - Cloud Run deployment with new revision
-
-### GitHub Actions Workflow
-
-Triggered by: Tag push matching `library-api-v*`
-
-Steps:
-1. Checkout code
-2. Set up Java 17
-3. Maven build: `mvn clean package`
-4. Validate version sync (tag vs pom.xml)
-5. Docker build using `src/main/docker/Dockerfile.jvm`
-6. Push to Google Artifact Registry with tags: `:v{version}`, `:latest`
-7. Deploy to Cloud Run with revision name
-
-### Google Cloud Run Configuration
-
-**Project**: benefit-decision-toolkit-play
-**Region**: us-central1
-**Service**: library-api
-**Container Registry**: `us-central1-docker.pkg.dev/benefit-decision-toolkit-play/benefit-decision-toolkit-play/library-api`
-
-**Settings**:
-- Max instances: 2
-- Authentication: Allow unauthenticated (public API)
-- Port: 8080 (Cloud Run default)
-- CPU: 1
-- Memory: 512Mi
-
-**Service Account**: `library-api-service-account@benefit-decision-toolkit-play.iam.gserviceaccount.com`
+**Cloud Run config**: `benefit-decision-toolkit-play`, `us-central1`, public API, max 2 instances
 
 ---
 
