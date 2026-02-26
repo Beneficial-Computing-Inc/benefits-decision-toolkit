@@ -1,0 +1,38 @@
+meta {
+  name: Fail - Not Disabled
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/checks/disability/disability-duration-requirement
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1970-04-15",
+          "isDisabled": false,
+          "isBlind": false
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  Person is neither disabled nor blind - duration requirement is not met
+  because there is no qualifying disability condition.
+}

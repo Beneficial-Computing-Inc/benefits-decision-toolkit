@@ -17,8 +17,14 @@
     <dmn:itemComponent id="_91A83290-5D64-4A70-9BF3-36C5E5EF11F6" name="id" isCollection="false">
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
-    <dmn:itemComponent id="_3C34025E-EDB1-4B36-92EA-D248BF236D9B" name="isBlindOrDisabled" isCollection="false">
+    <dmn:itemComponent id="_3C34025E-EDB1-4B36-92EA-D248BF236D9B" name="isBlind" isCollection="false">
       <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_3C34025E-EDB1-4B36-92EA-D248BF236D9C" name="isDisabled" isCollection="false">
+      <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_3C34025E-EDB1-4B36-92EA-D248BF236D9D" name="expectedDisabilityDuration" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
   <dmn:itemDefinition id="_2E5D7848-C1ED-4E02-9DE7-36DC1D2C9D55" name="tPersonList" isCollection="true">
@@ -43,15 +49,33 @@
     </dmn:informationRequirement>
     <dmn:context id="_1A2B3C4D-5E6F-7890-ABCD-EF0123456789">
       <dmn:contextEntry>
-        <dmn:variable id="_2B3C4D5E-6F78-9ABC-DEF0-123456789ABC" name="isBlindOrDisabled" typeRef="boolean"/>
+        <dmn:variable id="_2B3C4D5E-6F78-9ABC-DEF0-123456789ABC" name="isBlind" typeRef="boolean"/>
         <dmn:literalExpression id="_3C4D5E6F-7890-ABCD-EF01-23456789ABCD">
-          <dmn:text>situation.people[id = parameters.personId].isBlindOrDisabled[1]</dmn:text>
+          <dmn:text>situation.people[id = parameters.personId].isBlind[1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_2B3C4D5E-6F78-9ABC-DEF0-123456789ABD" name="isDisabled" typeRef="boolean"/>
+        <dmn:literalExpression id="_3C4D5E6F-7890-ABCD-EF01-23456789ABCE">
+          <dmn:text>situation.people[id = parameters.personId].isDisabled[1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_2B3C4D5E-6F78-9ABC-DEF0-123456789ABE" name="expectedDisabilityDuration" typeRef="string"/>
+        <dmn:literalExpression id="_3C4D5E6F-7890-ABCD-EF01-23456789ABCF">
+          <dmn:text>situation.people[id = parameters.personId].expectedDisabilityDuration[1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:variable id="_2B3C4D5E-6F78-9ABC-DEF0-123456789ABF" name="meetsDurationRequirement" typeRef="boolean"/>
+        <dmn:literalExpression id="_3C4D5E6F-7890-ABCD-EF01-23456789ABD0">
+          <dmn:text>if expectedDisabilityDuration = null then true else expectedDisabilityDuration in ("12_MONTHS_OR_MORE", "EXPECTED_TO_RESULT_IN_DEATH")</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry>
         <dmn:variable id="_4D5E6F78-90AB-CDEF-0123-456789ABCDEF" name="result" typeRef="boolean"/>
         <dmn:literalExpression id="_5E6F7890-ABCD-EF01-2345-6789ABCDEF01">
-          <dmn:text>if isBlindOrDisabled = null then false else isBlindOrDisabled</dmn:text>
+          <dmn:text>(if isBlind = null then false else isBlind) or ((if isDisabled = null then false else isDisabled) and meetsDurationRequirement)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry>
@@ -85,6 +109,12 @@
             <kie:width>453</kie:width>
           </kie:ComponentWidths>
           <kie:ComponentWidths dmnElementRef="_6F789ABC-DEF0-1234-5678-9ABCDEF01234">
+            <kie:width>453</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_3C4D5E6F-7890-ABCD-EF01-23456789ABCF">
+            <kie:width>453</kie:width>
+          </kie:ComponentWidths>
+          <kie:ComponentWidths dmnElementRef="_3C4D5E6F-7890-ABCD-EF01-23456789ABD0">
             <kie:width>453</kie:width>
           </kie:ComponentWidths>
         </kie:ComponentsWidthsExtension>

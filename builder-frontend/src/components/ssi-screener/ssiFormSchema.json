@@ -32,15 +32,29 @@
       }
     },
     {
-      "label": "Are you blind or disabled?",
+      "label": "Are you blind?",
       "type": "yes_no",
       "layout": {
-        "row": "Row_blind_disabled",
+        "row": "Row_blind",
         "columns": null
       },
-      "id": "Field_blind_disabled",
-      "key": "isBlindOrDisabled",
-      "description": "SSI is available to individuals who are aged 65 or older, blind, or disabled",
+      "id": "Field_blind",
+      "key": "isBlind",
+      "description": "Statutory blindness (visual acuity 20/200 or less in better eye)",
+      "validate": {
+        "required": true
+      }
+    },
+    {
+      "label": "Do you have a disability?",
+      "type": "yes_no",
+      "layout": {
+        "row": "Row_disabled",
+        "columns": null
+      },
+      "id": "Field_disabled",
+      "key": "isDisabled",
+      "description": "A physical or mental condition that prevents substantial work",
       "validate": {
         "required": true
       }

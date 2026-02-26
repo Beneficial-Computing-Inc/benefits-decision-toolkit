@@ -11,8 +11,26 @@
         "isCollection": false,
         "primitive": true
       },
-      "isBlindOrDisabled": {
+      "isBlind": {
         "type": "boolean",
+        "required": false,
+        "isCollection": false,
+        "primitive": true
+      },
+      "isDisabled": {
+        "type": "boolean",
+        "required": false,
+        "isCollection": false,
+        "primitive": true
+      },
+      "disabilityOnsetDate": {
+        "type": "date",
+        "required": false,
+        "isCollection": false,
+        "primitive": true
+      },
+      "expectedDisabilityDuration": {
+        "type": "string",
         "required": false,
         "isCollection": false,
         "primitive": true

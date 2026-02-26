@@ -35,6 +35,13 @@ Tracking only (no income effect):
 
   <dmn:extensionElements/>
 
+  <!-- Import BDT base module -->
+  <dmn:import id="_INC2_IMPORT_BDT"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              locationURI="../../BDT.dmn"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
+
   <!-- Result type -->
   <dmn:itemDefinition id="_INC2_RESULT_TYPE" name="tExclusionResult" isCollection="false">
     <dmn:itemComponent id="_INC2_RESULT_EXCLUDED" name="isExcluded" isCollection="false">
@@ -48,10 +55,23 @@ Tracking only (no income effect):
     </dmn:itemComponent>
   </dmn:itemDefinition>
 
-  <!-- Input: benefitType -->
-  <dmn:inputData id="_INC2_INPUT_BENEFIT" name="benefitType">
+  <!-- Parameters type definition -->
+  <dmn:itemDefinition id="_INC2_PARAM_TYPE" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_INC2_PARAM_BENEFIT" name="benefitType" isCollection="false">
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <!-- Input: situation -->
+  <dmn:inputData id="_INC2_INPUT_SITUATION" name="situation">
     <dmn:extensionElements/>
-    <dmn:variable id="_INC2_INPUT_BENEFIT_VAR" name="benefitType" typeRef="string"/>
+    <dmn:variable id="_INC2_INPUT_SITUATION_VAR" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <!-- Input: parameters -->
+  <dmn:inputData id="_INC2_INPUT_PARAMETERS" name="parameters">
+    <dmn:extensionElements/>
+    <dmn:variable id="_INC2_INPUT_PARAMETERS_VAR" name="parameters" typeRef="tParameters"/>
   </dmn:inputData>
 
   <!-- Decision: exclusionResult -->
@@ -59,13 +79,13 @@ Tracking only (no income effect):
     <dmn:description>Determines if the benefit type is excluded from SSI income and provides POMS citation.</dmn:description>
     <dmn:extensionElements/>
     <dmn:variable id="_INC2_DECISION_RESULT_VAR" name="exclusionResult" typeRef="tExclusionResult"/>
-    <dmn:informationRequirement id="_INC2_REQ_BENEFIT">
-      <dmn:requiredInput href="#_INC2_INPUT_BENEFIT"/>
+    <dmn:informationRequirement id="_INC2_REQ_PARAMETERS">
+      <dmn:requiredInput href="#_INC2_INPUT_PARAMETERS"/>
     </dmn:informationRequirement>
     <dmn:decisionTable id="_INC2_DT" hitPolicy="FIRST" preferredOrientation="Rule-as-Row">
       <dmn:input id="_INC2_DT_INPUT">
         <dmn:inputExpression id="_INC2_DT_INPUT_EXPR" typeRef="string">
-          <dmn:text>benefitType</dmn:text>
+          <dmn:text>parameters.benefitType</dmn:text>
         </dmn:inputExpression>
       </dmn:input>
       <dmn:output id="_INC2_DT_OUT_EXCLUDED" name="isExcluded" typeRef="boolean"/>
@@ -166,10 +186,11 @@ Tracking only (no income effect):
   <dmn:decisionService id="_INC2_SERVICE" name="BenefitIsExcludedFromSsiIncomeService">
     <dmn:description>Determines if a benefit type is excluded from SSI income counting per POMS SI 00830.</dmn:description>
     <dmn:extensionElements/>
-    <dmn:variable id="_INC2_SERVICE_VAR" name="BenefitIsExcludedFromSsiIncomeService"/>
+    <dmn:variable id="_INC2_SERVICE_VAR" name="BenefitIsExcludedFromSsiIncomeService" typeRef="BDT.tCheckResponse"/>
     <dmn:outputDecision href="#_INC2_DECISION_CHECK"/>
     <dmn:outputDecision href="#_INC2_DECISION_RESULT"/>
-    <dmn:inputData href="#_INC2_INPUT_BENEFIT"/>
+    <dmn:inputData href="#_INC2_INPUT_SITUATION"/>
+    <dmn:inputData href="#_INC2_INPUT_PARAMETERS"/>
   </dmn:decisionService>
 
   <dmndi:DMNDI>

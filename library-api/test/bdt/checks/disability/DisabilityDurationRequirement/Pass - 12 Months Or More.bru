@@ -1,0 +1,37 @@
+meta {
+  name: Pass - 12 Months Or More
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/checks/disability/disability-duration-requirement
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1980-01-15",
+          "isDisabled": true,
+          "expectedDisabilityDuration": "12_MONTHS_OR_MORE"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+docs {
+  POMS DI 10501.015 - Disability expected to last 12+ months meets duration requirement.
+}

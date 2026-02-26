@@ -2,7 +2,7 @@
 
 **Created:** 2026-01-27
 **Status:** Implemented (LAPR only), Full Integration Deferred
-**Related:** `/screener-working-dir/SCR-1-SUBCHECK-FIELD-HIGHLIGHTING.md`
+**Related:** `../../../docs/tickets/SCR-1-SUBCHECK-FIELD-HIGHLIGHTING.md`
 
 > **Note**: This pattern enables precise UI field highlighting by exposing granular sub-check results.
 > The LAPR detailed endpoint is working. Full UI integration is deferred as a significant overhaul.

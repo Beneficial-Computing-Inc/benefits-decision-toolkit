@@ -93,11 +93,14 @@ Unlike SSI (needs-based), SSDI is an **insurance program** requiring both disabi
   - `isBlindOrDisabled` deprecated - use `isBlind` and `isDisabled` separately
 
 #### 1. Disability Self-Report (POMS DI 10105.065)
-- **Status**: ✅ Implemented
+- **Status**: ✅ Implemented (duration check added 2026-02-16)
 - **Location**: `library-api/src/main/resources/checks/ssdi/disability/reports-disabling-condition.dmn`
 - **Decision Service**: `ReportsDisablingConditionService`
 - **Logic**:
-  - Returns true if `isDisabled = true` OR `isBlind = true`
+  - Returns true if `isBlind = true` OR (`isDisabled = true` AND meets duration requirement)
+  - Duration requirement (POMS DI 10501.015): disability must last 12+ months or result in death
+  - Blind has NO duration requirement
+  - When `expectedDisabilityDuration` is null: defaults to pass (backwards compatible)
   - For screener purposes, this is self-reported disability
   - SSA will make the actual medical determination
 - **Inputs**: `situation` (tSituation), `parameters` (optional personId)
@@ -108,6 +111,7 @@ Unlike SSI (needs-based), SSDI is an **insurance program** requiring both disabi
   - Pass - Both disabled and blind
   - Fail - Not disabled (isDisabled=false)
   - Fail - No disability info provided
+  - Fail - Disabled But Under 12 Months (added 2026-02-16)
 
 ---
 
@@ -142,7 +146,7 @@ library-api/src/main/resources/
 │   │   ├── age/
 │   │   │   └── not-at-full-retirement-age.dmn   # ✅ FRA check (DONE)
 │   │   └── disability/
-│   │       └── reports-disabling-condition.dmn  # ✅ Self-reported disability (DONE)
+│   │       └── reports-disabling-condition.dmn  # ✅ Self-reported disability + duration check (DONE)
 │   └── waiting-period/
 │       └── calculate-waiting-period.dmn      # When benefits would start (planned)
 └── benefits/
@@ -326,6 +330,16 @@ library-api/src/main/resources/
 
 ---
 
-**Last Updated**: 2026-01-19
-**Current Sprint**: Phase 2 COMPLETE - SSDI screener functional (bug fix applied)
+**Last Updated**: 2026-02-16
+**Current Sprint**: Phase 2 COMPLETE - SSDI screener functional (duration check added 2026-02-16)
 **Next Steps**: Phase 3 - Enhancements (waiting period, TWP, etc.) or integration
+
+---
+
+### 2026-02-16: Disability Duration Requirement (DMN-001)
+- ✅ Added duration validation to `reports-disabling-condition.dmn`: `isBlind OR (isDisabled AND meetsDurationRequirement)`
+- ✅ `meetsDurationRequirement`: null→true (backwards compat), `12_MONTHS_OR_MORE`→true, `EXPECTED_TO_RESULT_IN_DEATH`→true, `LESS_THAN_12_MONTHS`→false
+- ✅ Blind has NO duration requirement per POMS DI 10501.015
+- ✅ Created standalone `checks/disability/disability-duration-requirement.dmn` for direct API testing
+- ✅ Added Bruno test: `Fail - Disabled But Under 12 Months.bru`
+- ✅ Fixes DIS-14 persona (temporary 6-month disability incorrectly marked eligible)

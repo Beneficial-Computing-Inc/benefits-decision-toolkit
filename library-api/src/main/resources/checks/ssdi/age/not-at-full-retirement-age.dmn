@@ -93,10 +93,16 @@
           <dmn:text>if dateOfBirth = null then null else date(dateOfBirth).year</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
+      <dmn:contextEntry id="_FRA-CTX-AGEDUR">
+        <dmn:variable id="_FRA-CTX-AGEDUR-VAR" name="ageDuration"/>
+        <dmn:literalExpression id="_FRA-EXPR-AGEDUR">
+          <dmn:text>if dateOfBirth = null then null else years and months duration(date(dateOfBirth), date(evaluationDate))</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
       <dmn:contextEntry id="_FRA-CTX-AGE">
         <dmn:variable id="_FRA-CTX-AGE-VAR" name="age" typeRef="number"/>
         <dmn:literalExpression id="_FRA-EXPR-AGE">
-          <dmn:text>if dateOfBirth = null then -1 else Age.as of date(dateOfBirth, evaluationDate)</dmn:text>
+          <dmn:text>if ageDuration = null then -1 else ageDuration.years + ageDuration.months / 12</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry id="_FRA-CTX-FRA">

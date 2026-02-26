@@ -1,0 +1,67 @@
+meta {
+  name: Spillover Amount Verification
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/checks/income/calculate-countable-income
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "situation": {
+      "evaluationDate": "2025-01-15",
+      "people": [{
+        "id": "person1",
+        "dateOfBirth": "1990-01-01",
+        "incomeSources": [
+          {"id": "inc1", "type": "unearned", "monthlyAmount": 10},
+          {"id": "inc2", "type": "earned", "monthlyAmount": 500}
+        ]
+      }]
+    },
+    "parameters": {
+      "personId": "person1",
+      "FBR": 967
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+  res.body.incomeCalculation.totalUnearnedIncome: eq 10
+  res.body.incomeCalculation.totalEarnedIncome: eq 500
+  res.body.incomeCalculation.generalExclusionApplied: eq 20
+  res.body.incomeCalculation.countableUnearnedIncome: eq 0
+  res.body.incomeCalculation.countableEarnedIncome: eq 212.5
+  res.body.incomeCalculation.totalCountableIncome: eq 212.5
+  res.body.incomeCalculation.meetsIncomeLimit: eq true
+}
+
+docs {
+  POMS SI 00820.500 - General exclusion spillover verification.
+
+  Person has $10 unearned + $500 earned:
+
+  Unearned:
+  - $20 general exclusion applied to $10 unearned: only $10 used
+  - Countable unearned: $10 - $10 = $0
+  - Unused general exclusion: $20 - $10 = $10 (spills to earned)
+
+  Earned:
+  - After $10 spillover: $500 - $10 = $490
+  - After $65 exclusion: $490 - $65 = $425
+  - After 50%: $425 / 2 = $212.50 countable earned
+
+  Total countable: $0 + $212.50 = $212.50
+  FBR: $967
+  Result: Passes income limit ($212.50 < $967)
+
+  Note: A common error is expecting $207.50, which assumes the full $20
+  spills over to earned. Since $10 was absorbed by unearned income,
+  only $10 spills over, producing $212.50 (not $207.50).
+}

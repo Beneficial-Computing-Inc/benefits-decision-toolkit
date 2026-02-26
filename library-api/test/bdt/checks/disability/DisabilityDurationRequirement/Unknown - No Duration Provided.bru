@@ -1,0 +1,39 @@
+meta {
+  name: Unknown - No Duration Provided
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{host}}/checks/disability/disability-duration-requirement
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1982-11-05",
+          "isDisabled": true
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq null
+}
+
+docs {
+  POMS DI 10501.015 - When a person is disabled but no duration info is provided,
+  the standalone check returns null (unknown). The benefit-level checks
+  (BlindOrDisabled, ReportsDisablingCondition) default to true for backwards
+  compatibility, but this standalone check surfaces the data gap.
+}

@@ -157,7 +157,7 @@ This imports and extends LaprWithException to add sub-check visibility without d
       <dmn:contextEntry>
         <dmn:variable id="_LAPRD_CR_VAR_BLINDDISEXC" name="meetsBlindDisabledResidenceException" typeRef="boolean"/>
         <dmn:literalExpression id="_LAPRD_CR_EXPR_BLINDDISEXC">
-          <dmn:text>(person.isBlindOrDisabled = true and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
+          <dmn:text>((person.isBlind = true or person.isDisabled = true) and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry>
@@ -247,7 +247,7 @@ This imports and extends LaprWithException to add sub-check visibility without d
       <dmn:contextEntry>
         <dmn:variable id="_LAPRD_SC_VAR_BLINDDISEXC" name="meetsBlindDisabledResidenceException" typeRef="boolean"/>
         <dmn:literalExpression id="_LAPRD_SC_EXPR_BLINDDISEXC">
-          <dmn:text>(person.isBlindOrDisabled = true and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
+          <dmn:text>((person.isBlind = true or person.isDisabled = true) and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry>

@@ -1,0 +1,39 @@
+meta {
+  name: Fail - Disabled But Under 12 Months
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/checks/ssdi/disability/reports-disabling-condition
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1988-09-20",
+          "isDisabled": true,
+          "expectedDisabilityDuration": "LESS_THAN_12_MONTHS"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  POMS DI 10105.065 / DI 10501.015 - Person reports being disabled but
+  expects disability to last less than 12 months. Does not meet the
+  duration requirement, so reports-disabling-condition returns false.
+}

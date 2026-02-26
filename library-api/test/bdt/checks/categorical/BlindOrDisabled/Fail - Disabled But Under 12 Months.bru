@@ -1,0 +1,39 @@
+meta {
+  name: Fail - Disabled But Under 12 Months
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{host}}/checks/categorical/blind-or-disabled
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1",
+          "isDisabled": true,
+          "expectedDisabilityDuration": "LESS_THAN_12_MONTHS"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  POMS SI 00501.001.B.1 / DI 10501.015 - Person reports being disabled but
+  expects disability to last less than 12 months. Does not meet the
+  duration requirement for SSI categorical eligibility.
+}

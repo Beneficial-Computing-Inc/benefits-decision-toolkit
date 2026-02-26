@@ -1,0 +1,37 @@
+meta {
+  name: Pass - Expected To Result In Death
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/checks/disability/disability-duration-requirement
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1975-06-01",
+          "isDisabled": true,
+          "expectedDisabilityDuration": "EXPECTED_TO_RESULT_IN_DEATH"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+docs {
+  POMS DI 10501.015 - Disability expected to result in death meets duration requirement.
+}

@@ -205,7 +205,7 @@ Applies exclusions from POMS SI 01130:
       <!-- Final result -->
       <dmn:contextEntry>
         <dmn:literalExpression id="_DDDD5555-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
-          <dmn:text>countableResources &lt; applicableLimit</dmn:text>
+          <dmn:text>countableResources &lt;= applicableLimit</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
     </dmn:context>

@@ -8,7 +8,7 @@
       {
         "id": "p1",
         "dateOfBirth": "1954-02-18",
-        "isBlindOrDisabled": false,
+        "isBlind": false, "isDisabled": false,
         "citizenshipStatus": "us_citizen",
         "residenceState": "OR",
         "countableResources": 2000,

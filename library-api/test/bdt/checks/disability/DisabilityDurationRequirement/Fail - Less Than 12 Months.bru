@@ -1,0 +1,38 @@
+meta {
+  name: Fail - Less Than 12 Months
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/disability/disability-duration-requirement
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1990-07-10",
+          "isDisabled": true,
+          "expectedDisabilityDuration": "LESS_THAN_12_MONTHS"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  POMS DI 10501.015 - Disability expected to last less than 12 months
+  does NOT meet the duration requirement. This is the DIS-14 persona fix.
+}

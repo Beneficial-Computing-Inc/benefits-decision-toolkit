@@ -20,12 +20,21 @@
         },
         {
           "type": "checkbox",
-          "id": "isBlindOrDisabled",
-          "label": "Is Blind Or Disabled",
+          "id": "isBlind",
+          "label": "Is Blind",
           "validate": {
             "required": false
           },
-          "description": "Check if you are blind or have a qualifying disability"
+          "description": "Check if you meet statutory blindness definition (POMS DI 10501.015)"
+        },
+        {
+          "type": "checkbox",
+          "id": "isDisabled",
+          "label": "Is Disabled",
+          "validate": {
+            "required": false
+          },
+          "description": "Check if you have a qualifying disability (POMS DI 10105.065)"
         },
         {
           "type": "textfield",

@@ -33,13 +33,17 @@
     <dmn:itemComponent id="_1D39B4A8-5079-44C9-BCE1-E58D5C8FB677" name="citizenshipStatus" isCollection="false">
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
-    <dmn:itemComponent id="_8F23A5C9-6D8E-4B1A-9F7C-3A9B2E5D4F6A" name="isBlindOrDisabled" isCollection="false">
-      <dmn:description>DEPRECATED - Use isBlind and isDisabled separately. Kept for backwards compatibility. True if person meets statutory blindness OR has qualifying disability.</dmn:description>
-      <dmn:typeRef>boolean</dmn:typeRef>
-    </dmn:itemComponent>
     <dmn:itemComponent id="_SSDI002-2026-0115-DISAB-ISDISABLED" name="isDisabled" isCollection="false">
       <dmn:description>POMS DI 10105.065 - Whether person has a medically determinable physical or mental impairment expected to last 12+ months or result in death, and is unable to engage in SGA. Used for SSI categorical eligibility and SSDI disability requirement.</dmn:description>
       <dmn:typeRef>boolean</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_BDT004-2026-0206-DISAB-ONSETDATE" name="disabilityOnsetDate" isCollection="false">
+      <dmn:description>POMS DI 10105.065 - Date disability began. Used with expectedDisabilityDuration for duration requirement check. Nullable - optional for screener use.</dmn:description>
+      <dmn:typeRef>date</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_BDT004-2026-0206-DISAB-EXPDURATION" name="expectedDisabilityDuration" isCollection="false">
+      <dmn:description>POMS DI 10105.065 - Expected duration of disability. Valid values: "12_MONTHS_OR_MORE", "LESS_THAN_12_MONTHS", "EXPECTED_TO_RESULT_IN_DEATH". Nullable - when null, system falls back to just checking isDisabled. Note: Statutory blindness (isBlind) has NO duration requirement per POMS DI 10501.015.</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_007C0A99-0361-48A3-A52B-4FAECB30663E" name="refugeeAdmissionDate" isCollection="false">
       <dmn:typeRef>date</dmn:typeRef>

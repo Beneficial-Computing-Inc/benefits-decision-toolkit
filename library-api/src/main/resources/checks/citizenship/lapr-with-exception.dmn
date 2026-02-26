@@ -160,7 +160,7 @@ has40QualifyingQuarters and (enteredBeforeWelfareReform or fiveYearsSinceEntry)<
         <dmn:variable id="_LAPR_VAR_BLINDDISEXC" name="meetsBlindDisabledResidenceException" typeRef="boolean"/>
         <dmn:literalExpression id="_LAPR_EXPR_BLINDDISEXC">
           <dmn:text>// POMS SI 00502.142 - Blind or disabled AND lawfully residing on 8/22/96
-(person.isBlindOrDisabled = true and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
+((person.isBlind = true or person.isDisabled = true) and person.wasLawfullyResidingOn8221996 = true)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 

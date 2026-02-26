@@ -1,0 +1,36 @@
+meta {
+  name: Fail - Fields Omitted
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/categorical/blind-or-disabled
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

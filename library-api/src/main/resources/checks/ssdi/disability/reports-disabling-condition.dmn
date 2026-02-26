@@ -89,10 +89,22 @@
           <dmn:text>if person = null or person.isBlind = null then false else person.isBlind</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
+      <dmn:contextEntry id="_DISAB-CTX-EXPDURATION">
+        <dmn:variable id="_DISAB-CTX-EXPDURATION-VAR" name="expectedDisabilityDuration" typeRef="string"/>
+        <dmn:literalExpression id="_DISAB-EXPR-EXPDURATION">
+          <dmn:text>if person = null then null else person.expectedDisabilityDuration</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DISAB-CTX-MEETSDURATION">
+        <dmn:variable id="_DISAB-CTX-MEETSDURATION-VAR" name="meetsDurationRequirement" typeRef="boolean"/>
+        <dmn:literalExpression id="_DISAB-EXPR-MEETSDURATION">
+          <dmn:text>if expectedDisabilityDuration = null then true else expectedDisabilityDuration in ("12_MONTHS_OR_MORE", "EXPECTED_TO_RESULT_IN_DEATH")</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
       <dmn:contextEntry id="_DISAB-CTX-RESULT">
         <dmn:variable id="_DISAB-CTX-RESULT-VAR" name="result" typeRef="boolean"/>
         <dmn:literalExpression id="_DISAB-EXPR-RESULT">
-          <dmn:text>isDisabled or isBlind</dmn:text>
+          <dmn:text>isBlind or (isDisabled and meetsDurationRequirement)</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry>

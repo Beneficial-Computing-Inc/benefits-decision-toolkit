@@ -1,0 +1,40 @@
+meta {
+  name: Fail - Edge Age 66yr11mo Born 1959
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{host}}/checks/ssdi/age/not-at-full-retirement-age
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1959-03-15"
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+  res.body.fraCalculation.hasAttainedFra: eq true
+}
+
+docs {
+  WALK-001 edge case: Born 1959-03-15, FRA = 66 + 10/12 = 66.833.
+  At eval ~2026-02, person is 66yr 11mo = decimal age 66.917.
+  66.917 >= 66.833 -> HAS attained FRA = not eligible for SSDI.
+  Before decimal fix: integer age 66 < 66.833 -> incorrectly passed.
+  After decimal fix: decimal 66.917 >= 66.833 -> correctly fails.
+}

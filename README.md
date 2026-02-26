@@ -40,6 +40,21 @@ If you are interested in getting involved with the project, check out [our page 
 
 [library-api](/library-api) contains a library of pre-built benefits and eligibility rules, suitable for including in custom screeners and for standing up a standalone eligibility API.
 
+## Current Focus: SSI/SSDI Eligibility
+
+The library-api currently implements **SSI (Supplemental Security Income)** and **SSDI (Social Security Disability Insurance)** eligibility rules using DMN. All 5 core SSI requirements are complete:
+
+- Categorical Eligibility (age 65+, blind, or disabled)
+- Citizenship/Residency
+- Resource Limits (with exclusions)
+- Income Limits (earned/unearned, deeming)
+- US Residence
+
+**Related Tools:**
+- [dmn-audit-tool](../dmn-audit-tool/) - Web UI for browsing DMN rules and running the SSI/SSDI screener
+- [SSI Implementation Progress](SSI-IMPLEMENTATION-PROGRESS.md) - Detailed status and POMS citations
+- [SSDI Implementation Progress](SSDI-IMPLEMENTATION-PROGRESS.md) - SSDI-specific tracking
+
 ## Development Setup
 
 ### In the Cloud (Github Codespaces)

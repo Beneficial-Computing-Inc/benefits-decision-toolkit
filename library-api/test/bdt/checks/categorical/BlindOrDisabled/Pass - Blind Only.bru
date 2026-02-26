@@ -1,0 +1,37 @@
+meta {
+  name: Pass - Blind Only
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/categorical/blind-or-disabled
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1",
+          "isBlind": true, "isDisabled": false
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

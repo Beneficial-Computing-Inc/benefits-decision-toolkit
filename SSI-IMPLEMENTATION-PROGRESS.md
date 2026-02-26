@@ -13,11 +13,17 @@ Implementing a complete SSI (Supplemental Security Income) eligibility screener 
 ### ✅ COMPLETED
 
 #### 1. Categorical Eligibility (POMS SI 00501.010)
-- **Status**: ✅ Implemented
+- **Status**: ✅ Implemented (duration check added 2026-02-16)
 - **Location**: `library-api/src/main/resources/checks/categorical/categorical-eligibility.dmn`
-- **Logic**: Age 65+ OR Blind OR Disabled
-- **Tests**: Bruno tests in `test/bdt/checks/categorical/`
-- **Form Field**: `isBlindOrDisabled` (yes/no), `dateOfBirth` (date)
+- **Logic**: Age 65+ OR Blind OR (Disabled AND meets duration requirement)
+- **Duration Requirement** (POMS DI 10501.015, added 2026-02-16):
+  - Disability must last or be expected to last 12+ months or result in death
+  - Blind has NO duration requirement
+  - `expectedDisabilityDuration` field: `12_MONTHS_OR_MORE`, `LESS_THAN_12_MONTHS`, `EXPECTED_TO_RESULT_IN_DEATH`
+  - When null (not provided): defaults to pass (backwards compatible)
+  - DMN files modified: `blind-or-disabled.dmn`, standalone `disability-duration-requirement.dmn` created
+- **Tests**: Bruno tests in `test/bdt/checks/categorical/` (including `Fail - Disabled But Under 12 Months.bru`)
+- **Form Field**: `isBlind` (yes/no), `isDisabled` (yes/no), `dateOfBirth` (date), `expectedDisabilityDuration` (enum)
 
 #### 2. Citizenship Eligibility (POMS SI 00501.400)
 - **Status**: ✅ Implemented
@@ -174,8 +180,10 @@ library-api/src/main/resources/
 │   ├── categorical/
 │   │   ├── Categorical.dmn                          # Base module
 │   │   ├── person-age-65-or-older.dmn              ✅
-│   │   ├── blind-or-disabled.dmn                   ✅
+│   │   ├── blind-or-disabled.dmn                   ✅ (duration check added 2026-02-16)
 │   │   └── categorical-eligibility.dmn              ✅
+│   ├── disability/
+│   │   └── disability-duration-requirement.dmn      ✅ (standalone duration check, 2026-02-16)
 │   ├── citizenship/
 │   │   ├── Citizenship.dmn                          # Base module
 │   │   ├── person-us-citizen.dmn                   ✅
@@ -231,7 +239,10 @@ builder-frontend/src/components/ssi-screener/
   - `id: string`
   - `dateOfBirth: date`
   - `citizenshipStatus: string`
-  - `isBlindOrDisabled: boolean`
+  - `isBlind: boolean`
+  - `isDisabled: boolean`
+  - `disabilityOnsetDate: date` (optional)
+  - `expectedDisabilityDuration: string` (optional)
   - `refugeeAdmissionDate: date`
   - `asylumGrantDate: date`
   - `withheldDeportationGrantDate: date`

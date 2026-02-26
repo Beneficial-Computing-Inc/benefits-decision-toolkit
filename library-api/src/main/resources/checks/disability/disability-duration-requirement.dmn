@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/"
+                 xmlns="https://kie.apache.org/dmn/_DISAB-DURATION-2026-0216"
+                 xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 xmlns:kie="http://www.drools.org/kie/dmn/1.2"
+                 xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/"
+                 xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+                 xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+                 xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+                 id="_DISAB-DURATION-2026-0216-MAIN"
+                 name="DisabilityDurationRequirement"
+                 typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/"
+                 namespace="https://kie.apache.org/dmn/_DISAB-DURATION-2026-0216">
+
+  <dmn:description>POMS DI 10501.015 - Disability duration requirement: A disability must last or be expected to last 12+ months or result in death. Statutory blindness has NO duration requirement.</dmn:description>
+
+  <dmn:import id="_DURATION-IMPORT-BDT"
+              name="BDT"
+              namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79"
+              importType="http://www.omg.org/spec/DMN/20180521/MODEL/"
+              locationURI="../../BDT.dmn"/>
+
+  <dmn:itemDefinition id="_DURATION-TYPEDEF-PARAMS" name="tParameters" isCollection="false">
+    <dmn:itemComponent id="_DURATION-PARAM-PERSONID" name="personId" isCollection="false">
+      <dmn:description>ID of person to check. If not provided, uses primaryPersonId.</dmn:description>
+      <dmn:typeRef>string</dmn:typeRef>
+    </dmn:itemComponent>
+  </dmn:itemDefinition>
+
+  <dmn:decisionService id="_DURATION-DS" name="DisabilityDurationRequirementService">
+    <dmn:description>POMS DI 10501.015 - Returns true if disability duration requirement is met, false if not, null if no duration data provided.</dmn:description>
+    <dmn:variable id="_DURATION-DS-VAR" name="DisabilityDurationRequirementService" typeRef="BDT.tCheckResponse"/>
+    <dmn:outputDecision href="#_DURATION-DEC-CHECKRESULT"/>
+    <dmn:inputData href="#_DURATION-INPUT-SITUATION"/>
+    <dmn:inputData href="#_DURATION-INPUT-PARAMS"/>
+  </dmn:decisionService>
+
+  <dmn:inputData id="_DURATION-INPUT-SITUATION" name="situation">
+    <dmn:variable id="_DURATION-INPUT-SITUATION-VAR" name="situation" typeRef="BDT.tSituation"/>
+  </dmn:inputData>
+
+  <dmn:inputData id="_DURATION-INPUT-PARAMS" name="parameters">
+    <dmn:variable id="_DURATION-INPUT-PARAMS-VAR" name="parameters" typeRef="tParameters"/>
+  </dmn:inputData>
+
+  <dmn:decision id="_DURATION-DEC-CHECKRESULT" name="checkResult">
+    <dmn:description>POMS DI 10501.015 - Evaluates disability duration requirement. Blind = always true (no duration requirement). Disabled = checks expectedDisabilityDuration. Neither = false.</dmn:description>
+    <dmn:variable id="_DURATION-DEC-CHECKRESULT-VAR" name="checkResult" typeRef="boolean"/>
+    <dmn:informationRequirement id="_DURATION-IR-1">
+      <dmn:requiredInput href="#_DURATION-INPUT-SITUATION"/>
+    </dmn:informationRequirement>
+    <dmn:informationRequirement id="_DURATION-IR-2">
+      <dmn:requiredInput href="#_DURATION-INPUT-PARAMS"/>
+    </dmn:informationRequirement>
+    <dmn:context id="_DURATION-CTX">
+      <dmn:contextEntry id="_DURATION-CTX-PERSONID">
+        <dmn:variable id="_DURATION-CTX-PERSONID-VAR" name="personId" typeRef="string"/>
+        <dmn:literalExpression id="_DURATION-EXPR-PERSONID">
+          <dmn:text>if parameters.personId != null then parameters.personId else situation.primaryPersonId</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DURATION-CTX-PERSON">
+        <dmn:variable id="_DURATION-CTX-PERSON-VAR" name="person" typeRef="BDT.tPerson"/>
+        <dmn:literalExpression id="_DURATION-EXPR-PERSON">
+          <dmn:text>situation.people[id = personId][1]</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DURATION-CTX-ISBLIND">
+        <dmn:variable id="_DURATION-CTX-ISBLIND-VAR" name="isBlind" typeRef="boolean"/>
+        <dmn:literalExpression id="_DURATION-EXPR-ISBLIND">
+          <dmn:text>if person = null or person.isBlind = null then false else person.isBlind</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DURATION-CTX-ISDISABLED">
+        <dmn:variable id="_DURATION-CTX-ISDISABLED-VAR" name="isDisabled" typeRef="boolean"/>
+        <dmn:literalExpression id="_DURATION-EXPR-ISDISABLED">
+          <dmn:text>if person = null or person.isDisabled = null then false else person.isDisabled</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DURATION-CTX-EXPDURATION">
+        <dmn:variable id="_DURATION-CTX-EXPDURATION-VAR" name="expectedDisabilityDuration" typeRef="string"/>
+        <dmn:literalExpression id="_DURATION-EXPR-EXPDURATION">
+          <dmn:text>if person = null then null else person.expectedDisabilityDuration</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry id="_DURATION-CTX-RESULT">
+        <dmn:variable id="_DURATION-CTX-RESULT-VAR" name="result" typeRef="boolean"/>
+        <dmn:literalExpression id="_DURATION-EXPR-RESULT">
+          <dmn:text>if isBlind then true else if not(isDisabled) then false else if expectedDisabilityDuration = null then null else expectedDisabilityDuration in ("12_MONTHS_OR_MORE", "EXPECTED_TO_RESULT_IN_DEATH")</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <dmn:contextEntry>
+        <dmn:literalExpression id="_DURATION-EXPR-RETURN">
+          <dmn:text>result</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+    </dmn:context>
+  </dmn:decision>
+
+</dmn:definitions>

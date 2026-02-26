@@ -4,6 +4,9 @@
 
 export interface SSIFormData {
   dateOfBirth?: string;
+  isBlind?: boolean;
+  isDisabled?: boolean;
+  // Legacy field for backward compatibility
   isBlindOrDisabled?: boolean;
   citizenshipStatus?: string;
   residenceState?: string;
@@ -52,13 +55,21 @@ export interface SSIEligibilityResult {
 export function formDataToSituation(formData: SSIFormData): SSISituation {
   const today = new Date().toISOString().split('T')[0];
 
+  // Compute isBlindOrDisabled from separate fields (backward compatibility)
+  // If the legacy field is provided, use it; otherwise derive from separate fields
+  const isBlind = formData.isBlind === true;
+  const isDisabled = formData.isDisabled === true;
+  const isBlindOrDisabled = formData.isBlindOrDisabled ?? (isBlind || isDisabled);
+
   // Build person object, only including date fields if they have values
   const person: any = {
     id: "p1",
     dateOfBirth: formData.dateOfBirth || "",
     citizenshipStatus: formData.citizenshipStatus || "",
     residenceState: formData.residenceState || "",
-    isBlindOrDisabled: formData.isBlindOrDisabled || false,
+    isBlind,
+    isDisabled,
+    isBlindOrDisabled,
   };
 
   // Only include date fields if they're provided (avoid sending undefined/empty)

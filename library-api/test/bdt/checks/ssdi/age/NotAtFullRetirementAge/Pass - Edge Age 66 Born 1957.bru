@@ -1,5 +1,5 @@
 meta {
-  name: Pass - Edge Age 66 Born 1957
+  name: Pass - Edge Age 66 Born 1959
   type: http
   seq: 5
 }
@@ -17,7 +17,7 @@ body:json {
       "people": [
         {
           "id": "p1",
-          "dateOfBirth": "1957-07-15"
+          "dateOfBirth": "1959-10-26"
         }
       ]
     },
@@ -32,8 +32,8 @@ assert {
 }
 
 docs {
-  POMS DI 10105.080 - Born 1957, FRA = 66 + 6 months = 66.5 years.
-  At age 68, they have attained FRA. But this tests the edge case where
-  the month-based calculation matters. Person born July 1957 at age 68
-  in Jan 2026 has attained FRA 66.5.
+  POMS DI 10105.080 - Born 1959-10-26, FRA = 66 + 10/12 = 66.833.
+  At eval ~2026-02, person is 66yr 4mo = decimal age 66.333.
+  66.333 < 66.833 -> NOT at FRA = eligible for SSDI consideration.
+  Tests the edge case where birth year has fractional FRA months.
 }

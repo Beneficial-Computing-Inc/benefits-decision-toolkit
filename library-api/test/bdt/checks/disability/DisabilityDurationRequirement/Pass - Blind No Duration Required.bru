@@ -1,0 +1,38 @@
+meta {
+  name: Pass - Blind No Duration Required
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/disability/disability-duration-requirement
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1985-03-20",
+          "isBlind": true
+        }
+      ]
+    },
+    "parameters": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+docs {
+  POMS DI 10501.015 - Statutory blindness has NO duration requirement.
+  A blind person always meets the duration check regardless of
+  expectedDisabilityDuration value.
+}
