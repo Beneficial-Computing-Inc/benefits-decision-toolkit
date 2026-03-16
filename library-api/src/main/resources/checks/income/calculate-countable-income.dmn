@@ -24,7 +24,7 @@ Calculation order per SI 00820.500 and SI 01320.730:
 Per SI 01320.001: "deemed income... is considered to be the eligible individual's own unearned income"
 Per SI 01320.730: "Always treat deemed income as unearned income"
 
-2025 SEIE Limits: $2,350/month, $9,460/year</dmn:description>
+2026 SEIE Limits: $2,350/month, $9,460/year</dmn:description>
 
   <!-- Import BDT base module -->
   <dmn:import id="_7E8F9A0B-1C2D-3E4F-5A6B-7C8D9E0F1A2B"
@@ -325,7 +325,7 @@ else
       <dmn:contextEntry>
         <dmn:variable id="_0fc3dc2e-edb4-420a-814c-d88ad6ac1cdb" name="applicableFBR" typeRef="number"/>
         <dmn:literalExpression id="_66c0828c-1638-45f1-8cf7-9b4953f1e6f6">
-          <dmn:text>if parameters.FBR != null then parameters.FBR else 967</dmn:text>
+          <dmn:text>if parameters.FBR != null then parameters.FBR else 994</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 

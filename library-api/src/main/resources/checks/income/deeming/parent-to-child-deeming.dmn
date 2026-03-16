@@ -20,16 +20,16 @@ Deeming applies when:
 Computation per SI 01320.500:
 1. Calculate parent(s)' combined countable income (applying standard exclusions)
 2. Allocate for parent(s)' living needs:
-   - 1 parent: Individual FBR ($967 in 2025)
-   - 2 parents: Couple FBR ($1,450 in 2025)
+   - 1 parent: Individual FBR ($994 in 2026)
+   - 2 parents: Couple FBR ($1,491 in 2026)
 3. Allocate for each ineligible child in household:
-   - 1/2 of Individual FBR per child ($483.50 in 2025)
+   - 1/2 of Individual FBR per child ($497 in 2026)
 4. Remaining income after allocations is deemed to eligible child
 
-2025 Values:
-- Individual FBR: $967
-- Couple FBR: $1,450
-- Ineligible child allocation: $483.50 (1/2 of individual FBR)
+2026 Values:
+- Individual FBR: $994
+- Couple FBR: $1,491
+- Ineligible child allocation: $497 (1/2 of individual FBR)
 </dmn:description>
 
   <!-- Import BDT base module -->
@@ -60,11 +60,11 @@ Computation per SI 01320.500:
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_PARENT_PARAM_IND_FBR" name="individualFBR" isCollection="false">
-      <dmn:description>2025 Individual Federal Benefit Rate: $967 (default if not provided)</dmn:description>
+      <dmn:description>2026 Individual Federal Benefit Rate: $994 (default if not provided)</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_PARENT_PARAM_COUPLE_FBR" name="coupleFBR" isCollection="false">
-      <dmn:description>2025 Couple Federal Benefit Rate: $1,450 (default if not provided)</dmn:description>
+      <dmn:description>2026 Couple Federal Benefit Rate: $1,491 (default if not provided)</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
@@ -122,14 +122,14 @@ Computation per SI 01320.500:
       <dmn:contextEntry>
         <dmn:variable id="_PARENT_VAR_IND_FBR" name="individualFBR" typeRef="number"/>
         <dmn:literalExpression id="_PARENT_EXPR_IND_FBR">
-          <dmn:text>if parameters.individualFBR != null then parameters.individualFBR else 967</dmn:text>
+          <dmn:text>if parameters.individualFBR != null then parameters.individualFBR else 994</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
       <dmn:contextEntry>
         <dmn:variable id="_PARENT_VAR_COUPLE_FBR" name="coupleFBR" typeRef="number"/>
         <dmn:literalExpression id="_PARENT_EXPR_COUPLE_FBR">
-          <dmn:text>if parameters.coupleFBR != null then parameters.coupleFBR else 1450</dmn:text>
+          <dmn:text>if parameters.coupleFBR != null then parameters.coupleFBR else 1491</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 

@@ -19,13 +19,13 @@ Deeming applies when:
 
 Computation per SI 01320.400:
 1. Calculate ineligible spouse's countable income (applying standard exclusions)
-2. Allocate for spouse's living needs (couple FBR - individual FBR = $483 in 2025)
+2. Allocate for spouse's living needs (couple FBR - individual FBR = $497 in 2026)
 3. Remaining income after allocation is deemed to eligible individual
 
-2025 Values:
-- Individual FBR: $967
-- Couple FBR: $1,450
-- Spouse living allowance: $483 ($1,450 - $967)
+2026 Values:
+- Individual FBR: $994
+- Couple FBR: $1,491
+- Spouse living allowance: $497 ($1,491 - $994)
 </dmn:description>
 
   <!-- Import BDT base module -->
@@ -49,11 +49,11 @@ Computation per SI 01320.400:
       <dmn:typeRef>string</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_SPOUSE_PARAM_IND_FBR" name="individualFBR" isCollection="false">
-      <dmn:description>2025 Individual Federal Benefit Rate: $967 (default if not provided)</dmn:description>
+      <dmn:description>2026 Individual Federal Benefit Rate: $994 (default if not provided)</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_SPOUSE_PARAM_COUPLE_FBR" name="coupleFBR" isCollection="false">
-      <dmn:description>2025 Couple Federal Benefit Rate: $1,450 (default if not provided)</dmn:description>
+      <dmn:description>2026 Couple Federal Benefit Rate: $1,491 (default if not provided)</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>
@@ -102,14 +102,14 @@ Computation per SI 01320.400:
       <dmn:contextEntry>
         <dmn:variable id="_SPOUSE_VAR_IND_FBR" name="individualFBR" typeRef="number"/>
         <dmn:literalExpression id="_SPOUSE_EXPR_IND_FBR">
-          <dmn:text>if parameters.individualFBR != null then parameters.individualFBR else 967</dmn:text>
+          <dmn:text>if parameters.individualFBR != null then parameters.individualFBR else 994</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 
       <dmn:contextEntry>
         <dmn:variable id="_SPOUSE_VAR_COUPLE_FBR" name="coupleFBR" typeRef="number"/>
         <dmn:literalExpression id="_SPOUSE_EXPR_COUPLE_FBR">
-          <dmn:text>if parameters.coupleFBR != null then parameters.coupleFBR else 1450</dmn:text>
+          <dmn:text>if parameters.coupleFBR != null then parameters.coupleFBR else 1491</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
 

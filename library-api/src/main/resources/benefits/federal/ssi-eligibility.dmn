@@ -23,7 +23,7 @@ Current implementation status: ALL 5 CORE REQUIREMENTS IMPLEMENTED ✓ + COUPLE 
 - Citizenship eligibility (U.S. citizen OR qualified alien): IMPLEMENTED
 - Residence requirement (resides in 50 states, DC, or Northern Mariana Islands): IMPLEMENTED
 - Resource limits: IMPLEMENTED (Individual: $2,000, Couple: $3,000 per POMS SI 01110.003)
-- Income limits: IMPLEMENTED (Individual FBR: $967, Couple FBR: $1,450 per POMS SI 00810.010)
+- Income limits: IMPLEMENTED (Individual FBR: $994, Couple FBR: $1,491 per POMS SI 00810.010)
 - Couple eligibility: IMPLEMENTED (both members must meet categorical and citizenship requirements)
 
 Per POMS SI 00501.001, an individual is eligible for SSI if they meet ALL of the following:
@@ -371,7 +371,7 @@ All core checks implemented:
 - Citizenship eligibility (U.S. citizen OR qualified alien)
 - Residence eligibility (resides in 50 states, DC, or Northern Mariana Islands)
 - Resource eligibility (countable resources &lt; $2,000 for individuals) - SIMPLIFIED
-- Income eligibility (countable income &lt; FBR $967 with POMS exclusions) - IMPLEMENTED
+- Income eligibility (countable income &lt; FBR $994 with POMS exclusions) - IMPLEMENTED
 
 Future enhancements: Couple limits, full resource exclusions, SEIE, PASS, deeming</dmn:description>
     <dmn:extensionElements/>

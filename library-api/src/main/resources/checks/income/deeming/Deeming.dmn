@@ -16,11 +16,11 @@ Provides shared Business Knowledge Models (BKMs) for:
 - Determining living allowance allocations
 - Calculating ineligible children allocations
 
-Key 2025 Values:
-- Individual FBR: $967
-- Couple FBR: $1,450
-- Ineligible spouse allocation: $483 (couple FBR - individual FBR)
-- Ineligible child allocation: $483.50 (1/2 individual FBR)
+Key 2026 Values:
+- Individual FBR: $994
+- Couple FBR: $1,491
+- Ineligible spouse allocation: $497 (couple FBR - individual FBR)
+- Ineligible child allocation: $497 (1/2 individual FBR)
 </dmn:description>
 
   <!-- Import BDT base module -->
@@ -36,11 +36,11 @@ Key 2025 Values:
   <dmn:itemDefinition id="_DEEM_PARAMS_TYPE_2026" name="tDeemingParameters" isCollection="false">
     <dmn:description>Parameters for deeming calculations</dmn:description>
     <dmn:itemComponent id="_DEEM_PARAM_FBR_IND" name="individualFBR" isCollection="false">
-      <dmn:description>2025 Individual Federal Benefit Rate: $967</dmn:description>
+      <dmn:description>2026 Individual Federal Benefit Rate: $994</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_DEEM_PARAM_FBR_COUPLE" name="coupleFBR" isCollection="false">
-      <dmn:description>2025 Couple Federal Benefit Rate: $1,450</dmn:description>
+      <dmn:description>2026 Couple Federal Benefit Rate: $1,491</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_DEEM_PARAM_PERSONID" name="personId" isCollection="false">
@@ -160,7 +160,7 @@ Order: $20 general exclusion from unearned, spillover to earned, $65 earned excl
   <dmn:businessKnowledgeModel id="_BKM_SPOUSE_ALLOWANCE" name="get spouse living allowance">
     <dmn:description>POMS SI 01320.400 - Get living allowance for ineligible spouse.
 Equals difference between couple FBR and individual FBR.
-2025: $1,450 - $967 = $483</dmn:description>
+2026: $1,491 - $994 = $497</dmn:description>
     <dmn:variable id="_VAR_SPOUSE_ALLOWANCE" name="get spouse living allowance" typeRef="number"/>
     <dmn:encapsulatedLogic id="_LOGIC_SPOUSE_ALLOWANCE" kind="FEEL">
       <dmn:formalParameter id="_PARAM_IND_FBR" name="individualFBR" typeRef="number"/>
@@ -177,8 +177,8 @@ Equals difference between couple FBR and individual FBR.
        ========================================= -->
   <dmn:businessKnowledgeModel id="_BKM_PARENT_ALLOWANCE" name="get parent living allowance">
     <dmn:description>POMS SI 01320.500 - Get living allowance for ineligible parent(s).
-1 parent: Individual FBR ($967 in 2025)
-2 parents: Couple FBR ($1,450 in 2025)</dmn:description>
+1 parent: Individual FBR ($994 in 2026)
+2 parents: Couple FBR ($1,491 in 2026)</dmn:description>
     <dmn:variable id="_VAR_PARENT_ALLOWANCE" name="get parent living allowance" typeRef="number"/>
     <dmn:encapsulatedLogic id="_LOGIC_PARENT_ALLOWANCE" kind="FEEL">
       <dmn:formalParameter id="_PARAM_NUM_PARENTS" name="numberOfParents" typeRef="number"/>
@@ -197,7 +197,7 @@ Equals difference between couple FBR and individual FBR.
   <dmn:businessKnowledgeModel id="_BKM_CHILD_ALLOCATION" name="get ineligible children allocation">
     <dmn:description>POMS SI 01320.500 - Get allocation for ineligible children.
 Each ineligible child gets 1/2 of individual FBR.
-2025: $967 / 2 = $483.50 per child</dmn:description>
+2026: $994 / 2 = $497 per child</dmn:description>
     <dmn:variable id="_VAR_CHILD_ALLOCATION" name="get ineligible children allocation" typeRef="number"/>
     <dmn:encapsulatedLogic id="_LOGIC_CHILD_ALLOCATION" kind="FEEL">
       <dmn:formalParameter id="_PARAM_NUM_CHILDREN" name="numberOfIneligibleChildren" typeRef="number"/>
