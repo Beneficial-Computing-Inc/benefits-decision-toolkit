@@ -1,0 +1,45 @@
+meta {
+  name: Fail - Age 50 Insufficient Duration
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{host}}/checks/ssdi/work-credits/has-sufficient-work-credits
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "evaluationDate": "2026-03-18",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1976-01-01",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 6,
+          "approximateYearsWorked": 5
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq false
+}
+
+docs {
+  Age 50, passes Recent Work Test but fails Duration of Work Test.
+  Recent Work Test: 6 >= 5 = PASS
+  Duration of Work Test: (50-22)/4 = 7 years needed, 5 < 7 = FAIL
+  Source: ssa.gov/benefits/retirement/planner/credits, POMS RS 00301.120
+}

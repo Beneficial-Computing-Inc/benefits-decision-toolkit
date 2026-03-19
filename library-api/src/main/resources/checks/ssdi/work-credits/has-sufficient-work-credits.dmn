@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dmn:definitions xmlns:dmn="http://www.omg.org/spec/DMN/20180521/MODEL/" xmlns="https://kie.apache.org/dmn/_SSDI-WORK-CREDITS-2026-0115" xmlns:feel="http://www.omg.org/spec/DMN/20180521/FEEL/" xmlns:kie="http://www.drools.org/kie/dmn/1.2" xmlns:dmndi="http://www.omg.org/spec/DMN/20180521/DMNDI/" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:BDT="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" xmlns:Age="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708" id="_SSDI-WORK-CREDITS-DEF" name="HasSufficientWorkCredits" typeLanguage="http://www.omg.org/spec/DMN/20180521/FEEL/" namespace="https://kie.apache.org/dmn/_SSDI-WORK-CREDITS-2026-0115">
-  <dmn:description>POMS DI 10105.060, RS 00301.120 - Work Credits (Insured Status) Check for SSDI Eligibility
+  <dmn:description>POMS RS 00301.120, DI 10105.060, ssa.gov/benefits/retirement/planner/credits
+Work Credits (Insured Status) Check for SSDI Eligibility.
 
-Determines if a person has sufficient work history to qualify for SSDI benefits.
-This is a simplified screener check based on age-specific work history questions.
+Implements BOTH the Recent Work Test and Duration of Work Test per SSA rules.
 
-Rules (from RS 00301.120 and RS 00301.140):
-- Blind individuals: Only need "fully insured" status (ever worked and paid SS taxes)
-- Under age 24: Need ~1.5 years of work in last 3 years (6 QCs in 12 quarters)
-- Ages 24-30: Need work in about half the quarters since age 21
-- Ages 31+: Need ~5 years of work in last 10 years (20/40 test)
+Recent Work Test (explicit SSA formulas):
+- Before age 24: 6 credits (1.5 years) in the 3-year period before disability
+- Ages 24-31: Credit for working half the time between age 21 and disability onset
+- Ages 31+: At least 20 credits (5 years) in the 10-year period before disability
 
-Returns TRUE if person has sufficient work credits for SSDI consideration.</dmn:description>
+Duration of Work Test (SSA table - total lifetime work):
+- Before age 28: 1.5 years; age 30: 2; age 34: 3; age 38: 4; age 42: 5;
+  age 44: 5.5; age 46: 6; age 48: 6.5; age 50: 7; age 52: 7.5; age 54: 8;
+  age 56: 8.5; age 58: 9; age 60: 9.5
+- Derived formula matching table: max(1.5, (age - 22) / 4), capped at 10
+
+Blind: Only Duration Test (no Recent Work Test).
+Returns TRUE if person meets both tests.</dmn:description>
   <dmn:extensionElements/>
   <dmn:import id="_WC-IMPORT-BDT" name="BDT" namespace="https://kie.apache.org/dmn/_1B91A885-130A-4E0B-A762-E12AA6DD5C79" locationURI="../../../BDT.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
   <dmn:import id="_WC-IMPORT-AGE" name="Age" namespace="https://kie.apache.org/dmn/_81D401A8-CA81-4F9A-ABCC-532C25768708" locationURI="../../age/Age.dmn" importType="http://www.omg.org/spec/DMN/20180521/MODEL/"/>
@@ -92,9 +98,29 @@ else if age &lt; 31 then "age_24_to_30"
 else "age_31_plus"</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
-      <dmn:contextEntry id="_WC-CTX-REQYEARS">
-        <dmn:variable id="_WC-CTX-REQYEARS-VAR" name="requiredYearsOfWork" typeRef="number"/>
-        <dmn:literalExpression id="_WC-EXPR-REQYEARS">
+      <!-- Duration of Work Test - total lifetime years needed -->
+      <!-- Source: ssa.gov/benefits/retirement/planner/credits, POMS RS 00301.120 -->
+      <!-- Formula derived from SSA table: max(1.5, (age - 22) / 4), capped at 10 -->
+      <!-- Matches all SSA table rows: age 30->2, 34->3, 38->4, 42->5, 44->5.5, ..., 60->9.5 -->
+      <dmn:contextEntry id="_WC-CTX-DURATIONYEARS">
+        <dmn:variable id="_WC-CTX-DURATIONYEARS-VAR" name="durationTestYears" typeRef="number"/>
+        <dmn:literalExpression id="_WC-EXPR-DURATIONYEARS">
+          <dmn:text>if ageRuleApplied = "blind_fully_insured" then 0
+else if ageRuleApplied = "unknown" then 0
+else if age &lt; 28 then 1.5
+else if (age - 22) / 4 &gt; 10 then 10
+else (age - 22) / 4</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <!-- Recent Work Test - years needed in last 10 years -->
+      <!-- Source: ssa.gov/benefits/retirement/planner/credits (explicit formulas) -->
+      <!-- Before 24: 6 credits in last 3 years -->
+      <!-- 24-31: half the time between age 21 and disability -->
+      <!-- 31+: 20 credits in last 10 years -->
+      <!-- Blind: exempt (no recent work test) -->
+      <dmn:contextEntry id="_WC-CTX-RECENTYEARS">
+        <dmn:variable id="_WC-CTX-RECENTYEARS-VAR" name="recentTestYears" typeRef="number"/>
+        <dmn:literalExpression id="_WC-EXPR-RECENTYEARS">
           <dmn:text>if ageRuleApplied = "blind_fully_insured" then 0
 else if ageRuleApplied = "unknown" then 0
 else if ageRuleApplied = "under_24" then 1.5
@@ -102,14 +128,36 @@ else if ageRuleApplied = "age_24_to_30" then (age - 21) / 2
 else 5</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
-      <dmn:contextEntry id="_WC-CTX-MEETSREQ">
-        <dmn:variable id="_WC-CTX-MEETSREQ-VAR" name="meetsWorkRequirement" typeRef="boolean"/>
-        <dmn:literalExpression id="_WC-EXPR-MEETSREQ">
+      <!-- Duration Test: does total lifetime work meet the requirement? -->
+      <dmn:contextEntry id="_WC-CTX-MEETSDURATION">
+        <dmn:variable id="_WC-CTX-MEETSDURATION-VAR" name="meetsDurationTest" typeRef="boolean"/>
+        <dmn:literalExpression id="_WC-EXPR-MEETSDURATION">
           <dmn:text>if person = null then false
 else if ageRuleApplied = "blind_fully_insured" then person.hasWorkedAndPaidSSTaxes = true
 else if ageRuleApplied = "unknown" then false
+else if person.approximateYearsWorked != null then
+  person.approximateYearsWorked &gt;= durationTestYears
+else if person.yearsWorkedInLast10Years != null then
+  person.yearsWorkedInLast10Years &gt;= durationTestYears
+else false</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <!-- Recent Test: does recent work history meet the requirement? -->
+      <dmn:contextEntry id="_WC-CTX-MEETSRECENT">
+        <dmn:variable id="_WC-CTX-MEETSRECENT-VAR" name="meetsRecentTest" typeRef="boolean"/>
+        <dmn:literalExpression id="_WC-EXPR-MEETSRECENT">
+          <dmn:text>if ageRuleApplied = "blind_fully_insured" then true
+else if ageRuleApplied = "unknown" then false
+else if person = null then false
 else if person.yearsWorkedInLast10Years = null then false
-else person.yearsWorkedInLast10Years >= requiredYearsOfWork</dmn:text>
+else person.yearsWorkedInLast10Years &gt;= recentTestYears</dmn:text>
+        </dmn:literalExpression>
+      </dmn:contextEntry>
+      <!-- Final: must pass BOTH tests -->
+      <dmn:contextEntry id="_WC-CTX-MEETSREQ">
+        <dmn:variable id="_WC-CTX-MEETSREQ-VAR" name="meetsWorkRequirement" typeRef="boolean"/>
+        <dmn:literalExpression id="_WC-EXPR-MEETSREQ">
+          <dmn:text>meetsDurationTest and meetsRecentTest</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <dmn:contextEntry id="_WC-CTX-RESULT">

@@ -30,12 +30,10 @@ body:json {
 assert {
   res.status: eq 200
   res.body.checkResult: eq false
-  res.body.workCreditsCalculation.ageRuleApplied: eq "age_31_plus"
-  res.body.workCreditsCalculation.requiredYearsOfWork: eq 5
-  res.body.workCreditsCalculation.meetsWorkRequirement: eq false
 }
 
 docs {
   RS 00301.120 - Age 35 person with only 3 years of work in last 10 years.
-  Rule: Age 31+ needs 5 years. 3 < 5, so ineligible for SSDI.
+  Recent Work Test: 3 < 5 = FAIL (needs 5 years in last 10 for age 31+)
+  Source: ssa.gov/benefits/retirement/planner/credits
 }

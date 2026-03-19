@@ -30,11 +30,10 @@ body:json {
 assert {
   res.status: eq 200
   res.body.checkResult: eq true
-  res.body.workCreditsCalculation.ageRuleApplied: eq "age_24_to_30"
-  res.body.workCreditsCalculation.meetsWorkRequirement: eq true
 }
 
 docs {
-  RS 00301.140 - Age 27 needs work in half the quarters since age 21.
-  Rule: (27-21)/2 = 3 years required. Person has 4 years, so eligible.
+  Age 27 with 4 years of work. Uses dual-test structure:
+  Recent Work Test + Duration of Work Test.
+  See: https://www.ssa.gov/benefits/retirement/planner/credits
 }

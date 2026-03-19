@@ -120,7 +120,11 @@
       <dmn:typeRef>boolean</dmn:typeRef>
     </dmn:itemComponent>
     <dmn:itemComponent id="_SSDI004-2026-0115-WORK-YEARSLAST10" name="yearsWorkedInLast10Years" isCollection="false">
-      <dmn:description>RS 00301.120 - Approximate years worked in the last 10 years. Used for 20/40 test: need ~5 years for ages 31+. Also used for young worker rules.</dmn:description>
+      <dmn:description>RS 00301.120 - Approximate years worked in the last 10 years. Used for Recent Work Test: need ~5 years for ages 31+. Also used for young worker rules.</dmn:description>
+      <dmn:typeRef>number</dmn:typeRef>
+    </dmn:itemComponent>
+    <dmn:itemComponent id="_SSDI005-2026-0318-WORK-TOTALYEARS" name="approximateYearsWorked" isCollection="false">
+      <dmn:description>RS 00301.120 / ssa.gov/benefits/retirement/planner/credits - Approximate total years of lifetime US work. Used for Duration of Work Test (separate from the Recent Work Test).</dmn:description>
       <dmn:typeRef>number</dmn:typeRef>
     </dmn:itemComponent>
   </dmn:itemDefinition>

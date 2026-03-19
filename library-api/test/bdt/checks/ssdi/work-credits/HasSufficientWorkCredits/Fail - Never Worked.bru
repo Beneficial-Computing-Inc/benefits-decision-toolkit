@@ -30,10 +30,11 @@ body:json {
 assert {
   res.status: eq 200
   res.body.checkResult: eq false
-  res.body.workCreditsCalculation.meetsWorkRequirement: eq false
 }
 
 docs {
   Person has never worked. SSDI requires work history since it's an insurance
-  program based on paying into Social Security. Ineligible.
+  program based on paying into Social Security. Uses dual-test structure:
+  Recent Work Test + Duration of Work Test.
+  See: https://www.ssa.gov/benefits/retirement/planner/credits
 }

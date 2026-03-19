@@ -1,0 +1,45 @@
+meta {
+  name: Pass - Age 50 Both Tests Met
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{host}}/checks/ssdi/work-credits/has-sufficient-work-credits
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "evaluationDate": "2026-03-18",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1976-01-01",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 6,
+          "approximateYearsWorked": 12
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+docs {
+  Age 50, 6 years recent + 12 years total.
+  Recent Work Test: 6 >= 5 = PASS
+  Duration of Work Test: (50-22)/4 = 7 years needed, 12 >= 7 = PASS
+  Source: ssa.gov/benefits/retirement/planner/credits, POMS RS 00301.120
+}

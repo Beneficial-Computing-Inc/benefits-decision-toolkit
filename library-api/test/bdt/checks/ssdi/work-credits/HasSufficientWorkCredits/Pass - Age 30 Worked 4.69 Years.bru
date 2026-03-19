@@ -1,0 +1,45 @@
+meta {
+  name: Pass - Age 30 Worked 4.69 Years
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{host}}/checks/ssdi/work-credits/has-sufficient-work-credits
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "primaryPersonId": "p1",
+      "evaluationDate": "2026-03-18",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1996-01-01",
+          "isDisabled": true,
+          "hasWorkedAndPaidSSTaxes": true,
+          "yearsWorkedInLast10Years": 4.69,
+          "approximateYearsWorked": 4.69
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1"
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.checkResult: eq true
+}
+
+docs {
+  SME test case: Age 30, worked 4.69 years.
+  Recent Work Test: (30-21)/2 = 4.5 years needed, 4.69 >= 4.5 = PASS
+  Duration of Work Test: age 30 needs 2 years ((30-22)/4=2), 4.69 >= 2 = PASS
+  Source: ssa.gov/benefits/retirement/planner/credits, POMS RS 00301.120
+}

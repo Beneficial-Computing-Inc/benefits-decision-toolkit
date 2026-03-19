@@ -1,7 +1,7 @@
 meta {
-  name: Pass - Age 35 Worked 6 Years
+  name: Fail - Age 30 Worked 4 Years
   type: http
-  seq: 1
+  seq: 9
 }
 
 post {
@@ -14,27 +14,31 @@ body:json {
   {
     "situation": {
       "primaryPersonId": "p1",
+      "evaluationDate": "2026-03-18",
       "people": [
         {
           "id": "p1",
-          "dateOfBirth": "1990-01-15",
+          "dateOfBirth": "1996-01-01",
+          "isDisabled": true,
           "hasWorkedAndPaidSSTaxes": true,
-          "yearsWorkedInLast10Years": 6
+          "yearsWorkedInLast10Years": 4,
+          "approximateYearsWorked": 4
         }
       ]
     },
-    "parameters": {}
+    "parameters": {
+      "personId": "p1"
+    }
   }
 }
 
 assert {
   res.status: eq 200
-  res.body.checkResult: eq true
+  res.body.checkResult: eq false
 }
 
 docs {
-  RS 00301.120 - Age 35 person with 6 years of work in last 10 years.
-  Recent Work Test: 6 >= 5 = PASS
-  Duration of Work Test: (35-22)/4 = 3.25 years needed, falls back to yearsWorkedInLast10Years (6) >= 3.25 = PASS
+  Age 30 with only 4 years of work.
+  Recent Work Test: (30-21)/2 = 4.5 years needed, 4 < 4.5 = FAIL
   Source: ssa.gov/benefits/retirement/planner/credits
 }

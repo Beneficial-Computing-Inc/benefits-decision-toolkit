@@ -31,13 +31,12 @@ body:json {
 assert {
   res.status: eq 200
   res.body.checkResult: eq true
-  res.body.workCreditsCalculation.ageRuleApplied: eq "blind_fully_insured"
-  res.body.workCreditsCalculation.requiredYearsOfWork: eq 0
-  res.body.workCreditsCalculation.meetsWorkRequirement: eq true
 }
 
 docs {
-  RS 00301.120 - Blind individuals only need "fully insured" status (ever worked).
-  They are exempt from the 20/40 recent work test. Age 44, only 2 years worked,
-  but has worked and paid SS taxes, so eligible.
+  Blind individuals only need Duration of Work Test (fully insured status).
+  They are exempt from the Recent Work Test. Age 44, only 2 years worked,
+  but has worked and paid SS taxes, so eligible. Uses dual-test structure:
+  Recent Work Test + Duration of Work Test.
+  See: https://www.ssa.gov/benefits/retirement/planner/credits
 }
