@@ -129,6 +129,9 @@ else 5</dmn:text>
         </dmn:literalExpression>
       </dmn:contextEntry>
       <!-- Duration Test: does total lifetime work meet the requirement? -->
+      <!-- Blind path: durationTestYears is 0 above, but we check hasWorkedAndPaidSSTaxes -->
+      <!-- directly here instead of comparing against 0. Per POMS DI 10105.060, blind -->
+      <!-- applicants only need "fully insured" status (any prior work), not a specific duration. -->
       <dmn:contextEntry id="_WC-CTX-MEETSDURATION">
         <dmn:variable id="_WC-CTX-MEETSDURATION-VAR" name="meetsDurationTest" typeRef="boolean"/>
         <dmn:literalExpression id="_WC-EXPR-MEETSDURATION">
