@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Railway deployment
 # Stage 1: Build the application
-FROM maven:3.9-eclipse-temurin-17 AS builder
+FROM maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests -B
 
 # Stage 2: Runtime
-FROM registry.access.redhat.com/ubi9/openjdk-17:1.20
+FROM registry.access.redhat.com/ubi9/openjdk-21:1.20
 
 ENV LANGUAGE='en_US:en'
 
