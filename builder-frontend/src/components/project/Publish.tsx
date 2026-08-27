@@ -1,15 +1,29 @@
 import { createSignal } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { publishScreener } from "../../api/screener";
+import Tooltip from "../shared/Tooltip";
+import { Button } from "@/components/shared/Button";
 
 export default function Publish({ project, refetchProject }) {
   const [isLoading, setIsLoading] = createSignal(false);
 
-  const screenerName = () => { return project()?.screenerName };
-  const isPublished = () => { return project()?.publishedScreenerId !== null };
-  const lastPublishDate = () => { return project()?.lastPublishDate };
+  const screenerName = () => {
+    return project()?.screenerName;
+  };
+  const isPublished = () => {
+    return project()?.publishedScreenerId !== null;
+  };
+  const lastPublishDate = () => {
+    return project()?.lastPublishDate;
+  };
   const screenerUrl = () => {
-    return window.location.protocol + "//" +window.location.host + "/screener/" + project()?.publishedScreenerId;
+    return (
+      window.location.protocol +
+      "//" +
+      window.location.host +
+      "/screener/" +
+      project()?.publishedScreenerId
+    );
   };
 
   const { projectId } = useParams();
@@ -40,17 +54,17 @@ export default function Publish({ project, refetchProject }) {
       <div class="px-8 py-4 w-xl border-1 shadow-sm border-gray-200">
         <div class="text-xl">{screenerName()}</div>
         <div class="mt-4 flex flex-col gap-2">
-          <div class=" flex gap-4">
+          <div id="screener-url-info" class="flex gap-4">
             <div class="text-sm font-bold">Screener URL:</div>
             {isPublished() ? (
               <a href={screenerUrl()} target="_blank" rel="noopener noreferrer">
                 {screenerUrl()}
               </a>
             ) : (
-              <a>Deploy screener to create public url.</a>
+              <a>Publish screener to create public url.</a>
             )}
           </div>
-          <div class="flex gap-4">
+          <div id="screener-last-published-info" class="flex gap-4">
             <div class="text-sm font-bold">Last Published Date:</div>
             {lastPublishDate() ? (
               <div>{formattedDate(lastPublishDate())}</div>
@@ -60,17 +74,37 @@ export default function Publish({ project, refetchProject }) {
           </div>
         </div>
         <div class="mt-4 flex flex-col gap-2">
-          <button
-            onClick={handlePublish}
-            class="w-80 bg-gray-800 font-bold text-gray-50 rounded px-4 py-2 hover:bg-gray-700 disabled:opacity-50"
-            disabled={isLoading()}
-          >
-            Deploy Screener
-          </button>
+          <div class="flex flex-row gap-2 items-center">
+            <Button
+              variant="secondary"
+              id="publish-screener-button"
+              data-testid="publish-screener-button"
+              onClick={handlePublish}
+              disabled={isLoading()}
+            >
+              Publish Screener
+            </Button>
+            <Tooltip>
+              <p>
+                The Publish tab is where you deploy your screener to a publicly
+                accessible URL that you can share with end users.
+              </p>
+              <p>
+                <a
+                  href="https://bdt-docs.web.app/user-guide/#7-publishing-your-screener"
+                  target="_blank"
+                >
+                  Read about publishing your screener in the docs
+                </a>
+              </p>
+            </Tooltip>
+          </div>
           {lastPublishDate() ? (
-            <div>Deploy current working version to your public screener</div>
+            <div>Publish current working version to your public screener</div>
           ) : (
-            <div>Click to make your screener availble through a public URL</div>
+            <div>
+              Click to make your screener available through a public URL
+            </div>
           )}
         </div>
       </div>

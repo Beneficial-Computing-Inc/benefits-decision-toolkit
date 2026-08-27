@@ -31,17 +31,8 @@ jobs:
       - name: 'Checkout'
         uses: 'actions/checkout@v4'
 
-      # Devbox needs a .env file to exist, even if it's empty
-      # TODO: Make this useful in this and other workflows by just consolidating env vars
-      #       here (so that we don't need to manage multiple places)
-      - name: 'Create .env file'
-        run: touch .env
-
-      # Setup devbox which includes all our dependencies: Maven, JDK 21, Quarkus, etc.
-      - name: 'Install devbox'
-        uses: 'jetify-com/devbox-install-action@v0.12.0'
-        with:
-          enable-cache: true
+      - name: 'Setup devbox'
+        uses: ./.github/actions/devbox-setup
 
       # Cache Maven dependencies to speed up builds
       - name: 'Cache Maven dependencies'
@@ -50,7 +41,7 @@ jobs:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('builder-api/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-maven-${{ hashFiles('builder-api/pom.xml') }}
 
       # Configure Workload Identity Federation and generate an access token
       - id: 'auth'
@@ -90,6 +81,7 @@ jobs:
           env_vars: |
             QUARKUS_GOOGLE_CLOUD_PROJECT_ID=${{ env.PROJECT_ID }}
             GCS_BUCKET_NAME=${{ env.PROJECT_ID }}.firebasestorage.app
+            LIBRARY_API_BASE_URL=https://library-api-1034049717668.us-central1.run.app
 
       # If required, use the Cloud Run URL output in later steps
       - name: 'Show output'

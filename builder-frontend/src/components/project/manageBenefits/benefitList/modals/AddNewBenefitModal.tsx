@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store"
 
-import type { BenefitDetail } from "@/types";
+import type { CreateCustomBenefitRequest } from "@/types";
 
 
 type NewBenefitValues = {
@@ -9,7 +9,7 @@ type NewBenefitValues = {
 }
 const AddNewBenefitModal = (
   { addNewBenefit, closeModal }:
-  { addNewBenefit: (benefit: BenefitDetail) => Promise<void>; closeModal: () => void }
+  { addNewBenefit: (benefit: CreateCustomBenefitRequest) => Promise<void>; closeModal: () => void }
 ) => {
   const [newBenefit, setNewBenefit] = createStore<NewBenefitValues>({ name: "", description: "" });
 
@@ -29,7 +29,8 @@ const AddNewBenefitModal = (
           <label class="block font-bold mb-2">Name:</label>
           <input
             type="text"
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            id="new-benefit-name"
+            class="w-full border-2 border-gray-400 rounded px-3 py-2"
             value={newBenefit.name}
             onInput={(e) => setNewBenefit("name", e.currentTarget.value)}
             placeholder="Enter benefit name"
@@ -38,7 +39,8 @@ const AddNewBenefitModal = (
         <div class="mb-4">
           <label class="block font-bold mb-2">Description:</label>
           <textarea
-            class="w-full border border-gray-300 rounded px-3 py-2"
+            id="new-benefit-description"
+            class="w-full border-2 border-gray-400 rounded px-3 py-2"
             value={newBenefit.description}
             onInput={(e) => setNewBenefit("description", e.currentTarget.value)}
             placeholder="Enter benefit description"
@@ -56,16 +58,16 @@ const AddNewBenefitModal = (
           </div>
           <div
             class={"btn-default bg-sky-600 text-white " + addButtonClasses()}
+            id="new-benefit-submit"
+            data-testid="submit-new-benefit-button"
             onClick={async () => {
               if (isAddDisabled()) {
                 console.log("Please fill in all fields.");
                 return;
               }
-              const benefitToAdd = {
-                id: crypto.randomUUID(),
+              const benefitToAdd: CreateCustomBenefitRequest = {
                 name: newBenefit.name,
                 description: newBenefit.description,
-                isPublic: false,
               };
               await addNewBenefit(benefitToAdd);
               closeModal();

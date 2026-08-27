@@ -14,13 +14,15 @@ import org.acme.model.domain.Benefit;
 import org.acme.model.domain.CheckConfig;
 import org.acme.model.domain.EligibilityCheck;
 import org.acme.model.domain.Screener;
-import org.acme.model.dto.EvaluateCheckRequest;
+import org.acme.model.dto.EligibilityCheck.EvaluateCheckRequest;
 import org.acme.persistence.EligibilityCheckRepository;
 import org.acme.persistence.PublishedScreenerRepository;
 import org.acme.persistence.ScreenerRepository;
 import org.acme.persistence.StorageService;
 import org.acme.service.DmnService;
+import org.acme.service.FormDataTransformer;
 import org.acme.service.LibraryApiService;
+import org.acme.service.LibraryApiService.LibraryCheckEvaluation;
 
 import java.util.*;
 
@@ -66,11 +68,14 @@ public class DecisionResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        // Transform form data: convert people object to people array
+        Map<String, Object> transformedData = FormDataTransformer.transformFormData(inputData);
+
         try {
             Map<String, Object> screenerResults = new HashMap<String, Object>();
             for (Benefit benefit : benefits) {
                 // Evaluate benefit
-                Map<String, Object> benefitResults = evaluateBenefit(benefit, inputData);
+                Map<String, Object> benefitResults = evaluateBenefit(benefit, transformedData);
                 screenerResults.put(benefit.getId(), benefitResults);
             }
             return Response.ok().entity(screenerResults).build();
@@ -106,12 +111,15 @@ public class DecisionResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        // Transform form data: convert people object to people array
+        Map<String, Object> transformedData = FormDataTransformer.transformFormData(formData);
+
         try {
             Map<String, Object> screenerResults = new HashMap<String, Object>();
             //TODO: consider ways of processing benefits in parallel
             for (Benefit benefit : benefits) {
                 // Evaluate benefit
-                Map<String, Object> benefitResults = evaluateBenefit(benefit, formData);
+                Map<String, Object> benefitResults = evaluateBenefit(benefit, transformedData);
                 screenerResults.put(benefit.getId(), benefitResults);
             }
             return Response.ok().entity(screenerResults).build();
@@ -122,26 +130,29 @@ public class DecisionResource {
     }
 
     private Map<String, Object> evaluateBenefit(Benefit benefit, Map<String, Object> formData) throws Exception {
-        if (benefit.getPublic()) {
-            // Public benefit, call the Library API to evaluate
-            Map<String, Object> result = new HashMap<>();
-            return result;
-        } else {
-            // Custom benefit, evaluate here in the web app api (as opposed to calling the library api for evaluation)
-            List<EvaluationResult> resultsList = new ArrayList<>();
-            Map<String, Object> checkResults = new HashMap<>();
+        // Evaluate the benefit using its configured checks
+        List<EvaluationResult> resultsList = new ArrayList<>();
+        Map<String, Object> checkResults = new HashMap<>();
 
             int checkNum = 0;
             for (CheckConfig checkConfig : benefit.getChecks()) {
-                String dmnFilepath = storageService.getCheckDmnModelPath(checkConfig.getCheckId());
                 EvaluationResult evaluationResult;
+                Map<String, Object> effectiveParameters = checkConfig.getParameters() != null
+                    ? new HashMap<>(checkConfig.getParameters())
+                    : new HashMap<>();
+                List<String> defaultedParameters = List.of();
                 if (isLibraryCheck(checkConfig)){
-                    evaluationResult = libraryApi.evaluateCheck(checkConfig, formData);
+                    LibraryCheckEvaluation libraryCheckEvaluation = libraryApi.evaluateCheck(checkConfig, formData);
+                    evaluationResult = libraryCheckEvaluation.result();
+                    effectiveParameters = libraryCheckEvaluation.effectiveParameters();
+                    defaultedParameters = libraryCheckEvaluation.defaultedParameters();
                 } else {
                     Map<String, Object> customFormValues = (Map<String, Object>) formData.get("custom");
                     if (customFormValues == null) {
                         customFormValues = new HashMap<String, Object>();
                     }
+                    String sourceCheckId = checkConfig.getSourceCheckId() != null ? checkConfig.getSourceCheckId() : checkConfig.getCheckId();
+                    String dmnFilepath = storageService.getCheckDmnModelPath(sourceCheckId);
                     evaluationResult = dmnService.evaluateDmn(
                         dmnFilepath, checkConfig.getCheckName(), customFormValues, checkConfig.getParameters()
                     );
@@ -149,7 +160,16 @@ public class DecisionResource {
                 resultsList.add(evaluationResult);
 
                 String uniqueCheckKey = checkConfig.getCheckId() + checkNum;
-                checkResults.put(uniqueCheckKey, Map.of("name", checkConfig.getCheckName(), "result", evaluationResult));
+                Map<String, Object> checkResultMap = new HashMap<>();
+                checkResultMap.put("name", checkConfig.getCheckName());
+                checkResultMap.put("aliasName", checkConfig.getAliasName());
+                checkResultMap.put("result", evaluationResult);
+                checkResultMap.put("module", checkConfig.getCheckModule() != null ? checkConfig.getCheckModule() : "");
+                checkResultMap.put("version", checkConfig.getCheckVersion() != null ? checkConfig.getCheckVersion() : "");
+                checkResultMap.put("parameters", checkConfig.getParameters() != null ? checkConfig.getParameters() : Map.of());
+                checkResultMap.put("effectiveParameters", effectiveParameters);
+                checkResultMap.put("defaultedParameters", defaultedParameters);
+                checkResults.put(uniqueCheckKey, checkResultMap);
                 checkNum += 1;
             }
 
@@ -173,7 +193,6 @@ public class DecisionResource {
                     "check_results", checkResults
                 )
             );
-        }
     }
 
     @POST
@@ -233,7 +252,6 @@ public class DecisionResource {
     }
 
     private boolean isLibraryCheck(CheckConfig checkConfig){
-        Character libraryCheckPrefix = 'L';
-        return libraryCheckPrefix.equals(checkConfig.getCheckId().charAt(0));
+        return checkConfig.getEvaluationUrl() != null && !checkConfig.getEvaluationUrl().isBlank();
     }
 }

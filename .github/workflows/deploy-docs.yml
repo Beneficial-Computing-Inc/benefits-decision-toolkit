@@ -1,0 +1,57 @@
+name: "Build and Deploy Docs to Firebase Hosting"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - ".github/workflows/deploy-docs.yml"
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: "benefit-decision-toolkit-play"
+  FIREBASE_TARGET: "bdt-docs"
+
+jobs:
+  build-and-deploy-docs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        working-directory: docs
+        run: npm install
+
+      - name: Build Astro site
+        working-directory: docs
+        run: npm run build
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      # -------------------------
+      # Authenticate to Firebase
+      # -------------------------
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/1034049717668/locations/global/workloadIdentityPools/github-actions-google-cloud/providers/github
+          service_account: cicd-build-deploy-api@benefit-decision-toolkit-play.iam.gserviceaccount.com
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy Docs to Firebase Hosting
+        run: firebase deploy --only hosting:${{ env.FIREBASE_TARGET }}

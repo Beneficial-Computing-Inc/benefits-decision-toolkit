@@ -1,4 +1,4 @@
-import type { JSONSchema7 } from 'json-schema';
+import type { JSONSchema7 } from "json-schema";
 
 /* Types for managing benefits in a project */
 export interface ScreenerBenefits {
@@ -8,7 +8,6 @@ export interface BenefitDetail {
   id: string;
   name: string;
   description: string;
-  isPublic: boolean;
 }
 
 export interface Benefit {
@@ -29,6 +28,8 @@ export interface CheckConfig {
   parameters: ParameterValues;
   inputDefinition: JSONSchema7;
   parameterDefinitions: ParameterDefinition[];
+  // Optional user-defined alias for display purposes
+  aliasName?: string;
 }
 export interface ParameterValues {
   [key: string]: string | number | boolean | string[];
@@ -49,34 +50,46 @@ export interface EligibilityCheckDetail extends EligibilityCheck {
   dmnModel: string;
 }
 
+// Request types for EligibilityCheck API endpoints
+export interface CreateCheckRequest {
+  name: string;
+  module: string;
+  description: string;
+  parameterDefinitions: ParameterDefinition[];
+}
+
+export interface UpdateCheckRequest {
+  description?: string;
+  parameterDefinitions?: ParameterDefinition[];
+}
+
+// Request types for Custom Benefit API endpoints
+export interface CreateCustomBenefitRequest {
+  name: string;
+  description: string;
+}
+
+export interface UpdateCustomBenefitRequest {
+  name: string;
+  description: string;
+}
+
+export interface AddCheckRequest {
+  checkId: string;
+}
+
+export interface UpdateCheckParametersRequest {
+  parameters: ParameterValues;
+}
+
 // Parameter Types
-export type ParameterDefinition =
-  | StringParameter
-  // StringSelectParameter |
-  // StringMultiInputParameter |
-  | NumberParameter
-  | BooleanParameter;
-interface BaseParameter {
+export type ParameterType = "string" | "number" | "boolean" | "date" | "array";
+export type ParameterDefinition = {
   key: string;
   label: string;
+  type: "string" | "number" | "boolean" | "date" | "array";
   required: boolean;
-}
-// export interface StringSelectParameter extends BaseParameter {
-//   type: "select";
-//   options?: string;
-// }
-// export interface StringMultiInputParameter extends BaseParameter {
-//   type: "multi_input_string";
-// }
-export interface StringParameter extends BaseParameter {
-  type: "string";
-}
-export interface NumberParameter extends BaseParameter {
-  type: "number";
-}
-export interface BooleanParameter extends BaseParameter {
-  type: "boolean";
-}
+};
 
 /* Screener Evaluation Results */
 export interface ScreenerResult {
@@ -89,9 +102,15 @@ export interface BenefitResult {
     [key: string]: CheckResult;
   };
 }
-interface CheckResult {
+export interface CheckResult {
   name: string;
+  aliasName?: string;
   result: OptionalBoolean;
+  module: string;
+  version: string;
+  parameters: ParameterValues;
+  effectiveParameters?: ParameterValues;
+  defaultedParameters?: string[];
 }
 export type OptionalBoolean = "TRUE" | "FALSE" | "UNABLE_TO_DETERMINE";
 
@@ -104,4 +123,10 @@ export interface PreviewFormData {
 export interface PublishedScreener {
   screenerName: string;
   formSchema: any;
+}
+
+// Selectable Form Path in the Form Editor view
+export interface FormPath {
+  path: string;
+  type: string;
 }

@@ -14,7 +14,7 @@ body:json {
   {
     "situation": {
       "simpleChecks": {
-        "phillyHomeownerOccupant": true
+        "ownerOccupant": true
       },
       "primaryPersonId": "p1",
       "people": [
@@ -47,6 +47,10 @@ body:json {
       ]
     }
   }
+}
+
+assert {
+  res.body.isEligible: eq null
 }
 
 settings {

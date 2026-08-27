@@ -4,10 +4,14 @@
     "maven@latest",
     "quarkus@latest",
     "jdk21@latest",
-    "firebase-tools@latest",
+    "firebase-tools@14.27.0",
     "google-cloud-sdk@latest",
     "nodejs@22",
-    "bruno-cli@latest"
+    "bruno-cli@latest",
+    "process-compose@latest",
+    "python@3.14",
+    "python314Packages.pip@latest",
+    "github:NixOS/nixpkgs/fef9403a3e4d31b0a23f0bacebbec52c248fbb51#playwright-driver.browsers"
   ],
   "env_from": ".env",
   "shell": {
@@ -18,6 +22,9 @@
     "scripts": {
       "setup": [
         "bin/setup"
+      ],
+      "test": [
+        "bin/run-all-tests \"$@\""
       ],
       "build-library-api-ci": [
         "cd library-api",

@@ -1,21 +1,36 @@
-import { For, Show, createResource, createSignal, onMount } from "solid-js";
+import {
+  For,
+  JSX,
+  Show,
+  createResource,
+  createSignal,
+  onMount,
+} from "solid-js";
 import { useNavigate } from "@solidjs/router";
 
-import EditScreenerForm from "./EditScreenerForm";
+import EditScreenerForm, { EditModalData } from "./EditScreenerForm";
 import NewScreenerForm from "./NewScreenerForm";
 import MenuIcon from "../icon/MenuIcon";
 
 import {
-  fetchProjects, updateScreener, deleteScreener, createNewScreener,
+  fetchProjects,
+  updateScreener,
+  deleteScreener,
+  createNewScreener,
 } from "@/api/screener";
 import { useAuth } from "@/context/AuthContext";
-
+import { Title } from "@solidjs/meta";
+import { Modal } from "@/components/shared/Modal";
 
 export default function ProjectsList() {
-  const [projectList, { refetch: refetchProjectList }] = createResource(fetchProjects);
-  const [isNewScreenerModalVisible, setIsNewScreenerModalVisible] = createSignal(false);
-  const [isEditModalVisible, setIsEditgModalVisible] = createSignal(false);
-  const [editModelData, setEditModalData] = createSignal();
+  const [projectList, { refetch: refetchProjectList }] =
+    createResource(fetchProjects);
+  const [isNewScreenerModalVisible, setIsNewScreenerModalVisible] =
+    createSignal(false);
+  const [isEditModalVisible, setIsEditModalVisible] = createSignal(false);
+  const [editModelData, setEditModalData] = createSignal<EditModalData | null>(
+    null,
+  );
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -26,29 +41,39 @@ export default function ProjectsList() {
   });
 
   const navigateToProject = (project) => {
-    navigate("/project/" + project.id);
+    navigate("/projects/" + project.id);
   };
 
-  const handleCreateNewScreener = async (screenerData) => {
+  const handleCreateNewScreener = async (screenerData: {
+    screenerName: string;
+    description?: string | undefined;
+  }) => {
     try {
       const newScreener = await createNewScreener(screenerData);
-      navigate(`/project/${newScreener.id}`);
+      navigate(`/projects/${newScreener.id}`);
     } catch (e) {
       console.log("Error creating screener", e);
     }
   };
 
-  const handleProjectMenuClicked = (e, screenerData) => {
-    e.stopPropagation();
-    setEditModalData(screenerData);
-    setIsEditgModalVisible(true);
-  };
+  const handleProjectMenuClicked =
+    (
+      screenerData: EditModalData,
+    ): JSX.EventHandler<HTMLButtonElement, MouseEvent> =>
+    (e) => {
+      e.stopPropagation();
+      setEditModalData(screenerData);
+      setIsEditModalVisible(true);
+    };
 
-  const handleUpdateScreener = async (screenerData) => {
+  const handleUpdateScreener = async (
+    screenerId: string,
+    screenerData: { screenerName: string },
+  ) => {
     try {
-      await updateScreener(screenerData);
+      await updateScreener(screenerId, screenerData);
       refetchProjectList();
-      setIsEditgModalVisible(false);
+      setIsEditModalVisible(false);
     } catch (e) {
       console.log("Error editing screener", e);
     }
@@ -56,9 +81,9 @@ export default function ProjectsList() {
 
   const handleDeleteScreener = async (screenerData) => {
     try {
-      await deleteScreener(screenerData);
+      await deleteScreener(screenerData.id);
       refetchProjectList();
-      setIsEditgModalVisible(false);
+      setIsEditModalVisible(false);
     } catch (e) {
       console.log("Error deleting screener", e);
     }
@@ -66,71 +91,94 @@ export default function ProjectsList() {
 
   return (
     <>
-      <div>
-        <Show when={projectList} fallback={<div>Loading...</div>}>
-          <div class="flex flex-wrap gap-4 p-4 w-100">
-            <div
-              onClick={() => setIsNewScreenerModalVisible(true)}
-              class="
-                p-4 w-80 h-60 flex justify-center cursor-pointer
-                border-4 border-gray-300 rounded-lg
-                shadow-md hover:shadow-lg hover:bg-gray-200"
-            >
-              <div class="flex items-center text-2xl font-bold">
-                Create new screener
-              </div>
+      <Title>BDT - Projects List</Title>
+      <div class="bg-gray-100 rounded-xl p-8 flex flex-col text-sm">
+        <div class="text-xl font-bold">
+          Welcome to Benefit Decision Toolkit!
+        </div>
+        <div class="pt-2">
+          Benefit Decision Toolkit is an open-source, civic tech project that
+          aims to provide an easy and affordable platform for building benefit
+          eligibility screening tools.
+        </div>
+
+        <div class="pt-3">
+          Create a new eligibility screener by adding and configuring
+          eligibility checks from our library of pre-built eligibility rules. Or
+          build custom checks that meet your specific needs.
+        </div>
+        <button
+          data-testid="create-new-screener-button"
+          onClick={() => setIsNewScreenerModalVisible(true)}
+          class="
+                mt-2 px-4 py-2 w-fit cursor-pointer bg-blue-500
+                rounded-lg shadow-md hover:shadow-lg hover:bg-blue-600
+                font-bold text-sm text-white"
+        >
+          Create new screener
+        </button>
+        <Modal
+          show={isNewScreenerModalVisible()}
+          onClose={() => setIsNewScreenerModalVisible(false)}
+        >
+          <NewScreenerForm />
+        </Modal>
+      </div>
+      <Show when={projectList} fallback={<div>Loading...</div>}>
+        <div class="flex flex-wrap gap-4 py-4">
+          <Show when={projectList.loading}>
+            <div class="w-80 h-60 flex items-center justify-center border-2 border-gray-300 rounded-lg shadow-md">
+              <div class="text-2xl font-bold">Loading screeners...</div>
             </div>
-            <Show when={projectList.loading}>
-              <div class="w-80 h-60 flex items-center justify-center border-2 border-gray-300 rounded-lg shadow-md">
-                <div class="text-2xl font-bold">
-                  Loading screeners...
-                </div>
-              </div>
-            </Show>
-            <For each={projectList()}>
-              {(item) =>
+          </Show>
+          <For each={projectList()}>
+            {(item) => {
+              const screenerData: EditModalData = {
+                screenerId: item.id,
+                screenerName: item.screenerName,
+              };
+              return (
                 item && (
-                  <div
+                  <article
                     class="
                       w-80 h-60 relative cursor-pointer
                       border-2 border-gray-300 rounded-lg
                       shadow-md hover:shadow-lg hover:bg-gray-200"
                   >
-                    <div
+                    <button
+                      type="button"
                       class="absolute px-2 top-2 right-2 hover:bg-gray-300 rounded-xl"
-                      onClick={(e) => handleProjectMenuClicked(e, item)}
+                      onClick={handleProjectMenuClicked(screenerData)}
                     >
-                      <MenuIcon/>
-                    </div>
+                      <MenuIcon />
+                    </button>
                     <div
                       onClick={() => navigateToProject(item)}
                       class="h-60 p-4 flex flex-col justify-center items-center"
                     >
-                      <div class="text-2xl font-bold">
-                        {item.screenerName}
-                      </div>
+                      <div class="text-2xl font-bold">{item.screenerName}</div>
                     </div>
-                  </div>
+                  </article>
                 )
-              }
-            </For>
-          </div>
-        </Show>
-      </div>
-      {isNewScreenerModalVisible() && (
-        <NewScreenerForm
-          handleCreateNewScreener={handleCreateNewScreener}
-          setIsModalVisible={setIsNewScreenerModalVisible}
-        ></NewScreenerForm>
-      )}
-      {isEditModalVisible() && (
-        <EditScreenerForm
-          handleEditScreener={handleUpdateScreener}
-          handleDeleteScreener={handleDeleteScreener}
-          setIsEditModalVisible={setIsEditgModalVisible}
-          screenerData={editModelData()}
-        ></EditScreenerForm>
-      )}
+              );
+            }}
+          </For>
+          <Modal
+            show={isEditModalVisible()}
+            onClose={() => setIsEditModalVisible(false)}
+          >
+            <Show when={editModelData()}>
+              {(modalData) => (
+                <EditScreenerForm
+                  handleEditScreener={handleUpdateScreener}
+                  handleDeleteScreener={handleDeleteScreener}
+                  modalData={modalData()}
+                />
+              )}
+            </Show>
+          </Modal>
+        </div>
+      </Show>
     </>
   );
 }

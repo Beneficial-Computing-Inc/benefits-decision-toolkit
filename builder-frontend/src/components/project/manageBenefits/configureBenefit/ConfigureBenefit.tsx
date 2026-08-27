@@ -9,6 +9,7 @@ import { fetchPublicChecks, fetchUserDefinedChecks } from "@/api/check";
 
 import type { EligibilityCheckListMode } from "./EligibilityCheckListView";
 import type { EligibilityCheck, ParameterValues } from "@/types";
+import Tooltip from "@/components/shared/Tooltip";
 
 const ConfigureBenefit = ({
   screenerId,
@@ -26,11 +27,11 @@ const ConfigureBenefit = ({
     createSignal<EligibilityCheckListMode>("public");
   const [publicChecks] = createResource<EligibilityCheck[]>(fetchPublicChecks);
   const [userDefinedChecks] = createResource<EligibilityCheck[]>(() =>
-    fetchUserDefinedChecks(false)
+    fetchUserDefinedChecks(false),
   );
 
-  const onRemoveEligibilityCheck = (checkIndexToRemove: number) => {
-    actions.removeCheck(checkIndexToRemove);
+  const onRemoveEligibilityCheck = (checkId: string) => {
+    actions.removeCheck(checkId);
   };
 
   return (
@@ -42,9 +43,25 @@ const ConfigureBenefit = ({
       <Show when={benefit().id !== undefined && !initialLoadStatus.loading()}>
         <div class="p-5">
           <div class="flex mb-4">
-            <div class="text-3xl font-bold tracking-wide">
-              Configure Benefit:{" "}
-              {benefit() ? benefit().name : "No Benefit Found"}
+            <div class="flex flex-row gap-2 items-baseline">
+              <div class="text-3xl font-bold tracking-wide">
+                Configure Benefit:{" "}
+                {benefit() ? benefit().name : "No Benefit Found"}
+              </div>
+              <Tooltip>
+                <p>
+                  The Configure Benefit page is where you define the rules that
+                  determine whether a user qualifies for a specific benefit.
+                </p>
+                <p>
+                  <a
+                    href="https://bdt-docs.web.app/user-guide/#4-configuring-a-benefit"
+                    target="_blank"
+                  >
+                    Read about configuring a benefit in the docs
+                  </a>
+                </p>
+              </Tooltip>
             </div>
             <div class="ml-auto">
               <div
@@ -75,7 +92,7 @@ const ConfigureBenefit = ({
                 Selected eligibility checks for {benefit().name}
               </div>
 
-              <div class="px-4">
+              <div class="px-4" id="selected-eligibility-checks_container">
                 {benefit() && benefit().checks.length === 0 && (
                   <div class="text-gray-500">
                     No eligibility checks selected. Use the checkboxes to add
@@ -84,20 +101,27 @@ const ConfigureBenefit = ({
                 )}
                 {benefit().checks.length > 0 && (
                   <For each={benefit().checks}>
-                    {(checkConfig, checkIndex) => {
+                    {(checkConfig, checkConfigIndex) => {
                       return (
                         <SelectedEligibilityCheck
-                          checkId={() => checkConfig.checkId}
                           checkConfig={() => checkConfig}
                           onRemove={() =>
-                            onRemoveEligibilityCheck(checkIndex())
+                            onRemoveEligibilityCheck(checkConfig.checkId)
                           }
                           updateCheckConfigParams={(
-                            newCheckData: ParameterValues
+                            newCheckData: ParameterValues,
                           ) => {
                             actions.updateCheckConfigParams(
-                              checkIndex(),
-                              newCheckData
+                              checkConfig.checkId,
+                              newCheckData,
+                            );
+                          }}
+                          updateCheckConfigAlias={(
+                            aliasName: string | null,
+                          ) => {
+                            actions.updateCheckConfigAlias(
+                              checkConfig.checkId,
+                              aliasName,
                             );
                           }}
                         />

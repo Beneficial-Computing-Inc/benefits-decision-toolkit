@@ -9,6 +9,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CheckConfig {
     private String checkId;
+    // original checkId of the check this was cloned from
+    private String sourceCheckId;
     private String checkName;
     private String checkVersion;
     private String checkModule;
@@ -17,6 +19,33 @@ public class CheckConfig {
     private String evaluationUrl;
     private JsonNode inputDefinition;
     private List<ParameterDefinition> parameterDefinitions;
+    // optional alias name for this check instance
+    private String aliasName;
+
+    public CheckConfig() {
+    }
+
+    public CheckConfig(
+        String checkId,
+        String sourceCheckId,
+        String checkName,
+        String checkVersion,
+        String checkModule,
+        String evaluationUrl,
+        JsonNode inputDefinition,
+        List<ParameterDefinition> parameterDefinitions,
+        Map<String, Object> parameters
+    ) {
+        this.checkId = checkId;
+        this.sourceCheckId = sourceCheckId;
+        this.checkName = checkName;
+        this.checkVersion = checkVersion;
+        this.checkModule = checkModule;
+        this.evaluationUrl = evaluationUrl;
+        this.inputDefinition = inputDefinition;
+        this.parameterDefinitions = parameterDefinitions;
+        this.parameters = parameters;
+    }
 
     public String getCheckId() {
         return checkId;
@@ -80,5 +109,21 @@ public class CheckConfig {
 
     public void setCheckModule(String checkModule) {
         this.checkModule = checkModule;
+    }
+
+    public String getSourceCheckId() {
+        return sourceCheckId;
+    }
+
+    public void setSourceCheckId(String sourceCheckId) {
+        this.sourceCheckId = sourceCheckId;
+    }
+
+    public String getAliasName() {
+        return aliasName;
+    }
+
+    public void setAliasName(String aliasName) {
+        this.aliasName = aliasName;
     }
 }
