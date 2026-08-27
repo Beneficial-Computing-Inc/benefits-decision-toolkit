@@ -1,0 +1,60 @@
+meta {
+  name: Ineligible
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/benefits/pa/phl/senior-citizen-tax-freeze
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "simpleChecks": {
+        "ownerOccupant": true,
+        "livesInPhiladelphiaPa": false
+      },
+      "primaryPersonId": "p1",
+      "people": [
+        {
+          "id": "p1",
+          "dateOfBirth": "1970-08-01"
+        },
+        {
+          "id": "p2",
+          "dateOfBirth": "1960-12-30"
+        }
+      ],
+      "enrollments": [
+        {
+          "personId": "p2",
+          "benefit": "PhlHomesteadExemption"
+        }
+      ],
+      "relationships": [
+        {
+          "type": "spouse",
+          "personId": "p1",
+          "relatedPersonId": "p2"
+        },
+        {
+          "type": "spouse",
+          "personId": "p2",
+          "relatedPersonId": "p1"
+        }
+      ]
+    }
+  }
+}
+
+assert {
+  res.body.isEligible: eq false
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

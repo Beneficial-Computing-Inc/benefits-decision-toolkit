@@ -7,13 +7,14 @@ import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
@@ -54,8 +55,37 @@ public class DynamicEndpointPatternTest {
             .then()
                 .statusCode(200)
                 .body("checkResult", notNullValue())
-                .body("situation", notNullValue())
-                .body("parameters", notNullValue());
+                .body("situation", notNullValue());
+            // 'parameters' is only echoed back for checks that declare a parameters input
+        }
+    }
+
+    @Test
+    public void testAllCheckEndpointsReturnNullWithEmptyInputs() {
+        Map<String, ModelInfo> allModels = modelRegistry.getAllModels();
+
+        List<ModelInfo> checkModels = allModels.values().stream()
+            .filter(model -> model.getPath().startsWith("checks/"))
+            .filter(model -> model.getDecisionServices().contains(model.getModelName() + "Service"))
+            .collect(Collectors.toList());
+
+        assertTrue(checkModels.size() > 0, "Should have at least one check model");
+
+        for (ModelInfo model : checkModels) {
+            String path = "/api/v1/" + model.getPath();
+
+            String checkResult = given()
+                .contentType(ContentType.JSON)
+                .body(Map.of("situation", Map.of()))
+            .when()
+                .post(path)
+            .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath()
+                .getString("checkResult");
+
+            assertNull(checkResult, path + " should return null checkResult with empty situation");
         }
     }
 

@@ -1,4 +1,4 @@
-import { Navigate, Route } from "@solidjs/router";
+import { Route, Router } from "@solidjs/router";
 
 import Project from "./components/project/Project";
 import AuthForm from "./components/auth/AuthForm";
@@ -6,26 +6,34 @@ import { useAuth } from "./context/AuthContext";
 import HomeScreen from "./components/homeScreen/HomeScreen";
 import EligibilityCheckDetail from "./components/homeScreen/eligibilityCheckList/eligibilityCheckDetail/EligibilityCheckDetail";
 import Screener from "./components/screener/Screener";
-import ConversationalScreener from "./components/ssi-screener/ConversationalScreener";
-import SSIScreener from "./components/ssi-screener/SSIScreener";
 import Loading from "./components/Loading";
-import { Match, Switch } from "solid-js";
+import { Match, ParentProps, Switch } from "solid-js";
+import { ComponentLibrary } from "@/components/shared/ComponentLibrary";
+import Header from "@/components/Header/Header";
+import ANavBar from "@/components/shared/ANavbar";
+import { ViewLayout } from "@/components/homeScreen/ViewLayout";
+import ProjectsList from "@/components/homeScreen/ProjectsList";
+import EligibilityChecksList from "@/components/homeScreen/eligibilityCheckList/EligibilityChecksList";
 
+const MainLayout = (props: ParentProps) => {
+  const { user, isAuthLoading, isProvisioningAccount } = useAuth();
 
-const ProtectedRoute = (props) => {
-  const { user, isAuthLoading } = useAuth();
-  
-  // If user is logged in, render the requested component, otherwise redirect to login
+  const navbarItems = [
+    { label: "Projects", href: "/projects" },
+    { label: "Eligibility checks", href: "/check" },
+  ];
+
   return (
     <Switch>
-      <Match when={isAuthLoading()}>
+      <Match when={isAuthLoading() || isProvisioningAccount()}>
         <Loading />
       </Match>
-      <Match when={user() !== "loading"}>
-        <props.component />
+      <Match when={user() === null}>
+        <AuthForm />
       </Match>
-      <Match when={user() === "loading"}>
-        <Navigate href="/login" />
+      <Match when={user()}>
+        <Header />
+        {props.children}
       </Match>
     </Switch>
   );
@@ -33,17 +41,27 @@ const ProtectedRoute = (props) => {
 
 function App() {
   return (
-    <>
-      <Route path="/login" component={AuthForm} />
-      <Route path="/signup" component={AuthForm} />
-      <Route path="/" component={() => <ProtectedRoute component={HomeScreen}/>} />
-      <Route path="/project/:projectId" component={() => <ProtectedRoute component={Project}/>} />
-      <Route path="/check/:checkId" component={() => <ProtectedRoute component={EligibilityCheckDetail}/>} />
+    <Router>
+      <Route path="/component-test" component={ComponentLibrary} />
+      <Route path="/" component={MainLayout}>
+        <Route path="/" component={HomeScreen} />
+        <Route path="/login" component={AuthForm} />
+        <Route path="/signup" component={AuthForm} />
+        <Route path="/projects" component={ViewLayout}>
+          <Route path="/" component={ProjectsList} />
+          <Route path="/:projectId" component={Project} />
+        </Route>
+        <Route path="/check" component={ViewLayout}>
+          <Route path="/" component={EligibilityChecksList} />
+          <Route path="/:checkId" component={EligibilityCheckDetail} />
+        </Route>
+      </Route>
       <Route path="/screener/:publishedScreenerId" component={Screener} />
-      <Route path="/ssi-screener" component={ConversationalScreener} />
-      <Route path="/ssi" component={SSIScreener} />
-      <Route path="*" component={() => <div class="p-4">404 - Page Not Found</div>} />
-    </>
+      <Route
+        path="*"
+        component={() => <main class="p-4">404 - Page Not Found</main>}
+      />
+    </Router>
   );
 }
 export default App;

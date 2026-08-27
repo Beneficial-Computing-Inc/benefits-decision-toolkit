@@ -1,0 +1,42 @@
+meta {
+  name: Enrolled
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/checks/enrollment/person-not-enrolled-in-benefit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1"
+        }
+      ],
+      "enrollments": [
+        {
+          "personId": "p1",
+          "benefit": "bogus"
+        }
+      ]
+    },
+    "parameters": {
+      "personId": "p1",
+      "benefit": "bogus"
+    }
+  }
+}
+
+assert {
+  res.body.checkResult: eq false
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

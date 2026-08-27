@@ -1,0 +1,37 @@
+meta {
+  name: Enrollments null
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/checks/enrollment/person-enrolled-in-benefit
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "situation": {
+      "people": [
+        {
+          "id": "p1"
+        }
+      ],
+      "enrollments": null
+    },
+    "parameters": {
+      "personId": "p1",
+      "benefit": "bogus"
+    }
+  }
+}
+
+assert {
+  res.body.checkResult: eq null
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -32,6 +32,10 @@ body:json {
   }
 }
 
+assert {
+  res.body.checkResult: eq true
+}
+
 settings {
   encodeUrl: true
   timeout: 0

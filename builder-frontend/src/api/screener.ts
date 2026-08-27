@@ -1,18 +1,15 @@
-import { authFetch } from "@/api/auth";
+import { env } from "@/config/environment";
 
-import type { BenefitDetail, ScreenerResult } from "@/types";
+import { authDelete, authGet, authPatch, authPost } from "@/api/auth";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+import type { CreateCustomBenefitRequest, FormPath, ScreenerResult } from "@/types";
+
+const apiUrl = env.apiUrl;
 
 export const fetchProjects = async () => {
   const url = apiUrl + "/screeners";
   try {
-    const response = await authFetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    const response = await authGet(url);
 
     if (!response.ok) {
       throw new Error(`Fetch failed with status: ${response.status}`);
@@ -25,15 +22,10 @@ export const fetchProjects = async () => {
   }
 };
 
-export const fetchProject = async (screenerId) => {
+export const fetchProject = async (screenerId: string) => {
   const url = apiUrl + "/screener/" + screenerId;
   try {
-    const response = await authFetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    const response = await authGet(url);
 
     if (!response.ok) {
       throw new Error(`Fetch failed with status: ${response.status}`);
@@ -46,17 +38,13 @@ export const fetchProject = async (screenerId) => {
   }
 };
 
-export const createNewScreener = async (screenerData) => {
+export const createNewScreener = async (request: {
+  screenerName: string;
+  description?: string;
+}) => {
   const url = apiUrl + "/screener";
   try {
-    const response = await authFetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(screenerData),
-    });
+    const response = await authPost(url.toString(), request);
 
     if (!response.ok) {
       throw new Error(`Post failed with status: ${response.status}`);
@@ -69,17 +57,29 @@ export const createNewScreener = async (screenerData) => {
   }
 };
 
-export const updateScreener = async (screenerData) => {
-  const url = apiUrl + "/screener";
+export const updateScreener = async (
+  screenerId: string,
+  request: { screenerName: string },
+) => {
+  const url = new URL(`${apiUrl}/screener/${screenerId}`);
+
   try {
-    const response = await authFetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(screenerData),
-    });
+    const response = await authPatch(url.toString(), request);
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err);
+    }
+  } catch (error) {
+    console.error("Error updating project:", error);
+    throw error;
+  }
+};
+
+export const deleteScreener = async (screenerId: string) => {
+  const url = apiUrl + "/screener/delete?screenerId=" + screenerId;
+  try {
+    const response = await authDelete(url);
 
     if (!response.ok) {
       throw new Error(`Update failed with status: ${response.status}`);
@@ -90,40 +90,14 @@ export const updateScreener = async (screenerData) => {
   }
 };
 
-export const deleteScreener = async (screenerData) => {
-  const url = apiUrl + "/screener/delete?screenerId=" + screenerData.id;
-  try {
-    const response = await authFetch(url, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Update failed with status: ${response.status}`);
-    }
-  } catch (error) {
-    console.error("Error updating project:", error);
-    throw error;
-  }
-};
-
-export const saveFormSchema = async (screenerId, schema) => {
+export const saveFormSchema = async (screenerId: string, schema: any) => {
   const requestData: any = {};
-  requestData.screenerId = screenerId;
   requestData.schema = schema;
-  const url = apiUrl + "/save-form-schema";
+  const url = new URL(`${apiUrl}/save-form-schema`);
+  url.searchParams.append("screenerId", screenerId);
+
   try {
-    const response = await authFetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(requestData),
-    });
+    const response = await authPost(url.toString(), requestData);
 
     if (!response.ok) {
       throw new Error(`Post failed with status: ${response.status}`);
@@ -137,14 +111,7 @@ export const saveFormSchema = async (screenerId, schema) => {
 export const publishScreener = async (screenerId: string): Promise<void> => {
   const url = apiUrl + "/publish";
   try {
-    const response = await authFetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ screenerId: screenerId }),
-    });
+    const response = await authPost(url, { screenerId: screenerId });
 
     if (!response.ok) {
       throw new Error(`Submit failed with status: ${response.status}`);
@@ -155,17 +122,10 @@ export const publishScreener = async (screenerId: string): Promise<void> => {
   }
 };
 
-export const addCustomBenefit = async (screenerId: string, benefit: BenefitDetail) => {
+export const addCustomBenefit = async (screenerId: string, benefit: CreateCustomBenefitRequest) => {
   const url = apiUrl + "/screener/" + screenerId + "/benefit";
   try {
-    const response = await authFetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(benefit),
-    });
+    const response = await authPost(url, benefit);
 
     if (!response.ok) {
       throw new Error(`Create benefit failed with status: ${response.status}`);
@@ -176,19 +136,18 @@ export const addCustomBenefit = async (screenerId: string, benefit: BenefitDetai
   }
 };
 
-export const removeCustomBenefit = async (screenerId: string, benefitId: string) => {
+export const removeCustomBenefit = async (
+  screenerId: string,
+  benefitId: string,
+) => {
   const url = apiUrl + "/screener/" + screenerId + "/benefit/" + benefitId;
   try {
-    const response = await authFetch(url, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+    const response = await authDelete(url);
 
     if (!response.ok) {
-      throw new Error(`Delete of benefit failed with status: ${response.status}`);
+      throw new Error(
+        `Delete of benefit failed with status: ${response.status}`,
+      );
     }
   } catch (error) {
     console.error("Error deleting custom benefit:", error);
@@ -196,22 +155,38 @@ export const removeCustomBenefit = async (screenerId: string, benefitId: string)
   }
 };
 
-export const evaluateScreener = async (screenerId: string, inputData: any): Promise<ScreenerResult> => {
+export interface FormPathsResponse {
+  paths: FormPath[];
+}
+
+export const fetchFormPaths = async (screenerId: string): Promise<FormPathsResponse> => {
+  const url = apiUrl + "/screener/" + screenerId + "/form-paths";
+  try {
+    const response = await authGet(url);
+
+    if (!response.ok) {
+      throw new Error(`Fetch form paths failed with status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching form paths:", error);
+    throw error;
+  }
+};
+
+export const evaluateScreener = async (
+  screenerId: string,
+  inputData: any,
+): Promise<ScreenerResult> => {
   const url = apiUrl + "/decision/v2?screenerId=" + screenerId;
   try {
-    const response = await authFetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(inputData),
-    });
+    const response = await authPost(url, inputData);
 
     if (!response.ok) {
       throw new Error(`Evaluation failed with status: ${response.status}`);
     }
-    
+
     const data = await response.json();
     return data;
   } catch (error) {
